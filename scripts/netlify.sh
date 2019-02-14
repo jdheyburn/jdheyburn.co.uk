@@ -2,6 +2,8 @@
 
 # https://github.com/netlify/build-image/issues/183#issuecomment-419199649
 
+git submodule update --init --recursive
+
 HUGO_FLAVOUR="hugo_extended"
 HUGO_VERSION="0.54.0"
 
