@@ -2,10 +2,10 @@
 
 # https://github.com/netlify/build-image/issues/183#issuecomment-419199649
 
-cwd=$(pwd)
-cd ./jdheyburn.co.uk
-git submodule update --init --recursive
-cd $cwd
+#cwd=$(pwd)
+#cd ./jdheyburn.co.uk
+#git submodule update --init --recursive
+#cd $cwd
 
 HUGO_FLAVOUR="hugo_extended"
 HUGO_VERSION="0.54.0"
