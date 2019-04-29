@@ -67,6 +67,11 @@ googleAnalytics = "UA-139246187-1"
 #     weight = 5
 #     url = "https://medium.com/@johndoe"
 
+[privacy]
+    [privacy.googleAnalytics]
+        anonymizeIP = true
+        respectDoNotTrack = true
+
 
 [languages]
     [languages.en]
