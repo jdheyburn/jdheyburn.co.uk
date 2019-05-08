@@ -31,6 +31,7 @@ install:
 script:
 - hugo version
 - hugo #--gc --minify
+- cp CNAME public/
 deploy:
   provider: pages
   skip-cleanup: true
