@@ -30,7 +30,7 @@ install:
 #- pwd
 script:
 - hugo version
-- hugo --gc --minify
+- hugo #--gc --minify
 deploy:
   provider: pages
   skip-cleanup: true
