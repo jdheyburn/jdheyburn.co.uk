@@ -1,5 +1,4 @@
 ---
-draft: true
 date: 2019-09-11
 title: Applying Cartography
 description: 
