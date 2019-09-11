@@ -12,9 +12,9 @@ tags:
 
 # Applying Cartography
 
-With my academic background focused in infrastructure, I love seeing diagrams of topologies - they're a pretty damn useful way of understanding architecture of an application flow amongst other things. Let's take a look at how this my blog post is architected out.
+With my academic background focused in infrastructure, I love seeing diagrams of topologies - they're a pretty damn useful way of understanding architecture of an application flow amongst other things. Let's take a look at how my portfolio site is architected out.
 
-As I mentioned in my first blog post [first blog post](/posts/blog-bootstrap/) - I've got several ideas on how I can improve on the architecture of this site. But what good is evaluating where you've come from if you don't document what you currently have? 
+As I mentioned in my [first blog post](/posts/blog-bootstrap/) - I've got several ideas on how I can improve on the architecture of this site. But what good is evaluating where you've come from if you don't document what you currently have? 
 
 That's when you can make true comparisons in any system. As such the aim of this series of posts will be to explain how this website is architected, so that we may reference it in future posts. Later on, I'll also talk about how you're able to get yourself set up as well.
 
@@ -38,7 +38,7 @@ I'm a firm believer that you're best off getting a minimum viable product out th
 Back to the diagram, let's follow it from right-to-left and start talking about what's going on. 
 
 ## GitHub Pages - somewhere to call home
-You can see that the site is hosted via GitHub Pages on. Essentially this is GitHub's platform for hosting public repositories that are published on itself with the static resources contained within said repos. This then presents the assets at a domain prefix of your choosing, suffixed by `.github.io` - in my case it is at `jdheyburn.github.io`. GitHub Pages only hosts your site via HTTPS so you know your pages aren't being subject to a man-in-the-middle attack, and it takes care of your TLS certificates so you don't need to worry about renewing them!
+You can see that the site is hosted on GitHub Pages. Essentially this is GitHub's platform for hosting the static resources that are checked into the public repos. This then presents the assets at a domain prefix of your choosing, suffixed by `.github.io` - in my case it is at `jdheyburn.github.io`. GitHub Pages only hosts your site via HTTPS so you know your pages aren't being subject to a man-in-the-middle attack, and it takes care of your TLS certificates so you don't need to worry about renewing them!
 
 > You might be wondering why you would need to serve a static site over HTTPS when you aren't handling anything confidential. I'll turn you to Troy Hunt's excellent article [Here's Why Your Static Website Needs HTTPS](https://www.troyhunt.com/heres-why-your-static-website-needs-https/).
 
@@ -71,7 +71,7 @@ That means that the operating cost of a site like this is exactly ZILCH (nada, e
 ## Top-level domain fatigue? 
 I'm from the UK - and I wanted my site to reflect that, so I purchased a domain with the top-level domain (TLD) `.co.uk`. However when users come to visit me on my site they may not always remember whether it was `.com`, `.dev`, `.tk` (remember those?). Therefore I also have `jdheyburn.com` set up in the same way as its `.co.uk` sibling to maximise that user experience.
 
-Okay well that means there is a slight cost to maintain the site by FROM HERE there is a charge for the custom domains (notice how jdheyburn.com redirects to jdheyburn.co.uk?) but we're talking in the £10s per year for these two domains.
+Okay well that means there is a slight cost to maintain the site through purchasing and renewing the custom domains (notice how jdheyburn.com redirects to jdheyburn.co.uk?) but we're talking in the £10s per year for these two.
 
 So if you're interested in having a setup like this, then over the next few posts I'll be detailing how you can do the same. 
 
