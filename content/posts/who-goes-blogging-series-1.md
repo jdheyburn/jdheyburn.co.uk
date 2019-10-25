@@ -1,5 +1,5 @@
 ---
-date: 2019-09-11
+date: 2019-11-01
 title: Hugo's Blogging
 description:
 tags:
@@ -8,6 +8,7 @@ tags:
   - cloudflare
   - portfolio-site
   - github-pages
+draft: true
 ---
 
 I've done a lot of talking about how it is currently, but let's talk about how you can get set up with the same as I have done here. Let's recap exactly what that is:
