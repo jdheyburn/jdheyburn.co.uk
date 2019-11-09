@@ -82,5 +82,5 @@ So if you're interested in having a setup like this, then over the next few post
 
 \- jdheyburn
 
-[blog_arch]: /images/blog-arch.png
+[blog_arch]: /images/blog-arch-cover.png
 [analytics_example]: /images/analytics_example.png
