@@ -1,17 +1,18 @@
 ---
-date: 2019-11-01
+date: 2019-11-09
 title: "Who Goes Blogging Pt. 1: Getting Started"
-description:
+description: Create your own portfolio site with no hassle using Hugo and GitHub Pages
+images:
+- local_example_site.jpg
 tags:
   - architecture
   - cdn
   - cloudflare
   - portfolio-site
   - github-pages
-draft: true
 ---
 
-I've done a lot of talking about how it is currently, but let's talk about how you can get set up with the same as I have done here. Let's recap exactly what that is:
+I've done a lot of talking about how this website is currently, but let's talk about how you can get set up with the same as I have done here. Let's recap exactly what that is:
 
 1. A GitHub repo with the site source code
 1. Another GitHub project with the rendered site
@@ -22,11 +23,20 @@ I've done a lot of talking about how it is currently, but let's talk about how y
 
 We'll cover the first three points in this post, with the remainder to come in a follow up post.
 
+# Pre-requisites & Assumptions
+
+These series of posts is aimed at between the newcomer, to intermediate programmer. There may be some concepts which I won't be covering to due brevity, and because there are several guides out there who have explained these concepts better than I could. 
+
+Having said that, I assume you are comfortable with the following:
+- Navigating your way through a terminal
+- Happy with the basic set of `git` commands
+- Understand how website requests are made (though this isn't crucial)
+
 # Hugo Static Site Builder
 
 There are many website building platforms out there for your static sites. There is no one platform to rule them all, you should decide on which one works best for you. For myself, I wanted to explore further into the realm of Golang as a learning opportunity with the goal of creating my own Hugo template at some point. Additional, Hugo is completely open source, so you can [check out](https://github.com/gohugoio/hugo) how it works too!
 
-> While Hugo itself is free, there are fancier and more feature-rich themes available to purchase from designers which may have a cost attached to them.
+> While Hugo itself is free and comes with a bunch of [themes](https://themes.gohugo.io/) you can use for free, there are fancier and more feature-rich themes available to purchase from designers which may have a cost attached to them.
 
 I won't aim to reproduce a complete list of comparisons against other platforms, other people have already made the comparisons much better than I could! But nevertheless, some that I am aware of off the top of my head are [Jekyll](https://jekyllrb.com/), [Ghost](https://ghost.org/), and the infamous [WordPress](https://wordpress.com/).
 
@@ -54,7 +64,7 @@ Now that we have the repos set up, let's get started on building the website tem
 
 # Blog Bootstrapping
 
-Firstly you would need to create your Hugo template. You can do this from either executing `hugo new <site|theme>` and building up from there - or do what I did which was to browse the [Hugo themes](https://themes.gohugo.io/) and git clone the example site for the chosen theme and then make your changes around that. It may entirely depend on your learning approach which way works best for you.
+Firstly you would need to create your Hugo template. You can do this from either executing `hugo new <site|theme>` and building up from there - or do what I did which was to browse the [Hugo themes](https://themes.gohugo.io/) and `git clone` the example site for the chosen theme and then make your changes around that. It may entirely depend on your learning approach which way works best for you.
 
 In my case, I wanted to get up and running in the smallest time possible (isn't that the point of static site generators?), so I followed the approach above.
 
@@ -90,7 +100,7 @@ I advise you now go off and explore all the customisation options for your site,
 
 When we were setting up the `exampleSite` locally, we created a symlink from `~/projects/blog-source/themes/hugo-coder` -> `~/projects/hugo-coder`. This is okay for local development, however not particularly the best practice in the real world. We want to take an existing git repo (hugo-coder) and apply that to a directory in our project, but what we *don't* want to do is duplicate the code in our own repo.
 
-This problem is solved exactly by **git submodules**, and we define it within the `.gitmodules` file of our source code repo.
+This problem is solved exactly by [**git submodules**](https://git-scm.com/book/en/v2/Git-Tools-Submodules), and we define it within the `.gitmodules` file of our source code repo.
 
 {{< highlight bash >}}
 # .gitmodules
@@ -139,17 +149,18 @@ Now the original way I did this was through a simple bash script which largely f
 
 > I've since moved over onto a CI/CD platform which I will discuss in a future post.
 
-After following the process in the link prior, you should be able to Now you can invoke your deploy script at `./deploy.sh`, which will push the built `public/` directory to your `<USERNAME>.github.io`. GitHub should pick up that this is a GitHub Pages repo and have your site ready for you at `https://<USERNAME>.github.io`!
+After following the process in the link prior, you should be able to invoke your deploy script at `./deploy.sh`, which will push the built `public/` directory to your `<USERNAME>.github.io`. GitHub should pick up that this is a GitHub Pages repo and have your site ready for you at `https://<USERNAME>.github.io`!
 
 
 # Conclusion
 
 In this post, we have done the following:
 
-- Created two GitHub repos:
+1. Created two GitHub repos:
   - one for storing the source code for the website
   - another containing the rendered web pages 
-- Built Hugo locally for development using `hugo serve`
-- Written a script for deployment 
+1. Built Hugo locally for development using `hugo serve`
+1. Written a script for deployment 
+1. Deployed to GitHub Pages
 
 Next up, we'll be adding a custom domain to the site, front it with a CDN, and redirect multiple domains to it.

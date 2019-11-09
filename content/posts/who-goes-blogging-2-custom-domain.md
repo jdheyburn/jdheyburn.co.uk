@@ -1,7 +1,7 @@
 ---
 date: 2019-11-02
 title: "Who Goes Blogging Pt. 2: Custom Domain"
-description:
+description: Make your portfolio site professional by applying a custom domain to it
 tags:
   - architecture
   - cdn
