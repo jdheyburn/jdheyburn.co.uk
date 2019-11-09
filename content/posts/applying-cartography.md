@@ -1,6 +1,6 @@
 ---
 date: 2019-09-11
-title: Applying Cartography
+title: "Who Goes Blogging Pt. 0: Applying Cartography"
 description: 
 tags:
 - architecture

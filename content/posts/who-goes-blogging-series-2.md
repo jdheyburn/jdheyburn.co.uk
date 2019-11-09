@@ -1,6 +1,6 @@
 ---
-date: 2019-11-01
-title: Hugo's Blogging
+date: 2019-11-02
+title: "Who Goes Blogging Pt. 2: Custom Domain"
 description:
 tags:
   - architecture

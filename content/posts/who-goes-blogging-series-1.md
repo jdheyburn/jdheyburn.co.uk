@@ -1,6 +1,6 @@
 ---
 date: 2019-11-01
-title: Hugo's Blogging
+title: "Who Goes Blogging Pt. 1: Getting Started"
 description:
 tags:
   - architecture
