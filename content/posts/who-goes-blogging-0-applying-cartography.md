@@ -8,6 +8,9 @@ tags:
 - cloudflare
 - portfolio-site
 - github-pages
+# Redirect the old slug name to the new one
+aliases:
+  - /posts/applying-cartography/
 ---
 
 # Applying Cartography
