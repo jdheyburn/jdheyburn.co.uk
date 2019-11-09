@@ -3,7 +3,7 @@ date: 2019-11-09
 title: "Who Goes Blogging Pt. 1: Getting Started"
 description: Create your own portfolio site with no hassle using Hugo and GitHub Pages
 images:
-- local_example_site.jpg
+- images/local_example_site.jpg
 tags:
   - architecture
   - cdn

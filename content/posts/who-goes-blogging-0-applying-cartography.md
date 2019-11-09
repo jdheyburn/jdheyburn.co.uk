@@ -3,7 +3,7 @@ date: 2019-09-11
 title: "Who Goes Blogging Pt. 0: Applying Cartography"
 description: Mapping out the architecture of my portfolio website
 images:
-- blog-arch.png
+- images/blog-arch.png
 tags:
 - architecture
 - cdn
