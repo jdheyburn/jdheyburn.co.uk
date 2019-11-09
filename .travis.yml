@@ -9,10 +9,10 @@ env:
   matrix:
     secure: EAZCekWKOttRVxVzHUFL8pU2k146WMkuvi2AFj+o/tyHttUdrtbQfe5g2hQJKaTckuAZUXWXw1XskOUDsKv7ivBCb8CPkbO+3VtL1kVcbzNsc/8RGPBtFX5Nle1LwmZsyU+dIrNlXbyF5ztalf1ArUdIYENvKPifBlmNEnqkbxdLx1CJTFaI5kQtt/NNs/hWtptuyJ/NdAH7UTdn7BC/bEVBPhezJjUJWSXceiQ4rLPUyR6m7t8HYcpgYU6PpxyX+w8bbng81Iyrv2NpZzMwvV43wVgdFFaH6VVfh9eQWQ6LQNlR5ZntwQ4ULs1lEYnR/wNCO8T7WkKP7GxZPwrf6UeqEo6BTfGGRgVUmy1SGKqGzSexRVmiHo7L2UZ+wLoWjblZ5Op6TBJlfw7Oqw30eese3zXifjtjyLuXaGxxnDplAH+QPtOXntBZnmDkxiGPqEkhitGQMgOfIlnC0Di0gs8Y/Ac5c+yqZVsRU3pk1qdyM8/3ndL36GriYeJMfy+3ZDGWf0IIFy96dv/qc94/cS8rPiDpZMw2it9tpFpAhyQddNn1dQmnRIesr8es7ABJOtsrDeRMAWUh2f3aUHG0BxYbaE4EvP5TfqP3oS67K69sVj7K7pYrM6D12KpLgpdA7Siur4PgEEqt+PT0MRGX2UaOuY/bd1dz/ArWrTxYE1g=
 
-before_install:
-  # This workaround is required to avoid libstdc++ errors while running "extended" hugo with SASS support.
-- wget -q -O libstdc++6 http://security.ubuntu.com/ubuntu/pool/main/g/gcc-5/libstdc++6_5.4.0-6ubuntu1~16.04.10_amd64.deb
-- sudo dpkg --force-all -i libstdc++6
+# before_install:
+#   # This workaround is required to avoid libstdc++ errors while running "extended" hugo with SASS support.
+# - wget -q -O libstdc++6 http://security.ubuntu.com/ubuntu/pool/main/g/gcc-5/libstdc++6_5.4.0-6ubuntu1~16.04.10_amd64.deb
+# - sudo dpkg --force-all -i libstdc++6
 
 
 install:
