@@ -28,6 +28,7 @@ We'll cover the first three points in this post, with the remainder to come in a
 These series of posts is aimed at between the newcomer, to intermediate programmer. There may be some concepts which I won't be covering to due brevity, and because there are several guides out there who have explained these concepts better than I could. 
 
 Having said that, I assume you are comfortable with the following:
+
 - Navigating your way through a terminal
 - Happy with the basic set of `git` commands
 - Understand how website requests are made (though this isn't crucial)
