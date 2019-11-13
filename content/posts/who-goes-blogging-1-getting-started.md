@@ -10,6 +10,7 @@ tags:
   - cloudflare
   - portfolio-site
   - github-pages
+lastmod: 2019-11-13
 ---
 
 I've done a lot of talking about how this website is currently, but let's talk about how you can get set up with the same as I have done here. Let's recap exactly what that is:
@@ -28,17 +29,22 @@ We'll cover the first three points in this post, with the remainder to come in a
 These series of posts is aimed at between the newcomer, to intermediate programmer. There may be some concepts which I won't be covering to due brevity, and because there are several guides out there who have explained these concepts better than I could. 
 
 Having said that, I assume you are comfortable with the following:
+
 - Navigating your way through a terminal
 - Happy with the basic set of `git` commands
 - Understand how website requests are made (though this isn't crucial)
 
 # Hugo Static Site Builder
 
-There are many website building platforms out there for your static sites. There is no one platform to rule them all, you should decide on which one works best for you. For myself, I wanted to explore further into the realm of Golang as a learning opportunity with the goal of creating my own Hugo template at some point. Additional, Hugo is completely open source, so you can [check out](https://github.com/gohugoio/hugo) how it works too!
+There are many website building platforms out there for your static sites. There is no one platform to rule them all, you should decide on which one works best for you. For myself, I wanted to explore further into the realm of Golang as a learning opportunity. I've built websites from scratch before from basic HTML, CSS, and JavaScript all the way to using frameworks such as React and Angular. 
+
+However while using these frameworks provide you with the highest flexibility in terms of customisability, they can take a while to get something out there and hosted, when really you just want something to generate the HTML and CSS for you and allow you to focus on the content.
+
+That's where static site frameworks come in. They usually have some opinionated folder structure and some nuances on how things in a website should be, but comply by these rules and the website will be generated for you! Once such example is [Hugo](https://gohugo.io/) - which is what this website is built on; it's opensource and written in Golang, you can even check out the [source code](https://github.com/gohugoio/hugo) to see how it works!
 
 > While Hugo itself is free and comes with a bunch of [themes](https://themes.gohugo.io/) you can use for free, there are fancier and more feature-rich themes available to purchase from designers which may have a cost attached to them.
 
-I won't aim to reproduce a complete list of comparisons against other platforms, other people have already made the comparisons much better than I could! But nevertheless, some that I am aware of off the top of my head are [Jekyll](https://jekyllrb.com/), [Ghost](https://ghost.org/), and the infamous [WordPress](https://wordpress.com/).
+Hugo isn't the only static site framework out there, there are plenty more too each with their own pros and cons. I won't aim to reproduce a complete list of comparisons against other platforms, other people have already made the comparisons much better than I could! But nevertheless, some that I am aware of off the top of my head are [Jekyll](https://jekyllrb.com/), [Ghost](https://ghost.org/), and the infamous [WordPress](https://wordpress.com/) - so investigate using your search engine of choice if you wish to know the differences.
 
 All set on Hugo? Awesome - let's get started on some project foundations.
 
@@ -51,7 +57,7 @@ I mentioned before I split my website into two repos:
 
 For the first repo, it doesn't really matter what you call it - you can call it your destined domain name, or `blog-source`, or `dogs-are-great`. It's the second one which you will need to think about, where it must be `<YOUR_USERNAME>.github.io` - which will ultimately be made available at `https://<YOUR_USERNAME>.github.io`.
 
-Create two [empty Github repos now](https://github.com/new), then clone both to your environment.
+Create two [empty Github repos now](https://github.com/new), then clone both to your environment. If you don't have git available in your terminal, check out [this guide](https://help.github.com/en/github/getting-started-with-github/set-up-git) to get set up.
 ```bash
 mkdir ~/projects
 cd projects

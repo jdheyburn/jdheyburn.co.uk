@@ -17,6 +17,8 @@ pygmentscodefencesguesssyntax = true
 
 googleAnalytics = "UA-139246187-1"
 
+lastmod = [":fileModTime", ":default"]
+
 [params]
     author = "Joseph D. Heyburn"
     description = "Ramblings of a tech guy"
