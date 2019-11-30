@@ -46,6 +46,10 @@ That's where static site frameworks come in. They usually have some opinionated 
 
 Hugo isn't the only static site framework out there, there are plenty more too each with their own pros and cons. I won't aim to reproduce a complete list of comparisons against other platforms, other people have already made the comparisons much better than I could! But nevertheless, some that I am aware of off the top of my head are [Jekyll](https://jekyllrb.com/), [Ghost](https://ghost.org/), and the infamous [WordPress](https://wordpress.com/) - so investigate using your search engine of choice if you wish to know the differences.
 
+> **UPDATE 2019-11-30**
+>
+> I came across [this thread](https://news.ycombinator.com/item?id=21616149) on HackerNews which ultimately lead me to this [comparison website](https://www.staticgen.com/). 
+
 All set on Hugo? Awesome - let's get started on some project foundations.
 
 # Git Set Up
