@@ -111,9 +111,56 @@ One thing to note down before we move on is to capture the Cloudflare DNS Namese
 
 Navigate to the [Namecheap management page](https://ap.www.namecheap.com/domains/list/) for your domain and enter the Cloudflare nameservers once you have selected **Custom DNS**.
 
-<center>{{< figure src="/images/namecheap-nameservers.png" caption="Make a note of these nameservers for your domain" alt="Screenshot depicting completed Cloudflare DNS nameservers" >}}</center>
+<center>{{< figure src="/images/namecheap-nameservers.png" caption="Add in your Cloudflare domains from previously" alt="Screenshot depicting completed nameservers pointing to Cloudflare" >}}</center>
 
-// TODO finish from here - should be focused on GitHub Pages
+Once this is done you may need to wait a while for the DNS updates to propagate throughout the world. While we're waiting for that, there's one final piece of the puzzle which can keep us busy.
+
+## GitHub Pages Configuration
+
+The last place to configure is GitHub Pages. Currently it is hosting at our `.github.io` domain, but we need to instruct it to redirect to our custom domain. There are two methods for doing this:
+
+1. Configure the repository settings
+1. Use a `CNAME` file in your repository
+
+### Configure the repository settings
+
+This is the quicker of the two solutions, so I advise to follow this step to understand if you have everything in place correctly. Once done then you can lock-in your changes with step 2 above.
+
+For this step, you need to navigate to the settings pages for your `.github.io` repo containing your rendered code.
+
+```
+https://github.com/<USERNAME>/<USERNAME>.github.io/settings
+```
+
+Now scroll down, keep going until you hit the **GitHub Pages** heading. Here you will see a form for entering a custom domain; do the honours and enter it in like below.
+
+// TODO screenshot of the form
+
+Now again wait for DNS to propagate across the world. When GitHub is happy with the changes then you will see the green banner similar to the one in the screenshot above. This means everything is being served up! Why not give it a try ourselves? Head to your domain now and see if everything is working!
+
+// TODO screenshot?
+
+### Solidying our changes with a CNAME file
+
+// TODO complete
+
+# Bonus: TLD Redirection
+
+Let me tell you a story. Your website is up and operational. You're super proud of it, and you give yourself a round of applause {{<emoji ":clap:" >}}
+
+But you don't want to be the only person looking at it, you want the whole world to! You tell your parents, your significant other, the dog off the street - they all remember the name of your website, but *was it at `.com` or `.<insert snazzy TLD here>`?*
+
+Of course, you domain isn't at `.com`, that's boring as hell! You just forked out $50 on a `.dev` TLD, and no one will see it!
+
+Luckily there is a way. You can buy additional domains at different TLDs and have them redirect to your one-domain-to-rule-them-all with little to no hassle! There is the cost of purchasing the domain and renewing it year after year, but with that being ~£10 or so per year - I'd call that a good insurance policy to ensure people land at your website!
+
+The steps are already defined in this post. For a breakdown of what they are:
+1. [Purchase a domain](#acquire-a-domain)
+1. [Create a new website in Cloudflare](#cloudflare-our-domain)
+1. Create a DNS A record to redirect to your correct domain
+1. Configure Namecheap to use Cloudflare's nameservers
+
+// TODO go through the steps
 
 Once you've purchased your domain we'll need to create a file in our `blog-source` repo called `CNAME` and populate it with the domain we purchased. In my case, mine looks like this:
 
@@ -138,4 +185,4 @@ Now for the final piece of the puzzle, adding in a CDN layer. I briefly spoke ab
 
 For this website I am using CloudFlare as the CDN, given it is free and the one I have most experience with. 
 
-# Bonus: Adding more top-level domains for redirection
+
