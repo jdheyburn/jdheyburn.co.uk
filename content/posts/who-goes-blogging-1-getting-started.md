@@ -5,11 +5,11 @@ description: Create your own portfolio site with no hassle using Hugo and GitHub
 images:
 - images/local_example_site.jpg
 tags:
-  - architecture
-  - cdn
-  - cloudflare
-  - portfolio-site
-  - github-pages
+- architecture
+- cdn
+- cloudflare
+- portfolio-site
+- github-pages
 lastmod: 2019-11-13
 ---
 
