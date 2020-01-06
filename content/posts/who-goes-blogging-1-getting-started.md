@@ -48,7 +48,11 @@ Hugo isn't the only static site framework out there, there are plenty more too e
 
 > **UPDATE 2019-11-30**
 >
-> I came across [this thread](https://news.ycombinator.com/item?id=21616149) on HackerNews which ultimately lead me to this [comparison website](https://www.staticgen.com/). 
+> I came across [this thread](https://news.ycombinator.com/item?id=21616149) on HackerNews which ultimately lead me to these comparison websites for static site generators:
+>
+> https://www.staticgen.com/
+>
+> https://staticsitegenerators.net/
 
 All set on Hugo? Awesome - let's get started on some project foundations.
 
