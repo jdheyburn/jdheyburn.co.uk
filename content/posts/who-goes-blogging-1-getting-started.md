@@ -78,6 +78,8 @@ Now that we have the repos set up, let's get started on building the website tem
 
 # Blog Bootstrapping
 
+Before you get started, you're going to need to install Hugo - head to [this page](https://gohugo.io/getting-started/installing) for instructions on going so. Once done continue on below.
+
 Firstly you would need to create your Hugo template. You can do this from either executing `hugo new <site|theme>` and building up from there - or do what I did which was to browse the [Hugo themes](https://themes.gohugo.io/) and `git clone` the example site for the chosen theme and then make your changes around that. It may entirely depend on your learning approach which way works best for you.
 
 In my case, I wanted to get up and running in the smallest time possible (isn't that the point of static site generators?), so I followed the approach above.
