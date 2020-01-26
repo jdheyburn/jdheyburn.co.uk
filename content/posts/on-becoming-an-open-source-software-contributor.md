@@ -45,7 +45,7 @@ However, more importantly, and one that is most beneficial to me is that...
 
 **You will forget that shit and will need to reference it back again!**
 
-<center>{{< figure src="/images/elephant_cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}</center>
+<center>{{< figure src="/images/elephant-cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}</center>
 
 We are only human right? There is no way we can remember what most of us did a few weeks ago let alone a project from 6+ months ago.
 
