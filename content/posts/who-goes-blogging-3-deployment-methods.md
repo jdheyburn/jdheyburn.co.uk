@@ -20,6 +20,7 @@ For this part, I will tell you about how I migrated from deploying via a script,
 > `CI/CD` is an acronym for Continuous Integration / Continuous Deployment which is a very important concept in the DevOps culture.
 > If you would like to find out more about that and DevOps culture, check out these resources {{<emoji ":point_down:" >}}
 >
+> - https://medium.com/faun/the-basics-of-continuous-integration-delivery-with-10-most-popular-tools-to-use-9514231533f0
 > - https://www.redhat.com/en/topics/devops/what-is-ci-cd
 > - https://www.atlassian.com/devops
 > - https://www.amazon.co.uk/dp/B07B9F83WM
