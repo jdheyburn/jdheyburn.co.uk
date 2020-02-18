@@ -15,7 +15,7 @@ draft: true
 
 Since [part 1](/posts/who-goes-blogging-1-getting-started/), we have been using a simple bash script called `deploy.sh` to build our Hugo website and upload it to our GitHub Pages repo. In [part 2](/posts/who-goes-blogging-2-custom-domain/) we modified it slightly to include the `CNAME` file post-build to ensure GitHub Pages uses the custom domain we set up in that same part.
 
-For this part, I will tell you about how I migrated from deploying via a script, to a CI/CD tool - namely [TravisCI](https://travis-ci.com/). Then, I will document how I migrated from this, to the new [GitHub Actions](https://github.com/features/actions), GitHub's offering into the CI/CD space.
+For this part, I will tell you about how I migrated from deploying via a script, to a CI/CD tool - namely [TravisCI](https://travis-ci.com/). Then I will document how I migrated from this, to the new [GitHub Actions](https://github.com/features/actions); GitHub's offering into the CI/CD space.
 
 > `CI/CD` is an acronym for Continuous Integration / Continuous Deployment which is a very important concept in the DevOps culture.
 > If you would like to find out more about that and DevOps culture, check out these resources {{<emoji ":point_down:" >}}
@@ -37,6 +37,29 @@ One of those hosted solutions is [TravisCI](https://travis-ci.com/). They have s
 So it is a good idea to set your source code repository on GitHub to be public. TravisCI does include (at the time of writing) private projects in their free plan, but you are capped in some shape or form on how much the platform will do for you. 
 
 {{< figure src="/images/travis-free.png" caption="Free is definitely a thing you love to see" alt="Screenshot of Travis free pricing plan" >}}
+
+## TravisCI Account Setup
+
+The TravisCI account setup for TravisCI is very streamlined - instead of creating *another* account for you to manage, it integrates in with GitHub, so this is the account you use to sign-up with. Head over to https://travis-ci.com/ and click on **Sign in with GitHub**.
+
+{{< figure src="/images/travis-landing.png" caption="You can't resist a big green button..." alt="Screenshot of Travis landing page" >}}
+
+GitHub will ask you if you *really* want to share some of your GitHub data with Travis. Travis seems like a nice person so why not?
+
+{{< figure src="/images/travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
+
+Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely {{<emoji ":frowning:" >}} - let's fix that!
+
+All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the **Activate** button.
+
+{{< figure src="/images/travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
+
+Now on the next screen you may or may not want the default selection which is `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however there it is a best practice to follow the *principle of least privilege* not just for users but for services too. For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io`. It also gives you a cleaner Travis dashboard too.
+
+{{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
+
+TODO After this stage, landing page https://travis-ci.com/account/repositories
+
 
 ## TravisCI Configuration
 
