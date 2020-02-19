@@ -54,7 +54,7 @@ All we've done so far is allowed Travis to reach GitHub for creating an account 
 
 {{< figure src="/images/travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
 
-Now on the next screen you may or may not want the default selection which is `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however there it is a best practice to follow the *principle of least privilege* not just for users but for services too. For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io`. It also gives you a cleaner Travis dashboard too.
+Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the *principle of least privilege*; not just for users but for services too. For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
 
 {{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
 
