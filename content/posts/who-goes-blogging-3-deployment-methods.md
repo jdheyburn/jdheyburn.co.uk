@@ -1,6 +1,6 @@
 ---
-date: 2019-12-20
-title: "Who Goes Blogging Pt. 3: Deploy Methods"
+date: 2019-02-22
+title: "Who Goes Blogging Pt. 3: Deployment Methods"
 description: Apply DevOps practices by continuously deploying your website on any new changes
 images:
 - images/namecheap_landing.png
@@ -40,23 +40,25 @@ So it is a good idea to set your source code repository on GitHub to be public. 
 
 ## TravisCI Account Setup
 
-The TravisCI account setup for TravisCI is very streamlined - instead of creating *another* account for you to manage, it integrates in with GitHub, so this is the account you use to sign-up with. Head over to https://travis-ci.com/ and click on **Sign in with GitHub**.
+The TravisCI account setup for TravisCI is very streamlined - instead of creating *another* account for you to manage, it integrates in with GitHub, so this is the account you use to sign-up with. Head over to https://travis-ci.com/ and click on `Sign in with GitHub`.
 
 {{< figure src="/images/travis-landing.png" caption="You can't resist a big green button..." alt="Screenshot of Travis landing page" >}}
 
 GitHub will ask you if you *really* want to share some of your GitHub data with Travis. Travis seems like a nice person so why not?
 
-{{< figure src="/images/travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
+<center>{{< figure src="/images/travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}</center>
 
 Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely {{<emoji ":frowning:" >}} - let's fix that!
 
-All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the **Activate** button.
+All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the `Activate` button.
 
 {{< figure src="/images/travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
 
-Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the *principle of least privilege*; not just for users but for services too. For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
+Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the [*principle of least privilege*](https://en.wikipedia.org/wiki/Principle_of_least_privilege); not just for users but for services too. 
 
-{{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
+For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
+
+<center>{{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
 
 TODO After this stage, landing page https://travis-ci.com/account/repositories
 
@@ -73,6 +75,8 @@ Let's break it down section by section.
 
 ### Build Environment
 
+These settings here all refer to the build environment that we'd like our project to build on.
+
 ```yml
 dist: xenial
 
@@ -85,8 +89,6 @@ env:
   matrix:
     secure: REDACTED
 ```
-
-These settings here all refer to the build environment that we'd like our project to build on.
 
 `dist` specifies what platform Travis should build the project on. In this case `xenial` refers to Ubuntu 16.04, which is a Linux distribution. There are [several others](https://docs.travis-ci.com/user/reference/overview/) to choose from and more likely than not you'll want the platform to be Linux. However if you had a Windows application written in `.NET` then you would likely want it built on a Windows Server since that is what supports it. 
 
