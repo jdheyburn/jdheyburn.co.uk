@@ -60,14 +60,28 @@ For the scope of this effort we're only wanting Travis to read and manipulate ag
 
 <center>{{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
 
-TODO After this stage, landing page https://travis-ci.com/account/repositories
+Your dashboard will have the two repositories displayed on the screen.
+
+### Back to GitHub
+
+The next step is required to permit Travis to push the built project to our GitHub Pages repo. We need to generate a secret with the permissions that Travis requires and keep it aside for the Travis config file later.
+
+Navigate to the [GitHub Personal Access Tokens](https://github.com/settings/tokens) page and click on `Generate new token`.
+
+You'll come across a page asking for the name of the token being created. It doesn't matter what you call it, but it may be useful to link it back to what it is being used for. You're also going to want to select the `repo` checkbox as done so below. After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
+
+<center>{{< figure src="/images/travis-github-pat.png" caption="TODO" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
+
+The token's secret will display on the next screen. **Make sure you copy it** and place it somewhere you can refer back to it later such as a text editor like Notepad - we'll need it again in the next section.
+
+<center>{{< figure src="/images/travis-github-pat-created.png" caption="TODO" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}</center>
 
 
 ## TravisCI Configuration
 
 Once we have our Travis account set up, we need to add in a [configuration file](https://docs.travis-ci.com/user/tutorial/) that Travis will read from to determine what steps we'd like it to perform.
 
-In our source code repository (`jdheyburn.co.uk` in my case) we want to create a file at the root directory and call it `.travis.yml`. See below for an example of how I configured mine
+In our source code repository (`jdheyburn.co.uk` in my case) we want to create a file at the root directory and call it `.travis.yml`. See below for an example of how I configured mine.
 
 {{< gist jdheyburn 073bd6d4cb9284774e7e7feee093d86f >}}
 
@@ -97,7 +111,7 @@ env:
 `env.global` allows us to define what variables should be set in the environment. This is done in the form of an array of strings in the format `key=value`. So given the example, `HUGO_VERSION` will be set to `0.58.3`. We'll come back to this later.
 
 `env.matrix` is the encrypted value that gets passed to the `GITHUB_TOKEN` environment variable which is used to allow Travis to commit the built project to our GitHub Pages repo. 
-- You're going to want to take the personal access token generated from GitHub in the earlier step and encrypt it using [this method](https://docs.travis-ci.com/user/environment-variables#defining-encrypted-variables-in-travisyml), then add it back to this setting
+- You're going to want to take the personal access token generated from GitHub in the earlier step and encrypt it using [this method](https://docs.travis-ci.com/user/environment-variables#encrypting-environment-variables), then add it back to this setting
 
 ### External Dependencies
 
@@ -196,4 +210,20 @@ That concludes the configuration section. Remember to change it or add in some o
 
 ## Bringing It All Together
 
+Now you've completed your config file, let's check it all in to GitHub.
+
+```bash
+git add --all
+git commit -m 'Adding CI'
+git push
+```
+
+Travis will automatically detect that a new change has been made against your repo. And with the inclusion of `.travis.yml`, it will now work against that file.
+
+You can view the status of your repository's build by navigating to it from the [dashboard](https://travis-ci.com/dashboard) and clicking on it.
+
+
+
 # From TravisCI to GitHub Actions
+
+If  In this next section I'll be walking through how 
