@@ -26,6 +26,8 @@ For this part, I will tell you about how I migrated from deploying via a script,
 > - https://www.atlassian.com/devops
 > - https://www.amazon.co.uk/dp/B07B9F83WM
 
+**Note**: if you're only interested in how to onboard GitHub Actions then [jump to that section below](#from-travisci-to-github-actions). Be wary that some of the content may refer to previous sections.
+
 # Moving Away From deploy.sh
 
 There's nothing necessarily wrong with using `deploy.sh` to push our code, however we want to get all the bells and whistles that Continuous Integration can provide to us such as checks to [verify the markdown](https://github.com/DavidAnson/markdownlint) - of which I hope to do a future blog post about.
@@ -54,13 +56,11 @@ All we've done so far is allowed Travis to reach GitHub for creating an account 
 
 {{< figure src="/images/travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
 
-Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the [*principle of least privilege*](https://en.wikipedia.org/wiki/Principle_of_least_privilege); not just for users but for services too. 
+Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the [*principle of least privilege*](https://en.wikipedia.org/wiki/Principle_of_least_privilege) (POLP); not just for users but for services too. 
 
 For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
 
-<center>{{< figure src="/images/travis-github-repos-selection.png" caption="TODO" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
-
-Your dashboard will have the two repositories displayed on the screen.
+<center>{{< figure src="/images/travis-github-repos-selection.png" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
 
 ### Back to GitHub
 
@@ -70,12 +70,11 @@ Navigate to the [GitHub Personal Access Tokens](https://github.com/settings/toke
 
 You'll come across a page asking for the name of the token being created. It doesn't matter what you call it, but it may be useful to link it back to what it is being used for. You're also going to want to select the `repo` checkbox as done so below. After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
 
-<center>{{< figure src="/images/travis-github-pat.png" caption="TODO" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
+<center>{{< figure src="/images/travis-github-pat.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
 
 The token's secret will display on the next screen. **Make sure you copy it** and place it somewhere you can refer back to it later such as a text editor like Notepad - we'll need it again in the next section.
 
-<center>{{< figure src="/images/travis-github-pat-created.png" caption="TODO" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}</center>
-
+<center>{{< figure src="/images/travis-github-pat-created.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}</center>
 
 ## TravisCI Configuration
 
@@ -222,8 +221,72 @@ Travis will automatically detect that a new change has been made against your re
 
 You can view the status of your repository's build by navigating to it from the [dashboard](https://travis-ci.com/dashboard) and clicking on it.
 
+If any of the commands in the `script` section of the config returned a [non-zero status code](https://en.wikipedia.org/wiki/Exit_status#Shell_and_scripts), the build will fail. If this happens then have a look at a build log and investigate the issue. More likely than not someone else has encountered the problem before, so Google is your gatekeeper to solutions!
 
+I won't run through the build log - since this post is getting fairly long already. In Travis you can expand what each stage is doing for some more verbose output. Essentially it is no different to what we did in our original `deploy.sh` script!
 
 # From TravisCI to GitHub Actions
 
-If  In this next section I'll be walking through how 
+If you're perfectly happy using TravisCI as your CI service then there's no need for you to do the steps below since it will be about migrating to [GitHub Actions](https://help.github.com/en/actions/getting-started-with-github-actions/about-github-actions); GitHub's CI equivalent to TravisCI. However, there are some benefits which are worth considering.
+
+## Benefits
+
+**Firstly and most importantly**, there is a whole community of shared actions (a set of build instructions) which can save you a HUGE amount of time when it comes to piecing together a CI pipeline. If the TravisCI config seemed a bit intimidating, then these will be a whole lot more gentler to you. 
+
+Whereas in our Travis config we had to define the individual commands needed to set up our environment and then how to build it, there's an [action](https://github.com/marketplace/actions/hugo-setup) for that! Want to include some markdown linting? There's an [action](https://github.com/marketplace/actions/markdownlint-cli) for that! 
+
+I think you folks get the picture now. There's an [awesome-actions](https://github.com/sdras/awesome-actions) repository worth checking out for more actions.
+
+**Secondly**, all your DevOps tools are in one place! I'm a big sucker for [GitLab](https://about.gitlab.com/) and while I don't use it for my personal projects, I've used it in a past life and found its seamless integration with all other tools second-to-none. Not having to worry about integrating between multiple services can only increase your productivity - allowing you to focus more on the application you're writing.
+
+## Pricing
+
+**However** - one downsides to GitHub Actions is how many build minutes you get. Remember Travis allowed unlimited build minutes for a public repository? With Actions - you are limited to [2,000 minutes in their free plan](https://github.com/pricing). 
+
+If you've been building your project in Travis already, you'll notice it has been building (in my case at least) in ~30 seconds. With a bit of maths we can then say we will have 4,000 builds in a month on GitHub Actions.
+
+Given that this isn't a huge project with multiple contributors working on it, I think it's safe to say we won't ever reach this limit - unless you're churning out blog posts left right and centre!
+
+Sound good? Let's go.
+
+## Creating Our Workflow 
+
+Like all great services in the world, there is [great documentation](https://help.github.com/en/actions) to go along with them. Take a look over there if you'd like the detailed version. 
+
+What I will be focusing on is the documentation for two sets of predefined actions; [actions-hugo](https://github.com/peaceiris/actions-hugo) for building our website, and [actions-gh-pages](https://github.com/peaceiris/actions-gh-pages) for deploying it to GitHub Pages. 
+
+### Deployment Keys Setup
+
+The very first thing we need to do is set up some keys that will allow our source repository (where the workflow will reside on) to push the built project to the GitHub Pages repo. 
+
+In your terminal, create those keys now and copy the contents of the public key to your clipboard. 
+
+```bash
+$ ssh-keygen -t rsa -b 4096 -C "$(git config user.email)" -f ~/.ssh/gh-pages -N ""
+Generating public/private rsa key pair.
+Your identification has been saved in /home/jdheyburn/.ssh/gh-pages.
+Your public key has been saved in /home/jdheyburn/.ssh/gh-pages.pub
+# ...
+
+$ pbcopy < ~/.ssh/gh-pages.pub
+```
+
+> MacBooks have a handy terminal command to do this called `pbcopy`. I've created an alias on my Linux laptop that does the same
+>
+> `alias pbcopy="xclip -selection clipboard"`
+
+In GitHub load up your GitHub Pages repo and navigate to `Settings` and then `Deploy keys`. Give it an appropriate name, and paste in the public key. Make sure you check `Allow write access`.
+
+{{< figure src="/images/gha-deploy-key.png" caption="Make sure you actually place the key here!" alt="GitHub Pages repo deploy keys page" >}}
+
+Copy the contents of the *private key* you created earlier (perhaps using your new command?! {{<emoji ":smirk:" >}}) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
+
+{{< figure src="/images/gha-secrets-key.png" caption="No secrets here!" alt="GitHub source code repo secrets page" >}}
+
+### Workflow Configuration
+
+In the root directory of your source code repo, create a directory called `.github/workflows`. In this directory is where GitHub Actions will look for jobs to do. Create a `yml` file in this directory to contain your build job definition. I went ahead and named mine `deploy.yml`, but you can name it whatever you like.
+
+I used the [example](https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-repository-type---project) provided in the `actions-gh-pages` documentation as a base for my build definition. 
+
+{{< gist jdheyburn b4b2cad15604de30f21ad0e1a85ee6b9 >}}
