@@ -1,5 +1,5 @@
 ---
-date: 2019-02-22
+date: 2020-02-22
 title: "Who Goes Blogging Pt. 3: Deployment Methods"
 description: Apply DevOps practices by continuously deploying your website on any new changes
 images:
