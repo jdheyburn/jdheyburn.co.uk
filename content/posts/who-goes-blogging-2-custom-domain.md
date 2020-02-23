@@ -1,6 +1,6 @@
 ---
 date: 2019-12-12
-title: "Who Goes Blogging Pt. 2: Custom Domain"
+title: "Who Goes Blogging 2: Custom Domain"
 description: Make your portfolio site professional by applying a custom domain to it
 images:
 - images/namecheap_landing.png

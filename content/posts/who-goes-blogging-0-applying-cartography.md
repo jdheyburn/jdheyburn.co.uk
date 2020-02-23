@@ -1,6 +1,6 @@
 ---
 date: 2019-09-11
-title: "Who Goes Blogging Pt. 0: Applying Cartography"
+title: "Who Goes Blogging 0: Applying Cartography"
 description: Mapping out the architecture of my portfolio website
 images:
 - images/blog-arch-cover.png
