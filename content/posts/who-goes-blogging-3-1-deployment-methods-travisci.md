@@ -32,11 +32,11 @@ So this post will focus on migrating to TravisCI from the `deploy.sh` script. Wh
 
 # Moving Away From deploy.sh
 
-There's nothing necessarily wrong with using `deploy.sh` to push our code, however we want to get all the bells and whistles that Continuous Integration can provide to us such as checks to [verify the markdown](https://github.com/DavidAnson/markdownlint) - of which I hope to do a future blog post about.
+There's nothing necessarily wrong with using `deploy.sh` to push our code, however we want to get all the bells and whistles that Continuous Integration can provide to us such as running a series of tests and checks automatically against every commit to our repository. Once those tests and checks pass then we can automate the deployment of our website.
 
 Now there are many CI tools out there with the most well known likely to be [Jenkins](https://jenkins.io/), but there are also hosted solutions available which will take your code and perform your pipelines against them. 
 
-One of those hosted solutions is [TravisCI](https://travis-ci.com/). They have several pricing options available, but for public open source projects, it is completely free! 
+One of those hosted solutions is [TravisCI](https://travis-ci.com/), where they integrate quite nicely with GitHub repositories to attach [webhooks](https://developer.github.com/webhooks/) against them. They have several pricing options available, but for public open source projects, it is completely free! 
 
 So it is a good idea to set your source code repository on GitHub to be public. TravisCI does include (at the time of writing) private projects in their free plan, but you are capped in some shape or form on how much the platform will do for you. 
 
@@ -48,7 +48,7 @@ The TravisCI account setup for TravisCI is very streamlined - instead of creatin
 
 {{< figure src="/images/travis-landing.png" caption="You can't resist a big green button..." alt="Screenshot of Travis landing page" >}}
 
-GitHub will ask you if you *really* want to share some of your GitHub data with Travis. Travis seems like a nice person so why not?
+GitHub will ask you if you *really* want to share some of your GitHub data with Travis.
 
 <center>{{< figure src="/images/travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}</center>
 
@@ -70,7 +70,9 @@ The next step is required to permit Travis to push the built project to our GitH
 
 Navigate to the [GitHub Personal Access Tokens](https://github.com/settings/tokens) page and click on `Generate new token`.
 
-You'll come across a page asking for the name of the token being created. It doesn't matter what you call it, but it may be useful to link it back to what it is being used for. You're also going to want to select the `repo` checkbox as done so below. After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
+You'll come across a page asking for the name of the token being created. It doesn't matter what you call it, but it may be useful to link it back to what it is being used for. You're also going to want to select the `repo` checkbox as done so below. 
+
+After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
 
 <center>{{< figure src="/images/travis-github-pat.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
 
@@ -134,9 +136,9 @@ Remember we defined `HUGO_VERSION` earlier? This is where it is called back agai
 
 ### Previous Issues
 
-In an older version of the Travis `xenial` distribution used to build the project, there was an additional dependency I needed to include. The `hugo-coder` requires to be built with Hugo Extended (notice how this is the version defined in the previous section) since it requires Sass/SCSS support. 
+In a previous version of `hugo` I used, there was an additional dependency I needed to include. The `hugo-coder` theme requires to be built with Hugo Extended since it requires Sass/SCSS support. 
 
-This required a library which was not included in the distribution in the past. On the plus side - Travis allows us to define some more steps which you can see below.
+For this particular Hugo Extended version, it required a library which was not included in the build server distribution in the past. On the plus side - Travis allows us to define additional build steps to ensure all required libraries are on the build server beforehand.
 
 ```yml
 before_install:
@@ -145,7 +147,7 @@ before_install:
  - sudo dpkg --force-all -i libstdc++6
 ```
 
-This stage of the pipeline existed before the `install` config defined above. Simply put, all it is doing is pulling the required library and installing it on the build server.
+However in later versions of Hugo (including the one I am using today) this dependency is no longer required, hence why it is commented out in `.travis.yml`.
 
 You may not need this stage in your pipeline, I know my project no longer requires it. However this may come in handy later knowing that you have the option of specifying more pipeline steps if the build distribution you're using requires some additional dependencies.
 
@@ -197,15 +199,19 @@ deploy:
   verbose: true
 ```
 
-For the last time, let's talk about each setting here.
+For the last time, let's walk through what each of these is doing.
 
 - `provider` tells Travis this is a GitHub Pages deployment
 - `skip-cleanup` set to `true`, so that Travis does not delete the build before we've got the chance to upload it
-- `github-token` is set to the environment variable `$GITHUB_TOKEN` which was set for us earlier on in the build environment
-- `keep-history` performs an incremental commit against the project. Setting it to `true` allows us to view back the changes in the commit history such as [this one](https://github.com/jdheyburn/jdheyburn.github.io/commit/419da0cc71415d0253996b823d4ccf6844db4042)
-- `local-dir` specifies the directory that should be pushed to the target repo. We set it to `public` because that is the name of the generated website directory from the previous `script` step
+- `github-token` is set to the environment variable `$GITHUB_TOKEN` which was set for us earlier on in the build environment.
+  - This is passed to the provider so that it has valid credentials to push the code to the GitHub Pages repo.
+- `keep-history` performs an incremental commit against the project
+  - Setting it to `true` allows us to view back the changes in the commit history such as [this one](https://github.com/jdheyburn/jdheyburn.github.io/commit/419da0cc71415d0253996b823d4ccf6844db4042)
+- `local-dir` specifies the directory that should be pushed to the target repo
+  - We set it to `public` because that is the name of the generated website directory from the previous `script` step
 - `repo` is the target repo where we should be deploying to
-- `target-branch` is the branch that we want `local-dir` to be pushed to. For our setup we are using `master`
+- `target-branch` is the branch that we want `local-dir` to be pushed to
+  - For our setup we are using `master`
 - `verbose` specifies how much detail Travis will log about its deploy activities
 
 That concludes the configuration section. Remember to change it or add in some other functionality needed for your project and save it to `.travis.yml`. 
@@ -224,9 +230,7 @@ Travis will automatically detect that a new change has been made against your re
 
 You can view the status of your repository's build by navigating to it from the [dashboard](https://travis-ci.com/dashboard) and clicking on it.
 
-If any of the commands in the `script` section of the config returned a [nonzero status code](https://en.wikipedia.org/wiki/Exit_status#Shell_and_scripts), the build will fail. If this happens then have a look at a build log and investigate the issue. More likely than not someone else has encountered the problem before, so Google is your gatekeeper to solutions!
-
-I won't run through the build log - since this post is getting fairly long already. In Travis you can expand what each stage is doing for some more verbose output. Essentially it is no different to what we did in our original `deploy.sh` script!
+If any of the commands in the `script` section of the config return a [nonzero status code](https://en.wikipedia.org/wiki/Exit_status#Shell_and_scripts), the build will fail. If this happens then have a look at a build log and investigate the issue. More likely than not someone else has encountered the problem before, so Google is your gatekeeper to solutions!
 
 # Conclusion
 
