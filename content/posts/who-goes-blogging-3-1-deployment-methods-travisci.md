@@ -1,14 +1,13 @@
 ---
-date: 2020-02-23
+date: 2020-02-25
 title: "Who Goes Blogging 3.1: Deployment Methods - TravisCI"
 description: Apply DevOps practices by continuously deploying your website on any new changes, with an introduction to TravisCI
 images:
-- images/namecheap_landing.png
+- images/travisci-card.png
 tags:
 - ci/cd
 - travisci
 - github-actions
-draft: true
 ---
 
 # Recap
@@ -231,6 +230,10 @@ Travis will automatically detect that a new change has been made against your re
 You can view the status of your repository's build by navigating to it from the [dashboard](https://travis-ci.com/dashboard) and clicking on it.
 
 If any of the commands in the `script` section of the config return a [nonzero status code](https://en.wikipedia.org/wiki/Exit_status#Shell_and_scripts), the build will fail. If this happens then have a look at a build log and investigate the issue. More likely than not someone else has encountered the problem before, so Google is your gatekeeper to solutions!
+
+Once you've got a successful build, that means your website has been deployed to the GitHub Pages repo and will be available on the web to view. In a browser you can now view your changes on the website. 
+
+If they aren't there then your browser is most likely caching an older version. By default, websites served by GitHub Pages have a browser cache TTL [set to 10 minutes](https://webapps.stackexchange.com/questions/119286/caching-assets-in-website-served-from-github-pages). So you can either wait 10 minutes, or clear your browser cache!
 
 # Conclusion
 
