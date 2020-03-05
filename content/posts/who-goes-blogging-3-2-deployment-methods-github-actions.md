@@ -1,5 +1,5 @@
 ---
-date: 2020-02-30
+date: 2020-03-05
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 description: Migrating to GitHub Actions as our CI tool
 images:
@@ -8,16 +8,21 @@ tags:
 - ci/cd
 - travisci
 - github-actions
-draft: true
 ---
 
-# From TravisCI to GitHub Actions
+# From TravisCI to GitHub Actions 
 
-If you're perfectly happy using TravisCI as your CI service then there's no need for you to do the steps below since it will be about migrating to [GitHub Actions](https://help.github.com/en/actions/getting-started-with-github-actions/about-github-actions); GitHub's CI equivalent to TravisCI. However, there are some benefits which are worth considering.
+In the [previous post](/posts/who-goes-blogging-3-1-deployment-methods-travisci/) we looked at moving to a CI/CD model by moving from the `deploy.sh` script to TravisCI.
 
-## Benefits
+In this post we will look at how we can migrate from TravisCI to [GitHub Actions](https://help.github.com/en/actions/getting-started-with-github-actions/about-github-actions), GitHub's own CI/CD tool. 
 
-**Firstly and most importantly**, there is a whole community of shared actions (a set of build instructions) which can save you a HUGE amount of time when it comes to piecing together a CI pipeline. If the TravisCI config seemed a bit intimidating, then these will be a whole lot more gentler to you. 
+This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! {{<emoji ":rocket:" >}}
+
+## Benefits {{<emoji ":white_check_mark:" >}}
+
+Let's talk about why we want to migrate away from TravisCI in the first place.
+
+**Firstly and most importantly**, there is a whole community of shared actions (a set of build instructions) which can save you a *huge* amount of time when it comes to piecing together a CI pipeline. If the TravisCI config seemed a bit intimidating, then these will be a whole lot more gentler to you. 
 
 Whereas in our Travis config we had to define the individual commands needed to set up our environment and then how to build it, there's an [action](https://github.com/marketplace/actions/hugo-setup) for that! Want to include some markdown linting? There's an [action](https://github.com/marketplace/actions/markdownlint-cli) for that! 
 
@@ -27,7 +32,7 @@ I think you folks get the picture now. There's an [awesome-actions](https://gith
 
 **Lastly**, all configuration is managed in the workflow configuration file. One enhancement in particular that we will be introducing can be achieved with an additional setting in the workflow config file; for us to achieve the same in Travis would have to be done via the GUI. I'm a big sucker for having configuration baked into code so this is a very good plus.
 
-## Pricing
+## Pricing {{<emoji ":alarm_clock:" >}}
 
 **However** - one downsides to GitHub Actions is how many build minutes you get. Remember Travis allowed unlimited build minutes for a public repository? With Actions - you are limited to [2,000 minutes in their free plan](https://github.com/pricing). 
 
@@ -65,7 +70,7 @@ $ pbcopy < ~/.ssh/gh-pages.pub
 
 In GitHub load up your GitHub Pages repo and navigate to `Settings` and then `Deploy keys`. Give it an appropriate name, and paste in the public key. Make sure you check `Allow write access`.
 
-{{< figure src="/images/gha-deploy-key.png" caption="Make sure you actually place the key here!" alt="GitHub Pages repo deploy keys page" >}}
+{{< figure src="/images/gha-deploy-key.png" caption="" alt="GitHub Pages repo deploy keys page" >}}
 
 Copy the contents of the *private key* you created earlier (perhaps using your new command?! {{<emoji ":smirk:" >}}) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
 
@@ -104,7 +109,7 @@ An enhancement that we're adding is the `on.schedule.cron` setting. This tells A
 
 > The benefit to this is the way in which Hugo generates content. Hugo will only build content pages where the date on the content is either today or in the past, and is not a draft.
 >
-> Therefore if you had written a post due to be published in the future, you can define that date and have the daily Hugo build publish it when that date has been reached! 
+> Therefore if you had written a post due to be published in the future, you can define that date and have the daily Hugo build publish it when that date has been reached - which is exactly how this blog post was published!
 
 `jobs` is the field that contains the work we want to run. We're giving the job a name of `deploy` and telling it to run on `ubuntu-18.04` - which is the equivalent to `bionic` in Ubuntu. 
 
@@ -136,7 +141,9 @@ steps:
       submodules: true
 ```
 
-> It's worth noting that we didn't have to do this step for Travis - since it will checkout the repository with submodules already. This is because GitHub Actions can be used for many more things than just repository code manipulation where you may not necessarily need the repo checked out.
+> It's worth noting that we didn't have to do this step for Travis - since it will checkout the repository with submodules already. 
+> 
+> This is because GitHub Actions can be used for many more things than just repository code manipulation where you may not necessarily need the repo checked out.
 
 ### Build and Deploy Setup
 
@@ -184,7 +191,7 @@ Lastly, we can't forget to copy the `CNAME` file we made in [part 2](/posts/who-
 For the deployment to GitHub Pages I'm using the action [actions-gh-pages](https://github.com/peaceiris/actions-gh-pages). Again it only requires a bare minimum of parameters to work; an explanation of what I'm using is:
 
 - `deploy_key` is the *private key* we set up [earlier in this post](#deployment-keys-setup) in `Settings` -> `Secrets`
-  - If you didn't name yours `deploy_key` then you'll need to change it here too.
+  - If you didn't name yours `DEPLOY_KEY` then you'll need to change it here too.
 - `external_repository` tells the action where we want the built website to go to - we set this to our GitHub Pages repo
 - `publish_branch` is the branch of the repo we publish to
 - `publish_dir` is the directory on the build server that we want to push to the repo
@@ -198,7 +205,7 @@ If you're migrating from a previous CI tool (perhaps Travis?) then you'll need t
 
 For Travis, you can do that by navigating to your source code repo settings on Travis (https://travis-ci.com/jdheyburn/jdheyburn.co.uk/settings for me) and disabling `Build pushed branches`.
 
-{{< figure src="/images/travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}
+<center>{{< figure src="/images/travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}</center>
 
 Now that's done, go ahead and check in your new GitHub Actions workflow file and then navigate to the `Actions` tab of your source code repo on GitHub.
 
@@ -208,9 +215,14 @@ git commit -m 'Migrate to GitHub Actions'
 git push
 ```
 
-{{< figure src="/images/github-actions-build.png" caption="" alt="Successful build on GitHub Actions" >}}
+{{< figure src="/images/github-actions-build.png" caption="Great success!" alt="Successful build on GitHub Actions" >}}
 
 Hopefully your build went to success! If it didn't have a look through the logs and see what the issue was. It took me a few builds to determine my finalised workflow config. You can even see it at my [source code repo Actions page](https://github.com/jdheyburn/jdheyburn.co.uk/actions).
 
-# Conclusion & Review
+# Conclusion
 
+Now that we've migrated across over to GitHub Actions, we can close out the permissions that TravisCI has on our projects, and demise any secret keys we gave it.
+
+From the tone of my writing you can probably tell which one I favour. That's not to say I do not like TravisCI - each service has its own pros and cons. For this particular project, I prefer the one platform approach for which I am used to in GitLab. The number of build minutes available for GA is a concern, but not one I will have to worry about for now.
+
+Thanks for reading! {{<emoji ":full_moon_with_face:" >}}
