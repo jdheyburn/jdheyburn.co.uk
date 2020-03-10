@@ -1,9 +1,9 @@
 ---
-date: 2020-03-11
+date: 2020-03-10
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 description: Migrating to GitHub Actions as our CI tool
 images:
-- images/namecheap_landing.png
+- images/github-actions-build.png
 tags:
 - ci/cd
 - travisci
