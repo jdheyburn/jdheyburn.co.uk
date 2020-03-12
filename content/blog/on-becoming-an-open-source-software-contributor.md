@@ -9,6 +9,8 @@ tags:
 - documentation
 - terraform
 - opensource
+aliases:
+  - /posts/on-becoming-an-open-source-software-contributor/
 ---
 
 This is going to be a relatively shorter post that'll be in two parts since it's more of a self-promotion... But as of this Friday just gone, I finally had a [pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/11388) approved to be merged to [terraform--provider-aws](https://github.com/terraform-providers/terraform-provider-aws)!

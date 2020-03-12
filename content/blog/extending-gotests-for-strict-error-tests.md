@@ -6,6 +6,8 @@ tags:
 - golang
 - java
 - testing
+aliases:
+  - /posts/extending-gotests-for-strict-error-tests/
 ---
 
 # Strict Error Tests in Java

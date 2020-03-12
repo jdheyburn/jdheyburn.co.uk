@@ -8,6 +8,8 @@ tags:
 - ci/cd
 - travisci
 - github-actions
+aliases:
+  - /posts/who-goes-blogging-3-2-deployment-methods-github-actions/
 ---
 
 # From TravisCI to GitHub Actions 

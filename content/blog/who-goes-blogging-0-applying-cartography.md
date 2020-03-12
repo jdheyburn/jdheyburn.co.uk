@@ -13,6 +13,7 @@ tags:
 # Redirect the old slug name to the new one
 aliases:
   - /posts/applying-cartography/
+  - /posts/who-goes-blogging-0-appplying-cartography/
 ---
 
 # Applying Cartography

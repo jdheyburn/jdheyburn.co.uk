@@ -11,6 +11,8 @@ tags:
 - portfolio-site
 - github-pages
 lastmod: 2019-11-13
+aliases:
+  - /posts/who-goes-blogging-1-getting-started/
 ---
 
 I've done a lot of talking about how this website is currently, but let's talk about how you can get set up with the same as I have done here. Let's recap exactly what that is:

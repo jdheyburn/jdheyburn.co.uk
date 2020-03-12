@@ -4,6 +4,8 @@ title: Blog Bootstrap
 description: A short introduction to the blog.
 tags:
 - blabber
+aliases:
+  - /posts/blog-bootstrap/
 ---
 
 Howdy! {{<emoji ":wave:" >}}

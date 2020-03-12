@@ -6,6 +6,8 @@ tags:
 - python
 - testing
 - typing
+aliases:
+  - /posts/three-ways-to-spice-up-your-python-code/
 ---
 
 # Spice Up Your ~~Life~~ Python {{<emoji ":snake:" >}}
