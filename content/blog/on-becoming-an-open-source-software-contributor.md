@@ -2,6 +2,7 @@
 date: 2020-01-26
 title: "On Becoming An Open Source Software Contributor"
 description: Some words about having my first open source pull request merged to terraform-provider-aws
+type: posts
 images:
 - images/terraform-aws.png
 tags:

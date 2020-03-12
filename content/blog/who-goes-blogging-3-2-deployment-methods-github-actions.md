@@ -2,6 +2,7 @@
 date: 2020-03-10
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 description: Migrating to GitHub Actions as our CI tool
+type: posts
 images:
 - images/github-actions-build.png
 tags:

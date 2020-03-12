@@ -2,6 +2,7 @@
 date: 2020-02-25
 title: "Who Goes Blogging 3.1: Deployment Methods - TravisCI"
 description: Apply DevOps practices by continuously deploying your website on any new changes, with an introduction to TravisCI
+type: posts
 images:
 - images/travisci-card.png
 tags:

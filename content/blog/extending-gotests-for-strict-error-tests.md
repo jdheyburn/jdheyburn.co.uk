@@ -2,6 +2,7 @@
 date: 2019-04-29
 title: Extending Gotests for Strict Error Tests
 description: Here I document about a custom template used for enhancing how errors are tested in the gotests library.
+type: posts
 tags:
 - golang
 - java
