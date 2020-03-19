@@ -19,6 +19,8 @@ googleAnalytics = "UA-139246187-1"
 
 lastmod = [":fileModTime", ":default"]
 
+enableEmoji = true
+
 [params]
     author = "Joseph D. Heyburn"
     description = "Ramblings of a tech guy"
@@ -26,6 +28,7 @@ lastmod = [":fileModTime", ":default"]
     info = ""
     avatarurl = "images/me.jpg"
     footercontent = ""
+    toc = true
 
     dateformat = "2 January 2006"
 
@@ -99,3 +102,6 @@ lastmod = [":fileModTime", ":default"]
         weight = 5
         url = "/contact/"
 
+[taxonomies]
+    series = "series"
+    tag = "tags"

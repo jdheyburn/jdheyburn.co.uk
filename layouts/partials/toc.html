@@ -1,0 +1,10 @@
+{{ if and (.Site.Params.toc) (gt .WordCount 400) }}
+<div class="highlight">
+ 
+    <code class="language-bash" data-lang="bash" style="color:unset;background-color: unset;font-size: 2.5rem;">
+        <span style="color:#24909d">echo</span> <span style="color:#ed9d13">"</span><span style="color:#40ffff">$TableOfContents</span><span style="color:#ed9d13">"</span>
+    </code>
+
+</div>
+{{ .TableOfContents }}
+{{ end }}

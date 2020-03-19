@@ -9,7 +9,7 @@ aliases:
   - /posts/blog-bootstrap/
 ---
 
-Howdy! {{<emoji ":wave:" >}}
+Howdy! :wave:
 
 This site will be an area for me to braindump everything and anything that comes across my mind - although I'll try my best to keep it tech-focused!
 
