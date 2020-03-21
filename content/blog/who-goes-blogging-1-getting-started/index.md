@@ -6,7 +6,7 @@ type: posts
 series:
 - Who Goes Blogging
 images:
-- images/local_example_site.jpg
+- local_example_site.jpg
 tags:
 - architecture
 - cdn
@@ -105,7 +105,7 @@ hugo serve
 
 That last command will locally serve the example site, so that you can view it at `http://localhost:1313/`.
 
-{{< figure src="/images/local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
+{{< figure src="local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
 
 ### Experimenting
 
@@ -178,8 +178,8 @@ After following the process in the link prior, you should be able to invoke your
 In this post, we have done the following:
 
 1. Created two GitHub repos:
-  - one for storing the source code for the website
-  - another containing the rendered web pages 
+    - one for storing the source code for the website
+    - another containing the rendered web pages 
 1. Built Hugo locally for development using `hugo serve`
 1. Written a script for deployment 
 1. Deployed to GitHub Pages

@@ -144,11 +144,11 @@ func Test_validateDogName(t *testing.T) {
 From the above there are three highlighted changes, let's go over them individually:
 
 1. `wantErr error` 
-  - we are changing this from `bool` so that we can make a comparison against the error returned from the function
-1. `wantErr: errors.New("dog cannot have symbols in their name"),`
-  - this is the error struct that we are expecting
-1. `if tt.wantErr != nil && !reflect.DeepEqual(err, tt.wantErr) {`
-  - check to make sure the test is expected an error, if so then compare it against the returned error
+    - we are changing this from `bool` so that we can make a comparison against the error returned from the function
+2. `wantErr: errors.New("dog cannot have symbols in their name"),`
+    - this is the error struct that we are expecting
+3. `if tt.wantErr != nil && !reflect.DeepEqual(err, tt.wantErr) {`
+    - check to make sure the test is expected an error, if so then compare it against the returned error
 
 Point 3 provides additional support if there was a test case that did not expect an error. Note how `wantErr` is omitted entirely from the test case below.
 
@@ -166,13 +166,11 @@ Point 3 provides additional support if there was a test case that did not expect
 Gotests gives us the ability to provide our own templates for generating tests, and can easily be integrated into your text editor of choice. I'll show you how this can be done in VSCode.
 
 1. Check out gotests and copy the templates directory to a place of your choosing
-  - `git clone https://github.com/cweill/gotests.git`
-  - `cp -R gotests/internal/render/templates ~/scratch/gotests`
-
+    - `git clone https://github.com/cweill/gotests.git`
+    - `cp -R gotests/internal/render/templates ~/scratch/gotests`
 2. Overwrite the contents of function.tmpl with [the contents of this Gist](https://gist.github.com/jdheyburn/978e7b84dc9c197bcdd41afece2edab5)
-
 3. Add the following setting to VSCode's settings.json
-  - `"go.generateTestsFlags": ["--template_dir=~/scratch/templates"]` 
+    - `"go.generateTestsFlags": ["--template_dir=~/scratch/templates"]` 
 
 Once you have done that, future tests will now generate with stricter error testing! :tada:
 

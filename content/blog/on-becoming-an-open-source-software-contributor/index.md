@@ -4,7 +4,7 @@ title: "On Becoming An Open Source Software Contributor"
 description: Some words about having my first open source pull request merged to terraform-provider-aws
 type: posts
 images:
-- images/terraform-aws.png
+- card.png
 tags:
 - aws
 - documentation
@@ -48,12 +48,12 @@ However, more importantly, and one that is most beneficial to me is that...
 
 **You will forget that shit and will need to reference it back again!**
 
-<center>{{< figure src="/images/elephant-cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}</center>
+{{< figure class="center" src="elephant-cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}
 
 We are only human right? There is no way we can remember what most of us did a few weeks ago let alone a project from 6+ months ago.
 
 ### Example
-
+  
 As an example of this a few years ago at a previous employer, I worked on a project to build a number of microservices that acted as an onboarding layer to integrate between internal corporate services (e.g. user entitlements, processes that user had access to, etc.) and [AppDynamics](https://www.appdynamics.com/).
 
 I laid down all the flows, the design decisions, the architecture, the models, etc., on my documentation tool of choice (currently it's [Confluence](https://www.atlassian.com/software/confluence)) as a place of reference should either my team, or myself need to refer back to it later on. 

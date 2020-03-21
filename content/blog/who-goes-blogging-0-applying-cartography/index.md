@@ -6,7 +6,7 @@ type: posts
 series:
 - Who Goes Blogging
 images:
-- images/blog-arch-cover.png
+- blog-arch-cover.png
 tags:
 - architecture
 - cdn
@@ -86,5 +86,5 @@ So if you're interested in having a setup like this, then over the next few post
 
 \- jdheyburn
 
-[blog_arch]: /images/blog-arch-cover.png
-[analytics_example]: /images/analytics_example.png
+[blog_arch]: blog-arch-cover.png
+[analytics_example]: analytics_example.png

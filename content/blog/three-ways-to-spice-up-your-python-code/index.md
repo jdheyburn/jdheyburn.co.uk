@@ -186,17 +186,16 @@ Yikes, that's a misleading error! Having a look at the error straight away, you'
 What this is actually error-ing on is how an int is being concatenated to a str on the left-hand side of the + operator.
 
 > Under the hood, Python believe you are trying to do a __string concatenation__ because the parameter is of type string, and is on the left-hand side of the + operator. The below shows a valid way to perform a string concatenation:
-
+>
 > `"1" + "1" # -> "11"`
-
 >
 > If the int value was on the left-hand side of the operator and you passed a string, you'd get something like this:
-> ```
+>```
 >>> 1 + "1"
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: unsupported operand type(s) for +: 'int' and 'str'
-```
+>   Traceback (most recent call last):
+>  File "<stdin>", line 1, in <module>
+>TypeError: unsupported operand type(s) for +: 'int' and 'str'
+>```
 
 But changing the right-side of the operator won't fix this for us. What we need is to implement typing.
 
@@ -423,7 +422,7 @@ I hope the hints detailed in this helped you as much as it did for me! I'm sure 
 Thanks for reading :smiley:
 
 
-[type_hinting]: /images/type_hinting.png
-[type_checking]: /images/type_checking.png
-[type_checking_bad_return]: /images/type_checking_bad_return.png
-[type_checking_bad_assign]: /images/type_checking_bad_assign.png
+[type_hinting]: type_hinting.png
+[type_checking]: type_checking.png
+[type_checking_bad_return]: type_checking_bad_return.png
+[type_checking_bad_assign]: type_checking_bad_assign.png
