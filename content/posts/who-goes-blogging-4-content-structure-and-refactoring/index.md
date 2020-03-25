@@ -22,7 +22,7 @@ Some of the improvements to make:
 Hugo has a few different ways you can organise your content, known as [Page Bundles](https://gohugo.io/content-management/page-bundles/). So far I've been adopting the **Branch Bundle** where I have all my articles in named markdown files under the `content/posts` directory, and storing all images under the `static/images` - so the article at `content/posts/blog-bootstrap.md` will be available at `/posts/blog-bootstrap/`. As time has gone on, the images directory has gotten rather large and difficult to understand what images apply to what posts.
 
 
-The alternative way to organise content is the **Leaf Bundle**. This is where at a branch level you have a directory with the name of the article you wish to publish, followed by an `index.md` file with the article content such as `content/posts/blog-bootstrap/index.md`. Any page resources defined in this directory can be referenced relatively in the markdown files within it, such that any images can be stored within `content/posts/blog-bootstrap/` and referred to in the markdown as `{{< figure src="my-relative-img.png" ...` as opposed to `{{< figure src="/images/my-not-relative-img.png" ...`. 
+The alternative way to organise content is the **Leaf Bundle**. This is where at a branch level you have a directory with the name of the article you wish to publish, followed by an `index.md` file with the article content such as `content/posts/blog-bootstrap/index.md`. Any page resources defined in this directory can be referenced relatively in the markdown files within it, such that any images can be stored within `content/posts/blog-bootstrap/` and referred to in the markdown as `figure src="my-relative-img.png" ...` as opposed to `src="/images/my-not-relative-img.png" ...`. 
 
 This allows me to organise content much more effectively such that we will be going from this structure:
 
@@ -78,20 +78,47 @@ content/posts
 
 ### Script
 
-This is something we can script pretty easily. Firstly to add new leaves to our branch at `content/posts` we can use the below:
+We can script something that can do this for us easily enough.
 
-```bash
+{{<highlight bash "linenos=table" >}}
+# in project root dir
 posts=$(find content/posts -type f -name '*.md' -not -path '**/index.md' -not -path '**/_index.md')
 echo "$posts" | while read p; do
-    filename=$(basename -- "$p")
-    title="${filename%.*}"
-    mkdir content/posts/$title
-    git mv -v $p content/posts/$title/index.md
+    # Move to leaf bundle
+    postFname=$(basename -- "$p")
+    title="${postFname%.*}"
+    leafBundleDir=content/posts/$title
+    mkdir $leafBundleDir
+    newPostLocation=$leafBundleDir/index.md
+    git mv -v $p $newPostLocation
+
+    # Move images referenced in the articles to new leaf bundle dir
+    images=$(grep -oP 'images\/.*.(png|jpg|jpeg)' $newPostLocation | xargs -n1 | sort -u)
+    echo "$images" | while read i; do
+        [ -z "$i" ] && continue
+        imgFname=$(basename -- "$i")
+        git mv -v static/$i $leafBundleDir/$imgFname
+    done
+
+    # Change references to images in the article
+    ## figure src="/images/namecheap-domain-purchase.png"
+    sed -i 's/src="\/images\//src="/g' $newPostLocation
+    ## images:
+    ##   - images/namecheap_landing.png
+    sed -i 's/- images\//- /g' $newPostLocation
+    ## [blog_arch]: /images/blog-arch-cover.png
+    sed -i 's/: \/images\//: /g' $newPostLocation
 done
-```
+{{</highlight >}}
 
-For a quick breakdown of the above; we are getting all markdown files in the existing branch, extracting the article name, creating a new directory with that name, then move the article to `index.md` in that directory.
+Let's break down what's going on here. Firstly we are retrieving all posts that aren't already converted to a leaf bundle and looping over them, where lines 4-9 performs the conversion itself. 
 
+Once that is done then we need to get all images that are referenced in that post and move them to the new leaf bundle for the post. This is done in lines 12-17.
 
+Lastly, we then need to change the post content itself so that it references images in the location relative to the leaf bundle instead of under `static/images` - lines 21-26 accomplish this. Hugo allows you to define `img` blocks in several ways, and I probably need to have a uniform way of doing this. However for the time being, 3 `sed` commands will do the trick for me. 
 
+> I'm sure that a few lines could be cut out with some better regex expressions - but I'm not an expert at them so I'd rather crack on with what I know :smiley:
 
+## Move from posts to blog
+
+A gripe I've had with my site is when you click on **Blog** in the site header it takes you to **Posts**. Similar to the previous section this is because of **Branch Bundles**. 
