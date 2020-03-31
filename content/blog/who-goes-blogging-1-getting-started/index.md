@@ -2,14 +2,17 @@
 date: 2019-11-09
 title: "Who Goes Blogging 1: Getting Started"
 description: Create your own portfolio site with no hassle using Hugo and GitHub Pages
+type: posts
 images:
-- images/local_example_site.jpg
+- local_example_site.jpg
 tags:
 - architecture
 - cdn
 - cloudflare
 - portfolio-site
 - github-pages
+aliases:
+- /posts/who-goes-blogging-1-getting-started/
 lastmod: 2019-11-13
 ---
 
@@ -100,7 +103,7 @@ hugo serve
 
 That last command will locally serve the example site, so that you can view it at `http://localhost:1313/`.
 
-{{< figure src="/images/local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
+{{< figure src="local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
 
 ## Experimenting
 

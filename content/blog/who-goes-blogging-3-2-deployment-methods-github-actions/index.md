@@ -2,12 +2,15 @@
 date: 2020-03-10
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 description: Migrating to GitHub Actions as our CI tool
+type: posts
 images:
-- images/github-actions-build.png
+- github-actions-build.png
 tags:
 - ci/cd
 - travisci
 - github-actions
+aliases:
+- /posts/who-goes-blogging-3-2-deployment-methods-github-actions/
 ---
 
 # From TravisCI to GitHub Actions 
@@ -70,11 +73,11 @@ $ pbcopy < ~/.ssh/gh-pages.pub
 
 In GitHub load up your GitHub Pages repo and navigate to `Settings` and then `Deploy keys`. Give it an appropriate name, and paste in the public key. Make sure you check `Allow write access`.
 
-{{< figure src="/images/gha-deploy-key.png" caption="" alt="GitHub Pages repo deploy keys page" >}}
+{{< figure src="gha-deploy-key.png" caption="" alt="GitHub Pages repo deploy keys page" >}}
 
 Copy the contents of the *private key* you created earlier (perhaps using your new command?! {{<emoji ":smirk:" >}}) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
 
-{{< figure src="/images/gha-secrets-key.png" caption="No secrets here!" alt="GitHub source code repo secrets page" >}}
+{{< figure src="gha-secrets-key.png" caption="No secrets here!" alt="GitHub source code repo secrets page" >}}
 
 ## Workflow Configuration
 
@@ -205,7 +208,7 @@ If you're migrating from a previous CI tool (perhaps Travis?) then you'll need t
 
 For Travis, you can do that by navigating to your source code repo settings on Travis (https://travis-ci.com/jdheyburn/jdheyburn.co.uk/settings for me) and disabling `Build pushed branches`.
 
-<center>{{< figure src="/images/travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}</center>
+<center>{{< figure src="travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}</center>
 
 Now that's done, go ahead and check in your new GitHub Actions workflow file and then navigate to the `Actions` tab of your source code repo on GitHub.
 
@@ -215,7 +218,7 @@ git commit -m 'Migrate to GitHub Actions'
 git push
 ```
 
-{{< figure src="/images/github-actions-build.png" caption="Great success!" alt="Successful build on GitHub Actions" >}}
+{{< figure src="github-actions-build.png" caption="Great success!" alt="Successful build on GitHub Actions" >}}
 
 Hopefully your build went to success! If it didn't have a look through the logs and see what the issue was. It took me a few builds to determine my finalised workflow config. You can even see it at my [source code repo Actions page](https://github.com/jdheyburn/jdheyburn.co.uk/actions).
 

@@ -2,13 +2,16 @@
 date: 2020-01-26
 title: "On Becoming An Open Source Software Contributor"
 description: Some words about having my first open source pull request merged to terraform-provider-aws
+type: posts
 images:
-- images/terraform-aws.png
+- terraform-aws.png
 tags:
 - aws
 - documentation
 - terraform
 - opensource
+aliases:
+- /posts/on-becoming-an-open-source-software-contributor/
 ---
 
 This is going to be a relatively shorter post that'll be in two parts since it's more of a self-promotion... But as of this Friday just gone, I finally had a [pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/11388) approved to be merged to [terraform--provider-aws](https://github.com/terraform-providers/terraform-provider-aws)!
@@ -45,7 +48,7 @@ However, more importantly, and one that is most beneficial to me is that...
 
 **You will forget that shit and will need to reference it back again!**
 
-<center>{{< figure src="/images/elephant-cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}</center>
+<center>{{< figure src="elephant-cartoon.png" alt="Cartoon elephant" caption="Not everyone can have the memory of an elephant..." width="400x" >}}</center>
 
 We are only human right? There is no way we can remember what most of us did a few weeks ago let alone a project from 6+ months ago.
 

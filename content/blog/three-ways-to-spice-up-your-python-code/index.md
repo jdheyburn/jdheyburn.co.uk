@@ -2,10 +2,13 @@
 date: 2019-07-05
 title: Three Ways To Spice Up Your Python Code
 description: I describe some simple methods to improve on your Python codes integrity and durability
+type: posts
 tags:
 - python
 - testing
 - typing
+aliases:
+- /posts/three-ways-to-spice-up-your-python-code/
 ---
 
 # Spice Up Your ~~Life~~ Python {{<emoji ":snake:" >}}
@@ -420,7 +423,7 @@ I hope the hints detailed in this helped you as much as it did for me! I'm sure 
 Thanks for reading {{<emoji ":smiley:" >}}
 
 
-[type_hinting]: /images/type_hinting.png
-[type_checking]: /images/type_checking.png
-[type_checking_bad_return]: /images/type_checking_bad_return.png
-[type_checking_bad_assign]: /images/type_checking_bad_assign.png
+[type_hinting]: type_hinting.png
+[type_checking]: type_checking.png
+[type_checking_bad_return]: type_checking_bad_return.png
+[type_checking_bad_assign]: type_checking_bad_assign.png
