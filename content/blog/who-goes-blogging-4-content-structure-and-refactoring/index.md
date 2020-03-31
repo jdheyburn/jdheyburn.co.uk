@@ -6,7 +6,7 @@ type: posts
 images:
   - images/github-actions-build.png
 tags:
-
+  - bash
 draft: true
 ---
 
@@ -285,6 +285,4 @@ name = "Blog"
 weight = 2
 url = "/blog/"
 ```
-
-## Upgrading Hugo-Coder Theme
 
