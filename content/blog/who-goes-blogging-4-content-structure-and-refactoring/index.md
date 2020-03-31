@@ -14,7 +14,7 @@ So far in this series we've been looking at the infrastructure behind the Hugo w
 
 1. Moving content articles from a flat structure to a leaf bundle
 1. Rename content section to **blog** from **posts**
-1. Adding table of contents to articles
+1. Updating to the latest `hugo-coder` theme version
 
 ## Content Article Reorganising
 
@@ -278,4 +278,13 @@ We have another `type: posts` setting here because similar to above, we want Hug
 ### Heading to Blog
 
 Lastly and most easily, the **Blog** shortcut at the top-right corner of the page still directs us to `/posts` - we need to change that in the top-level `config.toml` to point to `/blog`.
+
+```toml
+[[languages.en.menu.main]]
+name = "Blog"
+weight = 2
+url = "/blog/"
+```
+
+## Upgrading Hugo-Coder Theme
 
