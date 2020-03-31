@@ -2,8 +2,11 @@
 date: 2019-02-11
 title: Blog Bootstrap
 description: A short introduction to the blog.
+type: posts
 tags:
 - blabber
+aliases:
+- /posts/blog-bootstrap/
 ---
 
 Howdy! {{<emoji ":wave:" >}}

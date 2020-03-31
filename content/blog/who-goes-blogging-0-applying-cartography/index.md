@@ -2,8 +2,9 @@
 date: 2019-09-11
 title: "Who Goes Blogging 0: Applying Cartography"
 description: Mapping out the architecture of my portfolio website
+type: posts
 images:
-- images/blog-arch-cover.png
+- blog-arch-cover.png
 tags:
 - architecture
 - cdn
@@ -13,6 +14,7 @@ tags:
 # Redirect the old slug name to the new one
 aliases:
   - /posts/applying-cartography/
+  - /posts/who-goes-blogging-0-applying-cartography/
 ---
 
 # Applying Cartography
@@ -82,5 +84,5 @@ So if you're interested in having a setup like this, then over the next few post
 
 \- jdheyburn
 
-[blog_arch]: /images/blog-arch-cover.png
-[analytics_example]: /images/analytics_example.png
+[blog_arch]: blog-arch-cover.png
+[analytics_example]: analytics_example.png
