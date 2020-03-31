@@ -1,20 +1,26 @@
 ---
-date: 2020-03-24
-title: "Who Goes Blogging 4: Content Structure & Refactoring"
+date: 2020-03-31
+title: "Who Goes Blogging 4.1: Content Structure & Refactoring"
 description: Performing refactoring and reorganising how my Hugo website is structured
 type: posts
 images:
-  - images/github-actions-build.png
+  - images/jdheyburn_co_uk_card.png
+categories:
+    - hugo  
 tags:
   - bash
-draft: true
+  - content-organisation
 ---
 
 So far in this series we've been looking at the infrastructure behind the Hugo website, but I haven't looked into improving the content layout of the site. Some of the improvements I want to make are:
 
 1. Moving content articles from a flat structure to a leaf bundle
 1. Rename content section to **blog** from **posts**
-1. Updating to the latest `hugo-coder` theme version
+1. Upgrading `hugo-coder` theme and `hugo` version
+1. Adding a table of contents to the pages
+1. ... and further improvements as I find them
+
+This post will cover items 1-2, the others will be in a follow up post.
 
 ## Content Article Reorganising
 
@@ -261,7 +267,7 @@ Earlier on, we came across this weird bug...
 
 {{< figure src="blogs-landing-page.png" alt="Screenshot of Blog landing page with incorrect Blogs title" >}}
 
-This is occuring because of the translation feature of Hugo (sourced from [i18n](https://gohugo.io/functions/i18n/)) which converts singular word titles to plural on content section landing pages, since Hugo is listing them out. This made sense when our previous section name was posts, but now we'd rather it have say blog.
+This is occurring because of the translation feature of Hugo (sourced from [i18n](https://gohugo.io/functions/i18n/)) which converts singular word titles to plural on content section landing pages, since Hugo is listing them out. This made sense when our previous section name was posts, but now we'd rather it have say blog.
 
 Remembering that `content/blog` is a [branch bundle](https://gohugo.io/content-management/page-bundles/#branch-bundles), we can override the inferred title with a `_index.md` file at that directory.
 
@@ -286,3 +292,4 @@ weight = 2
 url = "/blog/"
 ```
 
+Thanks for reading!
