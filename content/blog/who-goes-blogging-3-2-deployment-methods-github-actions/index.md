@@ -208,7 +208,7 @@ If you're migrating from a previous CI tool (perhaps Travis?) then you'll need t
 
 For Travis, you can do that by navigating to your source code repo settings on Travis (https://travis-ci.com/jdheyburn/jdheyburn.co.uk/settings for me) and disabling `Build pushed branches`.
 
-<center>{{< figure src="travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}</center>
+{{< figure src="travis-disable-build.png" class="center" caption="" alt="Build pushed branches disabled on Travis" >}}
 
 Now that's done, go ahead and check in your new GitHub Actions workflow file and then navigate to the `Actions` tab of your source code repo on GitHub.
 

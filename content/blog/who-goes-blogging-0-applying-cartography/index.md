@@ -29,7 +29,7 @@ That's when you can make true comparisons in any system. As such the aim of this
 
 Because we all love an architecture diagram, let's slap one in now.
 
-![An architecture diagram of my portfolio site][blog_arch]
+{{< figure src="blog-arch-cover.png" caption="" alt="An architecture diagram of my portfolio site" >}}
 
 Wow. That is... really not much at all. Apologies if you were expecting a lot more arrows and boxes!
 
@@ -65,9 +65,10 @@ Because everyone loves graphs and numbers... right??... Alright just me then...
 
 You'll be able to see how many requests are being served up, where requests originate from, amongst others. Take a look at an example below.
 
-![A graph displaying total requests, and how many of them were cached][analytics_example]
+{{< figure src="analytics_example.png" alt="A graph displaying total requests, and how many of them were cached" >}}
 
 ### Custom domain
+
   - This means you can access your site on something other than `<my_site>.github.io`, which is great for when you move off GitHub Pages to another platform, you can just tell Cloudflare to source requests from another server
   - It also gives your site that extra polish and professionalism about it - wouldn't you agree?
 
@@ -83,6 +84,3 @@ Okay well that means there is a slight cost to maintain the site through purchas
 So if you're interested in having a setup like this, then over the next few posts I'll be detailing how you can do the same. 
 
 \- jdheyburn
-
-[blog_arch]: blog-arch-cover.png
-[analytics_example]: analytics_example.png

@@ -33,6 +33,7 @@ Again - I won't try to replicate already great guides out there on the topic. So
 - https://opensource.com/article/17/4/introduction-domain-name-system-dns
 
 # Applying a Custom Domain to GitHub Pages
+
 Let's add a degree of professionalism to our site by having a custom domain apply to it. You'll need to make sure you own a domain first before you go ahead, so have a look at a few providers and see which works best for you [from a comparison list](https://www.techradar.com/uk/news/best-domain-registrars-in-2019). I bought mine from [namecheap](https://www.namecheap.com/) just because of the price and WhoisGuard features. There may be other providers that have the same features, so make sure to make your own comparison!
 
 > In the case of `.co.uk` domains, because it is a UK domain that resides in the EU (for now), the WhoIS lookup is disabled by default - which is a huge win for privacy. WhoisGuard is available for non-EU domains and I highly recommend it.
@@ -122,7 +123,7 @@ One thing to note down before we move on is to capture the Cloudflare DNS Namese
 
 Navigate to the [Namecheap management page](https://ap.www.namecheap.com/domains/list/) for your domain and enter the Cloudflare nameservers once you have selected **Custom DNS**.
 
-<center>{{< figure src="namecheap-nameservers.png" caption="Add in your Cloudflare domains from previously" alt="Screenshot depicting completed nameservers pointing to Cloudflare" >}}</center>
+{{< figure src="namecheap-nameservers.png" class="center" caption="Add in your Cloudflare domains from previously" alt="Screenshot depicting completed nameservers pointing to Cloudflare" >}}
 
 Once this is done you may need to wait a while for the DNS updates to propagate throughout the world. While we're waiting for that, there's one final piece of the puzzle which can keep us busy.
 
@@ -156,19 +157,21 @@ Now again wait for DNS to propagate across the world. When GitHub is happy with 
 We can use the above method to quickly try using GitHub repository settings to see if everything is working, however I'm a big fan of setting changes in code (Infrastructure-as-code anyone?). GitHub supports another method which is to use a file named `CNAME` in our generated `.github.io` repo that contains the domain name we wish to use. 
 
 In my case, I would have the following...
-{{< highlight bash >}}
+
+```bash
 # CNAME
 jdheyburn.co.uk
-{{< / highlight >}}
+```
 
 This then tells a repo that is enabled for GitHub Pages to use the domain in this file as our custom domain, effectively producing the steps in the previous section. Neato.
 
 The change to implement this is fairly easy. I have to admit I picked it up from somewhere but I don't have the source to reference it to.
 
 So back in your `blog-source` repo, you want to execute the below, replacing the template with your domain.
-{{< highlight bash >}}
+
+```bash
 echo "<DOMAIN-NAME>" > CNAME
-{{< / highlight >}}
+```
 
 #### Building into our deploy script
 

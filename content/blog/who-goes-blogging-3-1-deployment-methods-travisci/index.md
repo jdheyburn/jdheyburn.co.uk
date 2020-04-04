@@ -52,7 +52,7 @@ The TravisCI account setup for TravisCI is very streamlined - instead of creatin
 
 GitHub will ask you if you *really* want to share some of your GitHub data with Travis.
 
-<center>{{< figure src="travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}</center>
+{{< figure src="travis-github-authorise.png" class="center" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
 
 Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely {{<emoji ":frowning:" >}} - let's fix that!
 
@@ -64,7 +64,7 @@ Now on the next screen you may or may not want the default selection of `All rep
 
 For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
 
-<center>{{< figure src="travis-github-repos-selection.png" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
+{{< figure src="travis-github-repos-selection.png" class="center" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
 
 ## Back to GitHub
 
@@ -76,11 +76,11 @@ You'll come across a page asking for the name of the token being created. It doe
 
 After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
 
-<center>{{< figure src="travis-github-pat.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
+{{< figure src="travis-github-pat.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}
 
 The token's secret will display on the next screen. **Make sure you copy it** and place it somewhere you can refer back to it later such as a text editor like Notepad - we'll need it again in the next section.
 
-<center>{{< figure src="travis-github-pat-created.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}</center>
+{{< figure src="travis-github-pat-created.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}
 
 # TravisCI Configuration
 

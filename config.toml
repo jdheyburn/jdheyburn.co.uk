@@ -23,12 +23,13 @@ lastmod = [":fileModTime", ":default"]
     author = "Joseph D. Heyburn"
     description = "Ramblings of a tech guy"
     keywords = "blog,developer,devops,cloud"
-    info = ""
+    info = "Software / DevOps / Cloud Engineer"
     avatarurl = "images/me.jpg"
     footercontent = ""
 
     dateformat = "2 January 2006"
 
+    hideFooter = false
     hideCredits = false
     hideCopyright = false
 
@@ -37,11 +38,21 @@ lastmod = [":fileModTime", ":default"]
 
     rtl = false
 
-    # Use inverted colors
-    inverted = true
+    colorscheme = "dark"
+    
+    # Series see also post count
+    maxSeeAlsoItems = 5
 
     # Custom CSS
     custom_css = []
+
+    # Custom JS
+    custom_js = []
+
+[taxonomies]
+  category = "categories"
+  series = "series"
+  tag = "tags"
 
 [[params.social]]
     name = "Github"
@@ -68,6 +79,13 @@ lastmod = [":fileModTime", ":default"]
 #     icon = "fab fa-medium"
 #     weight = 5
 #     url = "https://medium.com/@johndoe"
+[[params.social]]
+    name = "RSS"
+    icon = "fas fa-rss"
+    weight = 6
+    url = "https://jdheyburn.co.uk/index.xml"
+    rel = "alternate"
+    type = "application/rss+xml"
 
 [privacy]
     [privacy.googleAnalytics]

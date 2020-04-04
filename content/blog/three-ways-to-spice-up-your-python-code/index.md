@@ -186,17 +186,17 @@ Yikes, that's a misleading error! Having a look at the error straight away, you'
 What this is actually error-ing on is how an int is being concatenated to a str on the left-hand side of the + operator.
 
 > Under the hood, Python believe you are trying to do a __string concatenation__ because the parameter is of type string, and is on the left-hand side of the + operator. The below shows a valid way to perform a string concatenation:
-
+>
 > `"1" + "1" # -> "11"`
-
+>
 >
 > If the int value was on the left-hand side of the operator and you passed a string, you'd get something like this:
-> ```
+>```
 >>> 1 + "1"
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: unsupported operand type(s) for +: 'int' and 'str'
-```
+>Traceback (most recent call last):
+>  File "<stdin>", line 1, in <module>
+>TypeError: unsupported operand type(s) for +: 'int' and 'str'
+>```
 
 But changing the right-side of the operator won't fix this for us. What we need is to implement typing.
 
@@ -205,6 +205,7 @@ But changing the right-side of the operator won't fix this for us. What we need 
 Python 3.6 onwards introduced static type checking, so make sure you upgrade to it if you haven't already - which you might want to do very soon as Python 2 is [EOL in 2020](https://pythonclock.org/)! 
 
 Taking our above `increment_int_by_one` function, we can add `: int` to the parameter which will tell the function what type it expects the parameter to be.
+
 ```python
 def increment_int_by_one(int_to_inc: int):
     incremented_int = int_to_increment + 1
@@ -213,13 +214,13 @@ def increment_int_by_one(int_to_inc: int):
 
 Now when we pass in a `str` as the parameter, we still get the same error we saw before. However, if the IDE you are using supports it, you will receive **type hints**!
 
-![Screenshot displaying type hinting provided by Visual Studio Code][type_hinting]
+{{< figure src="type_hinting.png" class="center" caption="" alt="Screenshot displaying type hinting provided by Visual Studio Code" >}}
 
 I'm using VSCode with the Python extension installed too, you can see the hint that appears includes the type of the parameter.
 
 VSCode also has the ability to check the type of the value you are passing into the function:
 
-![Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright][type_checking]
+{{< figure src="type_checking.png" class="center" caption="" alt="Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright" >}}
 
 Here we have a visual indicator that the string is incompatible with the int type of the function. Alongside this, in the Problems tab we have a full explanation on what has gone wrong. This is both provided by the `pyright` extension which can be found in the VSCode Extensions section.
 
@@ -235,13 +236,13 @@ def increment_int_by_one(int_to_inc: int) -> int:
 
 Note the only change here is the `-> int` which specifies the type it is returning. Now our type checker will highlight to us when we violate this in two scenarios:
 
-![Screenshot displaying type checking, highlighting the bad return value][type_checking_bad_return]
+{{< figure src="type_checking_bad_return.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad return value" >}}
 
 The IDE has shown us that the function is expected to return a type different to what it is actually returning...
 
-![Screenshot displaying type checking, highlighting the bad assigned variable][type_checking_bad_assign]
+{{< figure src="type_checking_bad_assign.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad assigned variable" >}}
 
-And in this snapshot, we are trying to assign a varaible of type `str` to the output of the function which returns an `int`!
+And in this snapshot, we are trying to assign a variable of type `str` to the output of the function which returns an `int`!
 
 Another pattern you might see is if a method does not return anything (in Java-speak, it is `void`), an example of this is if the method is a constructor for a class.
 
@@ -421,9 +422,3 @@ Normal service is resumed!!
 I hope the hints detailed in this helped you as much as it did for me! I'm sure there are many more tips out there - as I discover them be sure that I'll share them once I find them, along with documenting more on the side project I've been working on!
 
 Thanks for reading {{<emoji ":smiley:" >}}
-
-
-[type_hinting]: type_hinting.png
-[type_checking]: type_checking.png
-[type_checking_bad_return]: type_checking_bad_return.png
-[type_checking_bad_assign]: type_checking_bad_assign.png

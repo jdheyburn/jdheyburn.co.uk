@@ -69,6 +69,7 @@ I mentioned before I split my website into two repos:
 For the first repo, it doesn't really matter what you call it - you can call it your destined domain name, or `blog-source`, or `dogs-are-great`. It's the second one which you will need to think about, where it must be `<YOUR_USERNAME>.github.io` - which will ultimately be made available at `https://<YOUR_USERNAME>.github.io`.
 
 Create two [empty Github repos now](https://github.com/new), then clone both to your environment. If you don't have git available in your terminal, check out [this guide](https://help.github.com/en/github/getting-started-with-github/set-up-git) to get set up.
+
 ```bash
 mkdir ~/projects
 cd projects
@@ -91,7 +92,7 @@ In my case, I wanted to get up and running in the smallest time possible (isn't 
 
 The theme this blog uses as of publication is [hugo-coder](https://themes.gohugo.io/hugo-coder/), written by [Luiz de Prá](https://luizdepra.dev/). You may wish to use it, or something else. It's entirely up to you! Let's get started by laying down the foundations and cloning the theme.
 
-{{< highlight bash >}}
+```bash
 cd ~/projects
 git clone https://github.com/luizdepra/hugo-coder.git
 cp -r hugo-coder/exampleSite blog-source
@@ -99,7 +100,7 @@ mkdir blog-source/themes
 ln -s ~/projects/hugo-coder blog-source/themes/hugo-coder
 cd blog-source
 hugo serve
-{{< / highlight >}}
+```
 
 That last command will locally serve the example site, so that you can view it at `http://localhost:1313/`.
 
@@ -121,12 +122,12 @@ When we were setting up the `exampleSite` locally, we created a symlink from `~/
 
 This problem is solved exactly by [**git submodules**](https://git-scm.com/book/en/v2/Git-Tools-Submodules), and we define it within the `.gitmodules` file of our source code repo.
 
-{{< highlight bash >}}
+```bash
 # .gitmodules
 [submodule "themes/hugo-coder"]
 	path = themes/hugo-coder
 	url = https://github.com/luizdepra/hugo-coder.git
-{{< / highlight >}}
+```
 
 Now when this file is checked into the repo, any future clones will also include the hugo theme as a submodule in the `themes/hugo-coder` directory.
 
@@ -136,13 +137,13 @@ Once you've done this, your source code is all set! Why not share it with the re
 
 So far we have only been playing with the `hugo serve` command, which is great for local development but not for production. There is a more appropriate command for building hugo projects - aptly named `hugo`; pretty simple right? 
 
-```
+```bash
 hugo
 ```
 
 This renders the HTML and CSS files from your config and markdown for the theme and places them in the `public/` directory of your source code repo. In theory once you've executed this command you can host a webserver at that address and everything would operate as normal. Why not give it a try?
 
-```
+```bash
 cd public/
 python -m SimpleHTTPServer 8080
 ```
@@ -153,12 +154,12 @@ Since we are still in our source code repo, we want to make sure that `public/` 
 
 For this we can utilise a `.gitignore` file, instructing git to ignore any files that match the terms in the contents. Let's get one created now and check our code into the repo.
 
-{{<highlight bash>}}
+```bash
 echo "public/\nresources/" > .gitignore
 git add .
 git commit -m 'Initial commit'
 git push
-{{< / highlight >}}
+```
 
 We're currently committing to one repo, however we want GitHub Pages to host it for us. As mentioned earlier, GP can only host repos at the domain `github.io`, so we need to get our rendered website into that repo.
 
@@ -176,8 +177,8 @@ After following the process in the link prior, you should be able to invoke your
 In this post, we have done the following:
 
 1. Created two GitHub repos:
-  - one for storing the source code for the website
-  - another containing the rendered web pages 
+    - one for storing the source code for the website
+    - another containing the rendered web pages 
 1. Built Hugo locally for development using `hugo serve`
 1. Written a script for deployment 
 1. Deployed to GitHub Pages
