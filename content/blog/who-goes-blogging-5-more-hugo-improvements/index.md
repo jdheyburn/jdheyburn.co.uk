@@ -127,8 +127,12 @@ acb4bf6f2dcce51a27dc0e1f1008afb369d378d8
 
 Nice - this has changed from the previous value. We can jump over to GitHub to verify this is indeed the latest version.
 
-{{< figure src="hugo-coder-commit.png" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
+{{< figure src="hugo-coder-commit.png" caption="Verify at the GitHub repo page https://github.com/luizdepra/hugo-coder/commit/master" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
 
 ## Validation and Testing
 
-Now comes the testing part, ensuring that everything is working as intended with both the new Hugo version and the latest hugo-coder submodule.
+Now comes the testing part, ensuring that everything is working as intended with both the new Hugo version and the latest hugo-coder submodule. Some of the issues I came across were:
+
+
+## New Features Available
+
