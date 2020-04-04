@@ -19,6 +19,8 @@ googleAnalytics = "UA-139246187-1"
 
 lastmod = [":fileModTime", ":default"]
 
+enableEmoji = true
+
 [params]
     author = "Joseph D. Heyburn"
     description = "Ramblings of a tech guy"

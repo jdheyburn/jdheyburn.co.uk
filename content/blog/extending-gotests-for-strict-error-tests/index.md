@@ -172,10 +172,10 @@ Gotests gives us the ability to provide our own templates for generating tests, 
 1. Add the following setting to VSCode's settings.json
     - `"go.generateTestsFlags": ["--template_dir=~/scratch/templates"]` 
 
-Once you have done that, future tests will now generate with stricter error testing! {{<emoji ":tada:" >}}
+Once you have done that, future tests will now generate with stricter error testing! :tada:
 
 # Closing
 
 I understand that the recommendations above will make your code more fragile, as the code is subject to any changing of the error message of say a downstream library. However for myself, I prefer to write tests that are strict and minimalise the chance of other errors contaminating tests.
 
-I also understand that GoodestBoy#1 is probably a valid name for a dog! {{<emoji ":dog:" >}}
+I also understand that GoodestBoy#1 is probably a valid name for a dog! :dog:

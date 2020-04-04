@@ -19,9 +19,9 @@ In the [previous post](/posts/who-goes-blogging-3-1-deployment-methods-travisci/
 
 In this post we will look at how we can migrate from TravisCI to [GitHub Actions](https://help.github.com/en/actions/getting-started-with-github-actions/about-github-actions), GitHub's own CI/CD tool. 
 
-This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! {{<emoji ":rocket:" >}}
+This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! :rocket:
 
-## Benefits {{<emoji ":white_check_mark:" >}}
+## Benefits ":white_check_mark:"
 
 Let's talk about why we want to migrate away from TravisCI in the first place.
 
@@ -35,7 +35,7 @@ I think you folks get the picture now. There's an [awesome-actions](https://gith
 
 **Lastly**, all configuration is managed in the workflow configuration file. One enhancement in particular that we will be introducing can be achieved with an additional setting in the workflow config file; for us to achieve the same in Travis would have to be done via the GUI. I'm a big sucker for having configuration baked into code so this is a very good plus.
 
-## Pricing {{<emoji ":alarm_clock:" >}}
+## Pricing :alarm_clock:
 
 **However** - one downsides to GitHub Actions is how many build minutes you get. Remember Travis allowed unlimited build minutes for a public repository? With Actions - you are limited to [2,000 minutes in their free plan](https://github.com/pricing). 
 
@@ -75,7 +75,7 @@ In GitHub load up your GitHub Pages repo and navigate to `Settings` and then `De
 
 {{< figure src="gha-deploy-key.png" caption="" alt="GitHub Pages repo deploy keys page" >}}
 
-Copy the contents of the *private key* you created earlier (perhaps using your new command?! {{<emoji ":smirk:" >}}) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
+Copy the contents of the *private key* you created earlier (perhaps using your new command?! :smirk:) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
 
 {{< figure src="gha-secrets-key.png" caption="No secrets here!" alt="GitHub source code repo secrets page" >}}
 
@@ -228,4 +228,4 @@ Now that we've migrated across over to GitHub Actions, we can close out the perm
 
 From the tone of my writing you can probably tell which one I favour. That's not to say I do not like TravisCI - each service has its own pros and cons. For this particular project, I prefer the one platform approach for which I am used to in GitLab. The number of build minutes available for GA is a concern, but not one I will have to worry about for now.
 
-Thanks for reading! {{<emoji ":full_moon_with_face:" >}}
+Thanks for reading! :full_moon_with_face:

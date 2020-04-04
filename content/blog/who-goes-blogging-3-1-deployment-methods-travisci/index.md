@@ -20,7 +20,7 @@ Since [part 1](/posts/who-goes-blogging-1-getting-started/), we have been using 
 For this part, I will tell you about how I migrated from deploying via a script, to a CI/CD tool - namely [TravisCI](https://travis-ci.com/). Then I will document how I migrated from this, to the new [GitHub Actions](https://github.com/features/actions); GitHub's offering into the CI/CD space.
 
 > `CI/CD` is an acronym for Continuous Integration / Continuous Deployment which is a very important concept in the DevOps culture.
-> If you would like to find out more about that and DevOps culture, check out these resources {{<emoji ":point_down:" >}}
+> If you would like to find out more about that and DevOps culture, check out these resources :point_down:
 >
 > - https://www.atlassian.com/devops
 > - https://medium.com/faun/the-basics-of-continuous-integration-delivery-with-10-most-popular-tools-to-use-9514231533f0
@@ -54,7 +54,7 @@ GitHub will ask you if you *really* want to share some of your GitHub data with 
 
 {{< figure src="travis-github-authorise.png" class="center" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
 
-Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely {{<emoji ":frowning:" >}} - let's fix that!
+Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely :frowning: - let's fix that!
 
 All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the `Activate` button.
 
@@ -240,4 +240,4 @@ If they aren't there then your browser is most likely caching an older version. 
 
 # Conclusion
 
-You're on the way to DevOps masterclass. As mentioned the next post will focus on migrating to GitHub Actions so if you're happy with TravisCI then there's no more you need to do! Go ahead and add other repositories you may have to Travis and build up multiple pipelines {{<emoji ":raised_hands:" >}}
+You're on the way to DevOps masterclass. As mentioned the next post will focus on migrating to GitHub Actions so if you're happy with TravisCI then there's no more you need to do! Go ahead and add other repositories you may have to Travis and build up multiple pipelines :raised_hands:

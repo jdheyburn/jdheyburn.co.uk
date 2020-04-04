@@ -188,7 +188,7 @@ Then that's it! Take a look at my [finished repo](https://github.com/jdheyburn/j
 
 # Bonus: TLD Redirection
 
-Let me tell you a story. Your website is up and operational. You're super proud of it, and you give yourself a round of applause {{<emoji ":clap:" >}}
+Let me tell you a story. Your website is up and operational. You're super proud of it, and you give yourself a round of applause :clap:
 
 But you don't want to be the only person looking at it, you want the whole world to! You tell your parents, your significant other, the dog off the street - they all remember the name of your website, but *was it at `.com` or `.<insert snazzy TLD here>`*?
 

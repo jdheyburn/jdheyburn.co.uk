@@ -11,7 +11,7 @@ aliases:
 - /posts/three-ways-to-spice-up-your-python-code/
 ---
 
-# Spice Up Your ~~Life~~ Python {{<emoji ":snake:" >}}
+# Spice Up Your ~~Life~~ Python :snake:
 
 
 I'm currently working on a side project that I've written in Python. Now I've have a lot of experience with Python before, I used it primarily to write a load of scripts for automating processes for when Bash didn't quite cut it. Don't get me wrong Bash is great, but like for every other language out there, each has its purpose in the world. 
@@ -421,4 +421,4 @@ Normal service is resumed!!
 
 I hope the hints detailed in this helped you as much as it did for me! I'm sure there are many more tips out there - as I discover them be sure that I'll share them once I find them, along with documenting more on the side project I've been working on!
 
-Thanks for reading {{<emoji ":smiley:" >}}
+Thanks for reading :smiley:
