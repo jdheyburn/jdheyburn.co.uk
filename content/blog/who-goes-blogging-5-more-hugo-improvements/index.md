@@ -133,6 +133,24 @@ Nice - this has changed from the previous value. We can jump over to GitHub to v
 
 Now comes the testing part, ensuring that everything is working as intended with both the new Hugo version and the latest hugo-coder submodule. Some of the issues I came across were:
 
+`<center>` tags not rending correctly.
+
+I believe the new Hugo version broke this one. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images. However it looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
+
+`<center>{{< figure src="image-name.png" >}}</center>`
+
+To...
+
+`{{< figure src="image-name.png" class="center" >}}`
+
+Lists not rendering as before
+
+- suspected to be hugo
+- get an example 
+
+Incorrect rendering due to invalid markdown
+
+
 
 ## New Features Available
 
