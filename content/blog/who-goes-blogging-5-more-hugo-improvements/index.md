@@ -139,27 +139,50 @@ I believe the new Hugo version broke this one, where images that were wrapped in
 
 It looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
 
-`<center>{{< figure src="image-name.png" >}}</center>`
+`<center>{{ figure src="image-name.png" }}</center>`
 
 To...
 
-`{{< figure src="image-name.png" class="center" >}}`
+`{{ figure src="image-name.png" class="center" }}`
 
 **Lists not rendering as before**
 
 It turns out that my markdown for articles wasn't as watertight as I thought; Hugo is now a whole lot more strict in ensuring your syntax is correct. Check these two before and after for comparison.
 
-{{< figure src="old-render-list.png" caption="" alt="Screenshot showing old, proper list render >}}
+{{< figure src="old-render-list.png" caption="" alt="Screenshot showing old, proper list render" >}}
 
-{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render >}}
+{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render" >}}
 
 For this I just needed to fix the markdown by adding another indent to the list item. 
 
-{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render >}}
+{{< figure src="git-diff-list.png" caption="" alt="Screenshot showing git diff between old and new list" >}}
 
-I saw several cases of this, and 
+I saw several cases of this, and including a [markdown linter](https://github.com/igorshubovych/markdownlint-cli) in the CI/CD pipeline would help to prevent this. This is something I'll look to include in the near future.
 
+## Adding New Features
 
+The whole reason to upgrade both Hugo and the theme was to explore some of the new features that come in both of them, so let's get adding them.
 
-## New Features Available
+### Series Links in Content Footer
 
+The hugo-coder theme now has better support for series, articles that directly follow on from one another, such as this Who Goes Blogging one. Series are nothing new to Hugo and we could have done them with the version we upgraded from, only in [this commit for hugo-coder](https://github.com/luizdepra/hugo-coder/commit/27e83b1e5a9d8b7bbd42d202bd5ef57adcce659b) has it added a layout for it to be rendered.
+
+To create a series, we use the `series` front matter setting for articles. For the Who Goes Blogging articles, adding the front matter to them looks like this.
+
+```yml {hl_lines=["5-6"]}
+---
+date: 2020-03-10
+title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
+#...
+series:
+- Who Goes Blogging
+tags:
+#...
+---
+```
+
+Once this is done for all pages, hugo-coder will render the **See also in ...** section at the article footer.
+
+{{< figure src="series-footer-section.png" caption="" alt="Screenshot showing series rendered in the page footer" >}}
+
+### Table of Contents
