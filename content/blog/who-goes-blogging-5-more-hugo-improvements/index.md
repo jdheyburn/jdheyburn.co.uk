@@ -133,9 +133,11 @@ Nice - this has changed from the previous value. We can jump over to GitHub to v
 
 Now comes the testing part, ensuring that everything is working as intended with both the new Hugo version and the latest hugo-coder submodule. Some of the issues I came across were:
 
-`<center>` tags not rending correctly.
+**`<center>` tags not rending correctly.**
 
-I believe the new Hugo version broke this one. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images. However it looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
+I believe the new Hugo version broke this one, where images that were wrapped in `<center>` tags were simply disappearing. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images - but it looks like the new version causes these images to appear completely. 
+
+It looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
 
 `<center>{{< figure src="image-name.png" >}}</center>`
 
@@ -143,12 +145,19 @@ To...
 
 `{{< figure src="image-name.png" class="center" >}}`
 
-Lists not rendering as before
+**Lists not rendering as before**
 
-- suspected to be hugo
-- get an example 
+It turns out that my markdown for articles wasn't as watertight as I thought; Hugo is now a whole lot more strict in ensuring your syntax is correct. Check these two before and after for comparison.
 
-Incorrect rendering due to invalid markdown
+{{< figure src="old-render-list.png" caption="" alt="Screenshot showing old, proper list render >}}
+
+{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render >}}
+
+For this I just needed to fix the markdown by adding another indent to the list item. 
+
+{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render >}}
+
+I saw several cases of this, and 
 
 
 
