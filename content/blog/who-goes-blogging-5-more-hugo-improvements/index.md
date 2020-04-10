@@ -163,7 +163,7 @@ I saw several cases of this, and including a [markdown linter](https://github.co
 
 The whole reason to upgrade both Hugo and the theme was to explore some of the new features that come in both of them, so let's get adding them.
 
-### Series Links in Content Footer
+## Adding Series Links in Content Footer
 
 The hugo-coder theme now has better support for series, articles that directly follow on from one another, such as this Who Goes Blogging one. Series are nothing new to Hugo and we could have done them with the version we upgraded from, only in [this commit for hugo-coder](https://github.com/luizdepra/hugo-coder/commit/27e83b1e5a9d8b7bbd42d202bd5ef57adcce659b) has it added a layout for it to be rendered.
 
@@ -185,4 +185,89 @@ Once this is done for all pages, hugo-coder will render the **See also in ...** 
 
 {{< figure src="series-footer-section.png" caption="" alt="Screenshot showing series rendered in the page footer" >}}
 
-### Table of Contents
+## Adding Table of Contents
+
+### Template Lookup Order Primer
+
+Okay this one isn't exactly a new feature of the theme, but since we're playing around with the theme we may as well make use of this opportunity. Table of contents (TOC) aren't included by default in the `hugo-coder` theme, so we need to add it in ourselves. 
+
+There is some [documentation](https://gohugo.io/content-management/toc/) on how to add TOC to your articles. Before we do that we need to revisit how layouts are organised as discussed briefly in [a previous post](/blog/who-goes-blogging-4-content-structure-and-refactoring/#fixing-article-rendering).
+
+The type of a markdown file (defined by the front matter setting `type`) tells Hugo where to look for in the `layouts/` directory of your project. The Hugo theme you're using will already have these all defined, hence why they are predefined themes! Before Hugo looks for these layout HTML files in your theme, it will check for them in your projects `layouts/` directory first.
+
+In other words, the order of presedence (or hierarchy) for HTML files is anything in the project `layouts/` directory takes a higher priority than that in your theme - as described in Hugo's [documentation for template lookup order](https://gohugo.io/templates/lookup-order/).
+
+See below for a directory tree explaning this - a lot of content has been removed for brevity.
+
+```bash
+$ tree layouts                                          
+layouts
+├── posts
+│   └── single.html					# Hugo will use this file to render your HTML
+└── themes
+    └── hugo-coder
+	    └── layouts
+			└── posts
+			    └── single.html     # hugo will ignore this one in the themes directory
+```
+
+### Implementation
+
+The primer above gives a hint as to what file we need to modify. The [`single.html`](https://github.com/luizdepra/hugo-coder/blob/master/layouts/posts/single.html) file is in charge of how articles are rendered. Since we want everything else to remain the same about this file, we can take a copy of the file as it currently stands and place it into our project root.
+
+```bash
+mkdir layouts/posts
+cp -v themes/hugo-coder/layouts/posts/single.html layouts/posts
+```
+
+> I won't go into the details here, I'll leave that to you to make changes to see how they affect the rendering of the page.
+
+I want the TOC to appear before the main content, but after the featured image for the article (if there is any). Based on this the files is going to need the highlighted change below.
+
+```html {linenos=table,hl_lines=["33"],linenostart=29}
+      <div>
+        {{ if .Params.featured_image }}
+          <img src='{{ .Params.featured_image }}' alt="Featured image"/>
+        {{ end }}
+        {{ partial "toc.html" . }}
+        {{ .Content }}
+      </div>
+```
+
+We're not done there. We're referencing a [partial template file](https://gohugo.io/templates/partials/) here. These allow us to reuse HTML files in multiple places, or to break up a large HTML file into smaller, more easier to manage chunks. 
+
+Partial templates are found under the `layouts/partials` directory and follow the same principle as defined in the primer for template lookups, and are referenced back as `{{ partial "<partial_name>.html" . }}`.
+
+Let's go ahead and create the `layouts/partials/toc.html` file and populate it as below.
+
+```html
+{{ if and (gt .WordCount 400 ) (.Site.Params.toc) }}
+<aside>
+    {{.TableOfContents}}
+</aside>
+{{ end }}
+```
+
+This is similar to [Hugo's example](https://gohugo.io/content-management/toc/#template-example-toc-partial) but just tweaked a bit. I'm not looking to do anything too fancy with it just yet, but maybe later on.
+
+Previewing it by `hugo serve` we should get something that appears as below.
+
+{{< figure src="completed-toc.png" caption="" alt="Screenshot showing rendered Table of Contents" >}}
+
+### Nuances Along The Way
+
+As the heading suggests, there were a few extra things I needed to change before releasing it into the wild.
+
+**Fix improper headings**
+
+Per [Table of Contents Usage documentation](https://gohugo.io/content-management/toc/#usage), Hugo will render from `<h2>` headings, which are defined as `##` in markdown. So `# Introduction` would not be included in the TOC, but `## Introduction` will.
+
+This is a problem for some of my articles since I've been writing headings liberally at the wrong level. 
+
+{{< figure src="improper-toc-headings.png" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing rendered Table of Contents" >}}
+
+
+
+TODO 
+
+- Fix emojis too (use the correct format and add the fix for them in headings too if not done already)
