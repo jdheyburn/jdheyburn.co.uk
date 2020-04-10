@@ -264,8 +264,9 @@ Per [Table of Contents Usage documentation](https://gohugo.io/content-management
 
 This is a problem for some of my articles since I've been writing headings liberally at the wrong level. 
 
-{{< figure src="improper-toc-headings.png" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing rendered Table of Contents" >}}
+{{< figure src="improper-toc-headings.png" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
 
+The given example above shows what happens when we use `# Heading Name` instead of `## Heading Name`. To fix this I just need to go through each TODO finish
 
 
 TODO 
