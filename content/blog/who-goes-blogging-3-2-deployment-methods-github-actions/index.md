@@ -23,7 +23,7 @@ In this post we will look at how we can migrate from TravisCI to [GitHub Actions
 
 This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! :rocket:
 
-### Benefits ":white_check_mark:"
+### Benefits :white_check_mark:
 
 Let's talk about why we want to migrate away from TravisCI in the first place.
 
