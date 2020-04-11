@@ -11,7 +11,8 @@ aliases:
 - /posts/extending-gotests-for-strict-error-tests/
 ---
 
-# Strict Error Tests in Java
+## Strict Error Tests in Java
+
 I love confirming the stability of my code through writing tests and practicing Test-driven development (TDD).  For Java, JUnit was my preferred testing framework of choice. When writing tests to confirm an exception had been thrown, I used the optional parameter `expected` for the annotation `@Test`, however I quickly found that this solution would not work for methods where I raised the same exception class multiple times for different error messages, and testing on those messages. 
 
 This is commonly found in writing a validation method such as the one below, which will take in a name of a dog and return a boolean if it is valid. 
@@ -47,7 +48,7 @@ public void shouldHandleDogNameWithSymbols() {
 }
 ```
 
-# Applying to Golang
+## Applying to Golang
 
 Back to Golang, there is a built-in library aptly named `testing` which enables us to assert on test conditions. When combined with [Gotests](https://github.com/cweill/gotests) - a tool for generating Go tests from your code - writing tests could not be easier! I love how this is bundled in with the Go extension for VSCode, my text editor of choice (for now...).
 
@@ -104,7 +105,7 @@ func Test_validateDogName(t *testing.T) {
 
 From the above we are limited to what error we can assert for, here *any* error returned will pass the test. This is equivalent to using `@Test(expected=Exception.class)` in JUnit! But there is another way...
 
-## Modifying the Generated Test
+### Modifying the Generated Test
 
 We only need to make a few simple changes to the generated test to give us the ability to assert on test error message...
 
@@ -162,7 +163,8 @@ Point 3 provides additional support if there was a test case that did not expect
 }
 ```
 
-## Customising Gotests Generated Test 
+### Customising Gotests Generated Test
+
 Gotests gives us the ability to provide our own templates for generating tests, and can easily be integrated into your text editor of choice. I'll show you how this can be done in VSCode.
 
 1. Check out gotests and copy the templates directory to a place of your choosing
@@ -174,7 +176,7 @@ Gotests gives us the ability to provide our own templates for generating tests, 
 
 Once you have done that, future tests will now generate with stricter error testing! :tada:
 
-# Closing
+## Closing
 
 I understand that the recommendations above will make your code more fragile, as the code is subject to any changing of the error message of say a downstream library. However for myself, I prefer to write tests that are strict and minimalise the chance of other errors contaminating tests.
 

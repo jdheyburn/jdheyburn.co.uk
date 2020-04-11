@@ -3,6 +3,8 @@ date: 2019-12-12
 title: "Who Goes Blogging 2: Custom Domain"
 description: Make your portfolio site professional by applying a custom domain to it
 type: posts
+series:
+- Who Goes Blogging
 images:
 - namecheap_landing.png
 tags:
@@ -23,7 +25,7 @@ At the same time, we're going to make our website blazingly fast for users by ad
 
 Lastly, I'm going to throw in a bonus guide on how to redirect from multiple top-level domains (TLDs) to one (e.g. `<your-domain>.com` redirects to `<your-domain>.co.uk`).
 
-# Pre-requisites
+## Pre-requisites
 
 There's not much more to add from the last post. I talk a lot about domains and domain name system (DNS), which is the address-finder of the Internet, and an entirely huge beast in its own right. 
 
@@ -32,7 +34,7 @@ Again - I won't try to replicate already great guides out there on the topic. So
 - https://www.digitalocean.com/community/tutorials/an-introduction-to-dns-terminology-components-and-concepts
 - https://opensource.com/article/17/4/introduction-domain-name-system-dns
 
-# Applying a Custom Domain to GitHub Pages
+## Applying a Custom Domain to GitHub Pages
 
 Let's add a degree of professionalism to our site by having a custom domain apply to it. You'll need to make sure you own a domain first before you go ahead, so have a look at a few providers and see which works best for you [from a comparison list](https://www.techradar.com/uk/news/best-domain-registrars-in-2019). I bought mine from [namecheap](https://www.namecheap.com/) just because of the price and WhoisGuard features. There may be other providers that have the same features, so make sure to make your own comparison!
 
@@ -40,7 +42,7 @@ Let's add a degree of professionalism to our site by having a custom domain appl
 
 GitHub has a [series of documentation](https://help.github.com/en/github/working-with-github-pages/configuring-a-custom-domain-for-your-github-pages-site) on applying a custom domain to GitHub Pages in much greater detail than what I am about to write out, should you wish to find out more information.
 
-# Acquire a Domain
+## Acquire a Domain
 
 The rest of the post will depict a lot of Namecheap semantics, since that is the registrar I have access to. You can choose to follow the guide alongside a different registrar if you wish, at a high-level they will be pretty similar. For now, let's move on ahead with Namecheap and navigate through to the [domain purchase page](https://www.namecheap.com/).
 
@@ -58,7 +60,7 @@ This means when we type in our new domain into a browser, it will contact Namech
 
 Currently Namecheap is none the wiser about these records, which isn't very exciting. Let's move on to adding the CDN for the website.
 
-# Adding Our CDN Layer
+## Adding Our CDN Layer
 
 As discussed in a [previous post](/posts/who-goes-blogging-0-applying-cartography/#supercharge-your-delivery), a CDN can provide us with many benefits. Go check out the page for a refresher of what those are and for why I selected Cloudflare. You can use whichever you like, however the remainder of this guide will focus on Cloudflare in particular - the concepts can still be applied at a high level to other CDNs. 
 
@@ -67,7 +69,7 @@ As discussed in a [previous post](/posts/who-goes-blogging-0-applying-cartograph
 > You can go [here](https://blog.webnames.ca/advantages-and-disadvantages-of-a-content-delivery-network/) for a list of pros and cons of CDNs. Given this information I believe you can make your own mind up on what is best for yourself. For me, I the benefits far outweigh the downsides.
 
 
-## Cloudflare our Domain
+### Cloudflare our Domain
 
 Create an account with [Cloudflare](https://www.cloudflare.com/) if you haven't done so already. Once done you'll need to click **Add Site** at the top of the browser dashboard. Enter your newly purchased domain from the previous section.
 
@@ -79,7 +81,7 @@ Once that's created you'll see Cloudflare scan the DNS records for this domain y
 
 {{< figure src="cloudflare-domain-landing.png" caption="Name me a more iconic duo than numbers and graphs. I'll wait..." alt="Screenshot depicting the Cloudflare domain home page" >}}
 
-## Update Cloudflare DNS Records
+### Update Cloudflare DNS Records
 
 In order for Cloudflare to provide its benefits, it acts as the DNS server for your domain. This means that it will forward requests of our website to the IP addresses where our website is being hosted. It's place in the topology is like this:
 
@@ -117,7 +119,7 @@ One thing to note down before we move on is to capture the Cloudflare DNS Namese
 
 {{< figure src="cloudflare-nameservers.png" caption="Make a note of these nameservers for your domain" alt="Screenshot depicting completed Cloudflare DNS nameservers" >}}
 
-## Direct Namecheap to Cloudflare
+### Direct Namecheap to Cloudflare
 
 [Earlier in this post](/posts/who-goes-blogging-2-custom-domain/#acquire-a-domain), I mentioned that a newly created Namecheap domain will default to their own DNS nameservers. We want to change this to Cloudflares DNS nameservers from which we configured our DNS records.
 
@@ -127,14 +129,14 @@ Navigate to the [Namecheap management page](https://ap.www.namecheap.com/domains
 
 Once this is done you may need to wait a while for the DNS updates to propagate throughout the world. While we're waiting for that, there's one final piece of the puzzle which can keep us busy.
 
-## GitHub Pages Configuration
+### GitHub Pages Configuration
 
 The last place to configure is GitHub Pages. Currently it is hosting at our `.github.io` domain, but we need to instruct it to redirect to our custom domain. There are two methods for doing this:
 
 1. Configure the repository settings
 1. Use a `CNAME` file in your repository
 
-### Configure the repository settings
+#### Configure the repository settings
 
 This is the quicker of the two solutions, so I advise to follow this step to understand if you have everything in place correctly. Once done then you can lock-in your changes with step 2 above.
 
@@ -152,7 +154,7 @@ Now again wait for DNS to propagate across the world. When GitHub is happy with 
 
 {{< figure src="jdheyburn_co_uk_custom_domain.png" caption="You should end up with something like this!" alt="Screenshot depicting completed custom domain" >}}
 
-### Solidying our changes with a CNAME file
+#### Solidying our changes with a CNAME file
 
 We can use the above method to quickly try using GitHub repository settings to see if everything is working, however I'm a big fan of setting changes in code (Infrastructure-as-code anyone?). GitHub supports another method which is to use a file named `CNAME` in our generated `.github.io` repo that contains the domain name we wish to use. 
 
@@ -186,7 +188,7 @@ What this is doing is taking the `CNAME` file that already exists in our `blog-s
 Then that's it! Take a look at my [finished repo](https://github.com/jdheyburn/jdheyburn.github.io) and you'll see where `CNAME` fits in.
 
 
-# Bonus: TLD Redirection
+## Bonus: TLD Redirection
 
 Let me tell you a story. Your website is up and operational. You're super proud of it, and you give yourself a round of applause :clap:
 

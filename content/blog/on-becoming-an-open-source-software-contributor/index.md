@@ -32,7 +32,7 @@ As you can see from the ticket, I was suggested to improve on the documentation 
 
 In the meantime, let me talk about the importance of documentation in the next section.
 
-# Documentation Case Study
+## Documentation Case Study
 
 I'm a bit of a sucker when it comes to documentation. Yes everyone talks about how important it is to include it not just open source projects but also in your day-to-day job. A whole lot of the time there is far too much knowledge-retention and not enough knowledge-sharing. 
 
@@ -66,7 +66,7 @@ Later on when my former teammates wanted to add an additional feature to the pre
 
 Without that documentation I guarantee that I would've spent a whole load more time on trying to recollect my thoughts, only to waste the time of my teammate. If there was an ongoing incident too, then the time to resolution would be hastened too.
 
-# Conclusion
+## Conclusion
 
 Don't be that person to retain knowledge, it'll end up coming round and biting you in the arse. 
 

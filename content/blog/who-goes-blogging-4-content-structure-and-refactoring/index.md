@@ -3,6 +3,8 @@ date: 2020-03-31
 title: "Who Goes Blogging 4: Content Structure & Refactoring"
 description: Performing refactoring and reorganising how my Hugo website is structured
 type: posts
+series: 
+- Who Goes Blogging
 images:
   - images/jdheyburn_co_uk_card.png
 categories:
