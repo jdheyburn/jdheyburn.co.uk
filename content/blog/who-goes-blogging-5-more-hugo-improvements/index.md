@@ -254,21 +254,69 @@ Previewing it by `hugo serve` we should get something that appears as below.
 
 {{< figure src="completed-toc.png" caption="" alt="Screenshot showing rendered Table of Contents" >}}
 
-### Nuances Along The Way
+### Bugs Along The Way
 
 As the heading suggests, there were a few extra things I needed to change before releasing it into the wild.
 
-**Fix improper headings**
+#### Fix Improper Headings
 
 Per [Table of Contents Usage documentation](https://gohugo.io/content-management/toc/#usage), Hugo will render from `<h2>` headings, which are defined as `##` in markdown. So `# Introduction` would not be included in the TOC, but `## Introduction` will.
 
 This is a problem for some of my articles since I've been writing headings liberally at the wrong level. 
 
-{{< figure src="improper-toc-headings.png" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
+{{< figure src="improper-toc-headings.png" class="center" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
 
-The given example above shows what happens when we use `# Heading Name` instead of `## Heading Name`. To fix this I just need to go through each TODO finish
+The given example above shows what happens when we use `# Heading Name` instead of `## Heading Name`. To fix this I just need to go through each heading and make sure top-level headings begin with `##` and any subheadings have an additional `#`.
 
+{{< figure src="improper-toc-headings.png" class="center" caption="Much better!" alt="Screenshot showing table of contents fixed with correct heading indentation" >}}
+
+#### Fix Emojis
+
+Who doesn't love the use of emojis :interrobang: Well I don't when they render badly. Before this exercise I was using a custom shortcode to render them.
+
+```html
+# layouts/shortcodes/emoji.html
+{{ .Get 0 | emojify }} 
+```
+
+> [Shortcodes](https://gohugo.io/content-management/shortcodes/) are similar to partial templates in that they contain HTML, but they are usually for referring to one HTML element as opposed to multiple. 
+
+Then in my markdown I would refer back to them such as `{{<emoji ":wave:" >}}`. However in headings they rendered as below...
+
+{{< figure src="bad-emojis-headings.png" class="center" caption="Hugo clearly finds this hysterical" alt="Screenshot showing poorly rendered emojis in Table of Contents" >}}
+
+It's a weird one for sure - especially since they render fine in the headings themselves already.
+
+{{< figure src="good-emoji-heading-1.png" class="center" caption="" alt="Screenshot with heading example with emoji 1" >}}
+
+{{< figure src="good-emoji-heading-2.png" class="center" caption="" alt="Screenshot with heading example with emoji 2" >}}
+
+There is a fix for these, and it's called *rendering emojis the correct way!* :sweat_smile:
+
+Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{<emoji ":emoji_name:" >}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore. 
+
+{{< figure src="correct-emoji-headings.png" class="center" caption="" alt="Screenshot with correct emoji rendering in table of contents" >}}
+
+#### Markdown Not Rendering
+
+I also noticed that markdown wasn't rendering properly too. Given the markdown `## Spice Up Your ~~Life~~ Python :snake:`, which renders as a heading in the screenshot below...
+
+{{< figure src="markdown-heading-render.png" class="center" caption="" alt="Screenshot showing a heading formatted correctly with markdown" >}}
+
+But in the table of contents it appears without the tilde strikethrough (`~`) rendering.
+
+{{< figure src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
+
+TODO find the bug and fix it
+
+
+## More Emoji Fixing
+
+Continuing on the theme of fixing emojis
+
+I have some emojis in headings; now that the headings are being rendered in table of contents, we get some weird rendering.
 
 TODO 
+- then see if they appear in page links correctly
+- fix them for current 
 
-- Fix emojis too (use the correct format and add the fix for them in headings too if not done already)
