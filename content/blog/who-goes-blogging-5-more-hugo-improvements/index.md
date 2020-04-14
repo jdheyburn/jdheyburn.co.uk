@@ -307,12 +307,78 @@ But in the table of contents it appears without the tilde strikethrough (`~`) re
 
 {{< figure src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
 
-TODO find the bug and fix it
+This looks to be a bug within Hugo itself, since I was able to get **strong** and *emphasise* to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project.
+
+## Emojify Everything!
+
+Continuing on the theme of emojis; we were able to get them to appear in the Table of Contents fine. But what about in the titles of the articles themselves? We can add them in the `title` front matter setting like below:
+
+```yml {hl_lines=["3"]}
+---
+date: 2019-07-05
+title: ":snake: Three Ways To Spice Up Your Python Code"
+# ...
+---
+```
+
+Having a look around the site we see these aren't getting rendered correctly in a number of places...
+
+**(1)** Post title
+
+{{< figure src="broken-emoji-post-title.png" class="center" caption="" alt="Screenshot of broken emoji on post title" >}}
+
+**(2)** Browser title
+
+{{< figure src="broken-emoji-browser-title.png" class="center" caption="" alt="Screenshot of broken emoji on browser title" >}}
+
+**(3)** Type list entry
+
+{{< figure src="broken-emoji-list.png" class="center" caption="" alt="Screenshot of broken emoji rendering on lists" >}}
+
+This is all to do with how the theme is rendering these, they are not "[emojifying](https://gohugo.io/functions/emojify/)" the text it is receiving. This is easy to fix but it involves us copying over the respective files where they are being rendered from in hugo-coder and overwriting thme in our project root (back to [template ordering](#template-lookup-order-primer) again!).
+
+### Fix Post & Browser Title
+
+We can kill two birds with one stone since these are both found in the same file, the `layouts/posts/single.html` file - this is the main file used to render the article page. If you followed [above](#implementation), you'll notice we already copied across that file to our project root in order to add a TOC.
+
+We need to go back to that file and *emojify* both the main article heading, alongside the browser title to change any occurrence of `{{ .Title }}` to `{{ .Title | emojify }}`.
+
+By doing this we will *always* emojify the titles even if in our `config.toml` we specified `enableEmoji = false`, or didn't specify it at all. This will conflict with the default state of the setting which is `false`. So we need to include some logic into how it is formatted.
+
+TODO this is wrong, need to talk about how it doesn't respect enableEmoji because it isn't exposed and link to the GitHub issues.
+```golang
+{{ if .Site.Params.enableEmoji }}
+	{{ .Title | emojify }}
+{{ else }}
+	{{ .Title }}
+{{ end }}
+```
+
+See the Gist below for my completed `single.html` file, including the TOC addition earlier.
+
+{{< gist jdheyburn 35a10e346848379ec5f6f87cb48454cd >}}
+
+You'll notice I'm emojifying (surely I've said this enough times to make it into the Oxford Dictionary?!) the site title too. This is incase myself (or even yourselves) wish to add emojis there too.
+
+### Fix Type List Entry
+
+We need to find the file in the theme that determines how to render a list entry for a page of type `posts` and make the modification there - `layouts/posts/li.html`. We'll need to do the same here as we did for `single.html` and copy it to our project root.
+
+```bash
+cp -v themes/hugo-coder/layouts/posts/li.html layouts/posts
+```
+
+Talk about how it doesn't 
+
+All we need to do now is add in the conditional logic to emojify the title if `enableEmoji` is set to `true`.
 
 
-## More Emoji Fixing
 
-Continuing on the theme of fixing emojis
+
+
+
+
+
 
 I have some emojis in headings; now that the headings are being rendered in table of contents, we get some weird rendering.
 
