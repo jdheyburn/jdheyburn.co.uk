@@ -1,10 +1,10 @@
 ---
-date: 2020-04-05
+date: 2020-04-16
 title: "Who Goes Blogging 5: More Hugo Improvements"
 description: TODO
 type: posts
 images:
-- namecheap_landing.png
+  - namecheap_landing.png
 tags:
 
 draft: true
@@ -17,12 +17,11 @@ In this article we're going to continue making some improvements to our Hugo web
 1. Upgrading our Hugo theme
 1. Upgrading the Hugo version
 1. Adding table of contents
+1. Adding support for title emojis
 
-So far since this website has launched we haven't upgraded either the Hugo version used to build our website, alongside the theme being used. Hugo is a very active project with new features and bug fixes being added all the time. 
+So far since this website has launched we haven't upgraded either the Hugo version used to build our website, alongside the theme being used. Hugo is a very active project with new features and bug fixes being added all the time.
 
-By not upgrading Hugo, we are missing out on enhancements that we can make to the site - I'll cover such examples of these later on. As for upgrading the theme, improvements in the styling or even making use of said new features in Hugo can be added as part of the theme. Remember when you execute a `hugo` command which turns the website from markdown to rendered HTML files, that the theme chosen will be used to render those files. 
-
-
+By not upgrading Hugo, we are missing out on enhancements that we can make to the site. As for upgrading the theme, improvements in the styling or even making use of said new features in Hugo can be added as part of the theme. Remember when you execute a `hugo` command which turns the website from markdown to rendered HTML files, that the theme chosen will be used to render those files.
 
 ## Upgrading Hugo
 
@@ -135,7 +134,7 @@ Now comes the testing part, ensuring that everything is working as intended with
 
 **`<center>` tags not rending correctly.**
 
-I believe the new Hugo version broke this one, where images that were wrapped in `<center>` tags were simply disappearing. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images - but it looks like the new version causes these images to appear completely. 
+I believe the new Hugo version broke this one, where images that were wrapped in `<center>` tags were simply disappearing. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images - but it looks like the new version causes these images to appear completely.
 
 It looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
 
@@ -153,7 +152,7 @@ It turns out that my markdown for articles wasn't as watertight as I thought; Hu
 
 {{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render" >}}
 
-For this I just needed to fix the markdown by adding another indent to the list item. 
+For this I just needed to fix the markdown by adding another indent to the list item.
 
 {{< figure src="git-diff-list.png" caption="" alt="Screenshot showing git diff between old and new list" >}}
 
@@ -175,10 +174,11 @@ date: 2020-03-10
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 #...
 series:
-- Who Goes Blogging
+  - Who Goes Blogging
 tags:
 #...
 ---
+
 ```
 
 Once this is done for all pages, hugo-coder will render the **See also in ...** section at the article footer.
@@ -189,7 +189,7 @@ Once this is done for all pages, hugo-coder will render the **See also in ...** 
 
 ### Template Lookup Order Primer
 
-Okay this one isn't exactly a new feature of the theme, but since we're playing around with the theme we may as well make use of this opportunity. Table of contents (TOC) aren't included by default in the `hugo-coder` theme, so we need to add it in ourselves. 
+Okay this one isn't exactly a new feature of the theme, but since we're playing around with the theme we may as well make use of this opportunity. Table of contents (TOC) aren't included by default in the `hugo-coder` theme, so we need to add it in ourselves.
 
 There is some [documentation](https://gohugo.io/content-management/toc/) on how to add TOC to your articles. Before we do that we need to revisit how layouts are organised as discussed briefly in [a previous post](/blog/who-goes-blogging-4-content-structure-and-refactoring/#fixing-article-rendering).
 
@@ -200,7 +200,7 @@ In other words, the order of presedence (or hierarchy) for HTML files is anythin
 See below for a directory tree explaning this - a lot of content has been removed for brevity.
 
 ```bash
-$ tree layouts                                          
+$ tree layouts
 layouts
 ├── posts
 │   └── single.html					# Hugo will use this file to render your HTML
@@ -225,16 +225,14 @@ cp -v themes/hugo-coder/layouts/posts/single.html layouts/posts
 I want the TOC to appear before the main content, but after the featured image for the article (if there is any). Based on this the files is going to need the highlighted change below.
 
 ```html {linenos=table,hl_lines=["33"],linenostart=29}
-      <div>
-        {{ if .Params.featured_image }}
-          <img src='{{ .Params.featured_image }}' alt="Featured image"/>
-        {{ end }}
-        {{ partial "toc.html" . }}
-        {{ .Content }}
-      </div>
+<div>
+  {{ if .Params.featured_image }}
+  <img src="{{ .Params.featured_image }}" alt="Featured image" />
+  {{ end }} {{ partial "toc.html" . }} {{ .Content }}
+</div>
 ```
 
-We're not done there. We're referencing a [partial template file](https://gohugo.io/templates/partials/) here. These allow us to reuse HTML files in multiple places, or to break up a large HTML file into smaller, more easier to manage chunks. 
+We're not done there. We're referencing a [partial template file](https://gohugo.io/templates/partials/) here. These allow us to reuse HTML files in multiple places, or to break up a large HTML file into smaller, more easier to manage chunks.
 
 Partial templates are found under the `layouts/partials` directory and follow the same principle as defined in the primer for template lookups, and are referenced back as `{{ partial "<partial_name>.html" . }}`.
 
@@ -243,7 +241,7 @@ Let's go ahead and create the `layouts/partials/toc.html` file and populate it a
 ```html
 {{ if and (gt .WordCount 400 ) (.Site.Params.toc) }}
 <aside>
-    {{.TableOfContents}}
+  {{.TableOfContents}}
 </aside>
 {{ end }}
 ```
@@ -262,7 +260,7 @@ As the heading suggests, there were a few extra things I needed to change before
 
 Per [Table of Contents Usage documentation](https://gohugo.io/content-management/toc/#usage), Hugo will render from `<h2>` headings, which are defined as `##` in markdown. So `# Introduction` would not be included in the TOC, but `## Introduction` will.
 
-This is a problem for some of my articles since I've been writing headings liberally at the wrong level. 
+This is a problem for some of my articles since I've been writing headings liberally at the wrong level.
 
 {{< figure src="improper-toc-headings.png" class="center" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
 
@@ -275,11 +273,10 @@ The given example above shows what happens when we use `# Heading Name` instead 
 Who doesn't love the use of emojis :interrobang: Well I don't when they render badly. Before this exercise I was using a custom shortcode to render them.
 
 ```html
-# layouts/shortcodes/emoji.html
-{{ .Get 0 | emojify }} 
+# layouts/shortcodes/emoji.html {{ .Get 0 | emojify }}
 ```
 
-> [Shortcodes](https://gohugo.io/content-management/shortcodes/) are similar to partial templates in that they contain HTML, but they are usually for referring to one HTML element as opposed to multiple. 
+> [Shortcodes](https://gohugo.io/content-management/shortcodes/) are similar to partial templates in that they contain HTML, but they are usually for referring to one HTML element as opposed to multiple.
 
 Then in my markdown I would refer back to them such as `{{<emoji ":wave:" >}}`. However in headings they rendered as below...
 
@@ -291,9 +288,9 @@ It's a weird one for sure - especially since they render fine in the headings th
 
 {{< figure src="good-emoji-heading-2.png" class="center" caption="" alt="Screenshot with heading example with emoji 2" >}}
 
-There is a fix for these, and it's called *rendering emojis the correct way!* :sweat_smile:
+There is a fix for these, and it's called _rendering emojis the correct way!_ :sweat_smile:
 
-Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{<emoji ":emoji_name:" >}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore. 
+Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{<emoji ":emoji_name:" >}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore.
 
 {{< figure src="correct-emoji-headings.png" class="center" caption="" alt="Screenshot with correct emoji rendering in table of contents" >}}
 
@@ -307,7 +304,7 @@ But in the table of contents it appears without the tilde strikethrough (`~`) re
 
 {{< figure src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
 
-This looks to be a bug within Hugo itself, since I was able to get **strong** and *emphasise* to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project.
+This looks to be a bug within Hugo itself, since I was able to get **strong** and _emphasise_ to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project.
 
 ## Emojify Everything!
 
@@ -319,6 +316,7 @@ date: 2019-07-05
 title: ":snake: Three Ways To Spice Up Your Python Code"
 # ...
 ---
+
 ```
 
 Having a look around the site we see these aren't getting rendered correctly in a number of places...
@@ -341,24 +339,25 @@ This is all to do with how the theme is rendering these, they are not "[emojifyi
 
 We can kill two birds with one stone since these are both found in the same file, the `layouts/posts/single.html` file - this is the main file used to render the article page. If you followed [above](#implementation), you'll notice we already copied across that file to our project root in order to add a TOC.
 
-We need to go back to that file and *emojify* both the main article heading, alongside the browser title to change any occurrence of `{{ .Title }}` to `{{ .Title | emojify }}`.
+We need to go back to that file and _emojify_ both the main article heading, alongside the browser title to change any occurrence of `{{ .Title }}` to `{{ .Title | emojify }}`.
 
-By doing this we will *always* emojify the titles even if in our `config.toml` we specified `enableEmoji = false`, or didn't specify it at all. This will conflict with the default state of the setting which is `false`. So we need to include some logic into how it is formatted.
+By doing this we will _always_ emojify the titles even if in our `config.toml` we specified `enableEmoji = false`, or didn't specify it at all. This will conflict with the default state of the setting which is `false`. We could do some conditional logic on the `enableEmoji` setting, but unfortunately this isn't exposed to us to be able to perform something like <code>{{ if .Site.enableEmoji }}</code>. Because of this we cannot create a pull request (PR) to merge it in with the `hugo-coder` theme. I've raised a [couple](https://github.com/gohugoio/hugo/issues/7171) of [issues](https://github.com/gohugoio/hugo/issues/7170) against Hugo requesting these features.
 
-TODO this is wrong, need to talk about how it doesn't respect enableEmoji because it isn't exposed and link to the GitHub issues.
-```golang
-{{ if .Site.Params.enableEmoji }}
-	{{ .Title | emojify }}
-{{ else }}
-	{{ .Title }}
-{{ end }}
-```
+Since this is just for my website I am okay with the overriding behaviour of emojiying the title.
 
 See the Gist below for my completed `single.html` file, including the TOC addition earlier.
 
-{{< gist jdheyburn 35a10e346848379ec5f6f87cb48454cd >}}
+{{< gist jdheyburn "35a10e346848379ec5f6f87cb48454cd/3a30b153aae5a761f62293add95187e280d8c3d3" >}}
 
 You'll notice I'm emojifying (surely I've said this enough times to make it into the Oxford Dictionary?!) the site title too. This is incase myself (or even yourselves) wish to add emojis there too.
+
+The end result for the title will look like this:
+
+{{< figure src="fixed-emoji-post-title.png" class="center" caption="" alt="Screenshot of fixed emoji on post title" >}}
+
+And the browser title is fixed accordingly:
+
+{{< figure src="fixed-emoji-browser-title.png" class="center" caption="" alt="Screenshot of fixed emoji on browser title" >}}
 
 ### Fix Type List Entry
 
@@ -368,21 +367,22 @@ We need to find the file in the theme that determines how to render a list entry
 cp -v themes/hugo-coder/layouts/posts/li.html layouts/posts
 ```
 
-Talk about how it doesn't 
+Likewise for the title in the previous section, we need to emojify the title of the article as it's being listed out.
 
-All we need to do now is add in the conditional logic to emojify the title if `enableEmoji` is set to `true`.
+{{< gist jdheyburn 177fb9f74a38306d9257fb7302ba221c >}}
 
+Once done, we can see it reflect nicely in the list:
 
+{{< figure src="fixed-emoji-list.png" class="center" caption="" alt="Screenshot of fixed emoji rendering on lists" >}}
 
+## Conclusion
 
+There was a lot covered in this post, to recap we...
 
+1. Upgraded the Hugo version used to render the website locally, as well as in the CI/CD pipeline
+1. Also updated the version of the theme we're using
+   - Made use of new features that came with it such as series links
+1. Added a table of contents to our longer articles
+1. Added support for emojis in post titles
 
-
-
-
-I have some emojis in headings; now that the headings are being rendered in table of contents, we get some weird rendering.
-
-TODO 
-- then see if they appear in page links correctly
-- fix them for current 
-
+Thanks for reading! :full_moon_with_face:
