@@ -1,12 +1,12 @@
 {{ define "title" }}
-  {{ .Title }} · {{ .Site.Title }}
+  {{ .Title | emojify }} · {{ .Site.Title | emojify }}
 {{ end }}
 {{ define "content" }}
   <section class="container post">
     <article>
       <header>
         <div class="post-title">
-          <h1 class="title">{{ .Title }}</h1>
+          <h1 class="title">{{ .Title | emojify }}</h1>
         </div>
         <div class="post-meta">
           <div class="date">
