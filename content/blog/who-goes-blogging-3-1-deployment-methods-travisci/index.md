@@ -3,6 +3,8 @@ date: 2020-02-25
 title: "Who Goes Blogging 3.1: Deployment Methods - TravisCI"
 description: Apply DevOps practices by continuously deploying your website on any new changes, with an introduction to TravisCI
 type: posts
+series: 
+- Who Goes Blogging
 images:
 - travisci-card.png
 tags:
@@ -13,14 +15,14 @@ aliases:
 - /posts/who-goes-blogging-3-1-deployment-methods-travisci/
 ---
 
-# Recap
+## Recap
 
 Since [part 1](/posts/who-goes-blogging-1-getting-started/), we have been using a simple bash script called `deploy.sh` to build our Hugo website and upload it to our GitHub Pages repo. In [part 2](/posts/who-goes-blogging-2-custom-domain/) we modified it slightly to include the `CNAME` file post-build to ensure GitHub Pages uses the custom domain we set up in that same part.
 
 For this part, I will tell you about how I migrated from deploying via a script, to a CI/CD tool - namely [TravisCI](https://travis-ci.com/). Then I will document how I migrated from this, to the new [GitHub Actions](https://github.com/features/actions); GitHub's offering into the CI/CD space.
 
 > `CI/CD` is an acronym for Continuous Integration / Continuous Deployment which is a very important concept in the DevOps culture.
-> If you would like to find out more about that and DevOps culture, check out these resources {{<emoji ":point_down:" >}}
+> If you would like to find out more about that and DevOps culture, check out these resources :point_down:
 >
 > - https://www.atlassian.com/devops
 > - https://medium.com/faun/the-basics-of-continuous-integration-delivery-with-10-most-popular-tools-to-use-9514231533f0
@@ -32,7 +34,7 @@ I had originally planned this to be one post, but it soon became far too long - 
 
 So this post will focus on migrating to TravisCI from the `deploy.sh` script. Whereas the next post will focus on migrating to, and setting up GitHub Actions. If you're only interested in using that as your CI tool then I'll provide a link to that here when it is posted.
 
-# Moving Away From deploy.sh
+## Moving Away From deploy.sh
 
 There's nothing necessarily wrong with using `deploy.sh` to push our code, however we want to get all the bells and whistles that Continuous Integration can provide to us such as running a series of tests and checks automatically against every commit to our repository. Once those tests and checks pass then we can automate the deployment of our website.
 
@@ -44,7 +46,7 @@ So it is a good idea to set your source code repository on GitHub to be public. 
 
 {{< figure src="travis-free.png" caption="Free is definitely a thing you love to see" alt="Screenshot of Travis free pricing plan" >}}
 
-# TravisCI Account Setup
+## TravisCI Account Setup
 
 The TravisCI account setup for TravisCI is very streamlined - instead of creating *another* account for you to manage, it integrates in with GitHub, so this is the account you use to sign-up with. Head over to https://travis-ci.com/ and click on `Sign in with GitHub`.
 
@@ -52,9 +54,9 @@ The TravisCI account setup for TravisCI is very streamlined - instead of creatin
 
 GitHub will ask you if you *really* want to share some of your GitHub data with Travis.
 
-<center>{{< figure src="travis-github-authorise.png" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}</center>
+{{< figure src="travis-github-authorise.png" class="center" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
 
-Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely {{<emoji ":frowning:" >}} - let's fix that!
+Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely :frowning: - let's fix that!
 
 All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the `Activate` button.
 
@@ -64,9 +66,9 @@ Now on the next screen you may or may not want the default selection of `All rep
 
 For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
 
-<center>{{< figure src="travis-github-repos-selection.png" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}</center>
+{{< figure src="travis-github-repos-selection.png" class="center" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
 
-## Back to GitHub
+### Back to GitHub
 
 The next step is required to permit Travis to push the built project to our GitHub Pages repo. We need to generate a secret with the permissions that Travis requires and keep it aside for the Travis config file later.
 
@@ -76,13 +78,13 @@ You'll come across a page asking for the name of the token being created. It doe
 
 After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
 
-<center>{{< figure src="travis-github-pat.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}</center>
+{{< figure src="travis-github-pat.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}
 
 The token's secret will display on the next screen. **Make sure you copy it** and place it somewhere you can refer back to it later such as a text editor like Notepad - we'll need it again in the next section.
 
-<center>{{< figure src="travis-github-pat-created.png" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}</center>
+{{< figure src="travis-github-pat-created.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}
 
-# TravisCI Configuration
+## TravisCI Configuration
 
 Once we have our Travis account set up, we need to add in a [configuration file](https://docs.travis-ci.com/user/tutorial/) that Travis will read from to determine what steps we'd like it to perform.
 
@@ -92,7 +94,7 @@ In our source code repository (`jdheyburn.co.uk` in my case) we want to create a
 
 Let's break it down section by section.
 
-## Build Environment
+### Build Environment
 
 These settings here all refer to the build environment that we'd like our project to build on.
 
@@ -118,7 +120,7 @@ env:
 `env.matrix` is the encrypted value that gets passed to the `GITHUB_TOKEN` environment variable which is used to allow Travis to commit the built project to our GitHub Pages repo. 
 - You're going to want to take the personal access token generated from GitHub in the earlier step and encrypt it using [this method](https://docs.travis-ci.com/user/environment-variables#encrypting-environment-variables), then add it back to this setting
 
-## External Dependencies
+### External Dependencies
 
 Once the build environment is defined, we can tell Travis to pull in some additional dependencies or files required for our project. Now remember this is a `hugo` project and we needed to install it on our local machines to run `deploy.sh`, we need to do the same for Travis too.
 
@@ -136,7 +138,7 @@ Remember we defined `HUGO_VERSION` earlier? This is where it is called back agai
 1. Moving the `hugo` binary to the `~/bin/` directory
     - This directory is on the build servers `PATH`, which enables us to execute the binary using just the `hugo` command later
 
-### Previous Issues
+#### Previous Issues
 
 In a previous version of `hugo` I used, there was an additional dependency I needed to include. The `hugo-coder` theme requires to be built with Hugo Extended since it requires Sass/SCSS support. 
 
@@ -153,7 +155,7 @@ However in later versions of Hugo (including the one I am using today) this depe
 
 You may not need this stage in your pipeline, I know my project no longer requires it. However this may come in handy later knowing that you have the option of specifying more pipeline steps if the build distribution you're using requires some additional dependencies.
 
-## Build Script
+### Build Script
 
 Now onto the juicy stuff - building the project. This is pretty much where the `deploy.sh` starts from, since on our local machines we already had the `hugo` binary installed.
 
@@ -167,7 +169,7 @@ script:
 Not a lot is going on here, but to detail what each step is doing:
 
 1. Print out the version of `hugo` being used
-  - This is helpful for debugging the build. By printing out the version used we can try to replicate the bug locally for troubleshooting.
+    - This is helpful for debugging the build. By printing out the version used we can try to replicate the bug locally for troubleshooting.
 
 2. Build the project
     - We do this with two flags, `--gc` and `--minify`. These weren't defined in the `deploy.sh` script we used earlier so let's cover them here.
@@ -185,7 +187,7 @@ This ensures that the custom domain name we set up in the previous part continue
 >
 > The next section details the Continuous Deployment, ensuring that on the successful build of a project we deploy it to our production environment. 
 
-## Deploy to GitHub Pages
+### Deploy to GitHub Pages
 
 Once the project has been built, we need to push it to the GitHub Pages repository. Travis has [good documentation](https://docs.travis-ci.com/user/deployment/pages/) on this. My setup follows the below:
 
@@ -218,7 +220,7 @@ For the last time, let's walk through what each of these is doing.
 
 That concludes the configuration section. Remember to change it or add in some other functionality needed for your project and save it to `.travis.yml`. 
 
-# Bringing It All Together
+## Bringing It All Together
 
 Now you've completed your config file, let's check it all in to GitHub.
 
@@ -238,6 +240,6 @@ Once you've got a successful build, that means your website has been deployed to
 
 If they aren't there then your browser is most likely caching an older version. By default, websites served by GitHub Pages have a browser cache TTL [set to 10 minutes](https://webapps.stackexchange.com/questions/119286/caching-assets-in-website-served-from-github-pages). So you can either wait 10 minutes, or clear your browser cache!
 
-# Conclusion
+## Conclusion
 
-You're on the way to DevOps masterclass. As mentioned the next post will focus on migrating to GitHub Actions so if you're happy with TravisCI then there's no more you need to do! Go ahead and add other repositories you may have to Travis and build up multiple pipelines {{<emoji ":raised_hands:" >}}
+You're on the way to DevOps masterclass. As mentioned the next post will focus on migrating to GitHub Actions so if you're happy with TravisCI then there's no more you need to do! Go ahead and add other repositories you may have to Travis and build up multiple pipelines :raised_hands:
