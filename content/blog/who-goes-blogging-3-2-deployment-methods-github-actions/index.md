@@ -3,6 +3,8 @@ date: 2020-03-10
 title: "Who Goes Blogging 3.2: Deployment Methods - GitHub Actions"
 description: Migrating to GitHub Actions as our CI tool
 type: posts
+series: 
+- Who Goes Blogging
 images:
 - github-actions-build.png
 tags:
@@ -13,15 +15,15 @@ aliases:
 - /posts/who-goes-blogging-3-2-deployment-methods-github-actions/
 ---
 
-# From TravisCI to GitHub Actions 
+## From TravisCI to GitHub Actions 
 
 In the [previous post](/posts/who-goes-blogging-3-1-deployment-methods-travisci/) we looked at moving to a CI/CD model by moving from the `deploy.sh` script to TravisCI.
 
 In this post we will look at how we can migrate from TravisCI to [GitHub Actions](https://help.github.com/en/actions/getting-started-with-github-actions/about-github-actions), GitHub's own CI/CD tool. 
 
-This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! {{<emoji ":rocket:" >}}
+This post will also be useful if you are looking to onboard GitHub Actions as your CI/CD pipeline! :rocket:
 
-## Benefits {{<emoji ":white_check_mark:" >}}
+### Benefits :white_check_mark:
 
 Let's talk about why we want to migrate away from TravisCI in the first place.
 
@@ -35,7 +37,7 @@ I think you folks get the picture now. There's an [awesome-actions](https://gith
 
 **Lastly**, all configuration is managed in the workflow configuration file. One enhancement in particular that we will be introducing can be achieved with an additional setting in the workflow config file; for us to achieve the same in Travis would have to be done via the GUI. I'm a big sucker for having configuration baked into code so this is a very good plus.
 
-## Pricing {{<emoji ":alarm_clock:" >}}
+### Pricing :alarm_clock:
 
 **However** - one downsides to GitHub Actions is how many build minutes you get. Remember Travis allowed unlimited build minutes for a public repository? With Actions - you are limited to [2,000 minutes in their free plan](https://github.com/pricing). 
 
@@ -45,13 +47,13 @@ Given that this isn't a huge project with multiple contributors working on it, I
 
 Sound good? Let's go.
 
-# Creating Our Workflow 
+## Creating Our Workflow 
 
 Like all great services in the world, there is [great documentation](https://help.github.com/en/actions) to go along with them. Take a look over there if you'd like the detailed version. 
 
 What I will be focusing on is the documentation for two sets of predefined actions; [actions-hugo](https://github.com/peaceiris/actions-hugo) for building our website, and [actions-gh-pages](https://github.com/peaceiris/actions-gh-pages) for deploying it to GitHub Pages. 
 
-## Deployment Keys Setup
+### Deployment Keys Setup
 
 The very first thing we need to do is set up some keys that will allow our source repository (where the workflow will reside on) to push the built project to the GitHub Pages repo. 
 
@@ -75,11 +77,11 @@ In GitHub load up your GitHub Pages repo and navigate to `Settings` and then `De
 
 {{< figure src="gha-deploy-key.png" caption="" alt="GitHub Pages repo deploy keys page" >}}
 
-Copy the contents of the *private key* you created earlier (perhaps using your new command?! {{<emoji ":smirk:" >}}) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
+Copy the contents of the *private key* you created earlier (perhaps using your new command?! :smirk:) and navigate to the source code repository's `Settings` page, then `Secrets`. You'll need to give it a sensible name as this then referred to later in the workflow configuration. Paste the private key in the value field.
 
 {{< figure src="gha-secrets-key.png" caption="No secrets here!" alt="GitHub source code repo secrets page" >}}
 
-## Workflow Configuration
+### Workflow Configuration
 
 In the root directory of your source code repo, create a directory called `.github/workflows`. In this directory is where GitHub Actions will look for jobs to do. Create a `yml` file in this directory to contain your build job definition. I went ahead and named mine `deploy.yml`, but you can name it whatever you like.
 
@@ -89,7 +91,7 @@ I used the [example](https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-rep
 
 This config is much simpler to understand than the Travis one - let's break it down once more.
 
-### Build Metadata and Environment
+#### Build Metadata and Environment
 
 ```yml
 name: Build and deploy to jdheyburn.github.io
@@ -118,7 +120,7 @@ An enhancement that we're adding is the `on.schedule.cron` setting. This tells A
 
 > In order to keep our build the same as Travis's, we could instruct the job to run on `ubuntu-16.04`, nonetheless I'm pretty confident it will run on the next [LTS of Ubuntu](https://wiki.ubuntu.com/Releases).
 
-### Project Checkout
+#### Project Checkout
 
 ```yml
 # ...
@@ -148,7 +150,7 @@ steps:
 > 
 > This is because GitHub Actions can be used for many more things than just repository code manipulation where you may not necessarily need the repo checked out.
 
-### Build and Deploy Setup
+#### Build and Deploy Setup
 
 ```yml
 - name: Setup Hugo
@@ -178,7 +180,7 @@ Once `hugo` is set up we can then build it easily enough, as self-documented in 
 
 Lastly, we can't forget to copy the `CNAME` file we made in [part 2](/posts/who-goes-blogging-2-custom-domain/#solidying-our-changes-with-a-cname-file).
 
-### Deployment to GitHub Pages
+#### Deployment to GitHub Pages
 
 ```yml
 - name: Deploy
@@ -202,13 +204,13 @@ For the deployment to GitHub Pages I'm using the action [actions-gh-pages](https
 - `commit_message` allows us to specify a custom commit message to the target repo
   - Here I am telling it to inherit the commit message used in the source repo
 
-# Bringing It All Together (Again)
+## Bringing It All Together (Again)
 
 If you're migrating from a previous CI tool (perhaps Travis?) then you'll need to disable the builds on there since you may cause a conflict either build process.
 
 For Travis, you can do that by navigating to your source code repo settings on Travis (https://travis-ci.com/jdheyburn/jdheyburn.co.uk/settings for me) and disabling `Build pushed branches`.
 
-<center>{{< figure src="travis-disable-build.png" caption="" alt="Build pushed branches disabled on Travis" >}}</center>
+{{< figure src="travis-disable-build.png" class="center" caption="" alt="Build pushed branches disabled on Travis" >}}
 
 Now that's done, go ahead and check in your new GitHub Actions workflow file and then navigate to the `Actions` tab of your source code repo on GitHub.
 
@@ -222,10 +224,10 @@ git push
 
 Hopefully your build went to success! If it didn't have a look through the logs and see what the issue was. It took me a few builds to determine my finalised workflow config. You can even see it at my [source code repo Actions page](https://github.com/jdheyburn/jdheyburn.co.uk/actions).
 
-# Conclusion
+## Conclusion
 
 Now that we've migrated across over to GitHub Actions, we can close out the permissions that TravisCI has on our projects, and demise any secret keys we gave it.
 
 From the tone of my writing you can probably tell which one I favour. That's not to say I do not like TravisCI - each service has its own pros and cons. For this particular project, I prefer the one platform approach for which I am used to in GitLab. The number of build minutes available for GA is a concern, but not one I will have to worry about for now.
 
-Thanks for reading! {{<emoji ":full_moon_with_face:" >}}
+Thanks for reading! :full_moon_with_face:

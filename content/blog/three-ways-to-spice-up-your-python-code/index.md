@@ -11,7 +11,7 @@ aliases:
 - /posts/three-ways-to-spice-up-your-python-code/
 ---
 
-# Spice Up Your ~~Life~~ Python {{<emoji ":snake:" >}}
+## Spice Up Your ~~Life~~ Python :snake:
 
 
 I'm currently working on a side project that I've written in Python. Now I've have a lot of experience with Python before, I used it primarily to write a load of scripts for automating processes for when Bash didn't quite cut it. Don't get me wrong Bash is great, but like for every other language out there, each has its purpose in the world. 
@@ -39,7 +39,7 @@ From this list, we can include the following to solve the above:
 1. [Static type checking](#static-type-checking)
 1. [Classes](#class-objects)
 
-# Tests
+## Tests
 
 Alright so I know this one is a given. But in all honesty I've never really tested Python code before. Why so? I found it difficult to mock API calls and the effort required for the initial learning curve didn't seem to pay off for the tiny script I was automating. Given the scope of my side project is rather large, this is a great opportunity to learn. Let's start with a basic function:
 
@@ -52,7 +52,7 @@ def increment_int_by_one(int_to_inc):
 
 While this is something easy enough to test by doing so manually, at some point its functionality may increase, and at that point we would require automated tests to ensure its original feature-set was unchanged.
 
-## Implementation
+### Implementation
 
 There are [several testing frameworks](https://wiki.python.org/moin/PythonTestingToolsTaxonomy) out there, but for my use case I am using the built-in `unittest` which is easy enough to use. A basic structure of a test file is seen below:
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
 There's a lot going on here, let's break it down by section.
 
-### Imports
+#### Imports
 
 ```python
 import unittest
@@ -92,7 +92,7 @@ import scratch
 
 Here we are specifying the modules that the test file is going to interact with. `unittest` is the testing framework and `scratch` is the Python file containing our business logic, as written earlier.
 
-### Class Declaration
+#### Class Declaration
 
 ```python
 class TestIncrement(unittest.TestCase):
@@ -100,7 +100,7 @@ class TestIncrement(unittest.TestCase):
 
 Simply enough, this is a class that extends the `unittest.TestCase` class, for which then unittest can then execute all the test methods defined within it, and you can name them like `class TestXXXX`. There is no limit to how many classes you can have, but I like to group my TestClasses together in terms of what logic they are testing.
 
-### Test Methods
+#### Test Methods
 
 ```python
 def test_increment(self):
@@ -116,7 +116,7 @@ def test_increment(self):
 
 These methods are the real juicy bits of your tests. Here you are defining the parameters that are going to be used by your functions, and hitting the logic you are testing. For each test that you write you will alter the test name, description, expected values, and input parameters accordingly to what you are testing.
 
-### Main Method Invocation
+#### Main Method Invocation
 
 ```python
 if __name__ == '__main__':
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
 To close off nice and easily, this will tell Python to invoke all test classes that are described within `unittest.TestCase`.
 
-## Execution
+### Execution
 
 Now just execute the test file and it will now run as expected:
 
@@ -149,7 +149,7 @@ Ran 1 test in 0.002s
 OK                                                                    
 ```
 
-# Static Type Checking
+## Static Type Checking
 
 As I mentioned before, Python is great for throwing together a script to automate some task. It's quick and easy to do mainly because the type of a variable is implied from whatever you set to it.
 
@@ -173,6 +173,7 @@ def increment_int_by_one(int_to_inc):
 ```
 
 All good so far. But what happens when we pass in something that is not an int, such as a string?
+
 ```python
 >>> print(increment_int_by_one("1"))
 Traceback (most recent call last):
@@ -186,25 +187,26 @@ Yikes, that's a misleading error! Having a look at the error straight away, you'
 What this is actually error-ing on is how an int is being concatenated to a str on the left-hand side of the + operator.
 
 > Under the hood, Python believe you are trying to do a __string concatenation__ because the parameter is of type string, and is on the left-hand side of the + operator. The below shows a valid way to perform a string concatenation:
-
+>
 > `"1" + "1" # -> "11"`
-
+>
 >
 > If the int value was on the left-hand side of the operator and you passed a string, you'd get something like this:
-> ```
+>```
 >>> 1 + "1"
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: unsupported operand type(s) for +: 'int' and 'str'
-```
+>Traceback (most recent call last):
+>  File "<stdin>", line 1, in <module>
+>TypeError: unsupported operand type(s) for +: 'int' and 'str'
+>```
 
 But changing the right-side of the operator won't fix this for us. What we need is to implement typing.
 
-## Implementation
+### Implementation
 
 Python 3.6 onwards introduced static type checking, so make sure you upgrade to it if you haven't already - which you might want to do very soon as Python 2 is [EOL in 2020](https://pythonclock.org/)! 
 
 Taking our above `increment_int_by_one` function, we can add `: int` to the parameter which will tell the function what type it expects the parameter to be.
+
 ```python
 def increment_int_by_one(int_to_inc: int):
     incremented_int = int_to_increment + 1
@@ -213,17 +215,17 @@ def increment_int_by_one(int_to_inc: int):
 
 Now when we pass in a `str` as the parameter, we still get the same error we saw before. However, if the IDE you are using supports it, you will receive **type hints**!
 
-![Screenshot displaying type hinting provided by Visual Studio Code][type_hinting]
+{{< figure src="type_hinting.png" class="center" caption="" alt="Screenshot displaying type hinting provided by Visual Studio Code" >}}
 
 I'm using VSCode with the Python extension installed too, you can see the hint that appears includes the type of the parameter.
 
 VSCode also has the ability to check the type of the value you are passing into the function:
 
-![Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright][type_checking]
+{{< figure src="type_checking.png" class="center" caption="" alt="Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright" >}}
 
 Here we have a visual indicator that the string is incompatible with the int type of the function. Alongside this, in the Problems tab we have a full explanation on what has gone wrong. This is both provided by the `pyright` extension which can be found in the VSCode Extensions section.
 
-## Return Types
+### Return Types
 
 So all of that just describes how typing works for parameters, but how can we specify the return type of a function? That is done easily enough too. Let's extend on our increment function from earlier.
 
@@ -235,13 +237,13 @@ def increment_int_by_one(int_to_inc: int) -> int:
 
 Note the only change here is the `-> int` which specifies the type it is returning. Now our type checker will highlight to us when we violate this in two scenarios:
 
-![Screenshot displaying type checking, highlighting the bad return value][type_checking_bad_return]
+{{< figure src="type_checking_bad_return.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad return value" >}}
 
 The IDE has shown us that the function is expected to return a type different to what it is actually returning...
 
-![Screenshot displaying type checking, highlighting the bad assigned variable][type_checking_bad_assign]
+{{< figure src="type_checking_bad_assign.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad assigned variable" >}}
 
-And in this snapshot, we are trying to assign a varaible of type `str` to the output of the function which returns an `int`!
+And in this snapshot, we are trying to assign a variable of type `str` to the output of the function which returns an `int`!
 
 Another pattern you might see is if a method does not return anything (in Java-speak, it is `void`), an example of this is if the method is a constructor for a class.
 
@@ -250,11 +252,11 @@ def __init__(self) -> None:
     self.attribute = 'DEFAULT_VALUE'
 ```
 
-# Class Objects
+## Class Objects
 
 So you might __class__ this (pardon the pun!) as a type of its own, but this is something I've learnt all the same recently, so I hope it benefits you too! Python has the ability to construct more complex objects in the form of classes. While I won't go into the details of that (I'll leave it up to [better resources](https://www.w3schools.com/python/python_classes.asp)), I wanted to show how I've been able to utilise them.
 
-## Test Mocks
+### Test Mocks
 
 One of the main reasons for implementing classes has been to resolve one of my requirements I described earlier on in this post, the ability to test my code easily. For my side project I interface with some third-party APIs to retrieve data, in order for me to test these I need to mock them appropriately. See below for a snippet of the code:
 
@@ -331,7 +333,7 @@ The test `test_get_album_by_id` creates an instance of this mocked Spotify API, 
 
 Trying to learn how to implement the above has probably been the biggest blocker for me to test Python code in this way - now that I've discovered it I can't stop using it everywhere!
 
-## Complex Object Comparison
+### Complex Object Comparison
 
 Much like the previous section, this relates to the static typing we implemented earlier. I was writing methods that returned complex objects encapsulated in classes, and I wanted to be able to test for equality using unittest's `self.assertEqual(actual, expected)`. 
 
@@ -416,14 +418,8 @@ OK
 
 Normal service is resumed!! 
 
-# Closing
+## Closing
 
 I hope the hints detailed in this helped you as much as it did for me! I'm sure there are many more tips out there - as I discover them be sure that I'll share them once I find them, along with documenting more on the side project I've been working on!
 
-Thanks for reading {{<emoji ":smiley:" >}}
-
-
-[type_hinting]: type_hinting.png
-[type_checking]: type_checking.png
-[type_checking_bad_return]: type_checking_bad_return.png
-[type_checking_bad_assign]: type_checking_bad_assign.png
+Thanks for reading :smiley:
