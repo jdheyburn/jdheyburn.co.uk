@@ -1,12 +1,14 @@
 ---
 date: 2020-04-16
-title: "Who Goes Blogging 5: More Hugo Improvements"
-description: TODO
+title: "Who Goes Blogging 5: Updates Galore!"
+description: I update the theme, hugo version, fix bugs, and add some new functionality to the website
 type: posts
+series: 
+- Who Goes Blogging
 images:
-  - namecheap_landing.png
+  - images/jdheyburn_co_uk_card.png
 tags:
-
+ - hugo
 draft: true
 ---
 
@@ -384,5 +386,7 @@ There was a lot covered in this post, to recap we...
    - Made use of new features that came with it such as series links
 1. Added a table of contents to our longer articles
 1. Added support for emojis in post titles
+
+You can view all the changes made in this post at this [pull request](https://github.com/jdheyburn/jdheyburn.co.uk/pull/2).
 
 Thanks for reading! :full_moon_with_face:
