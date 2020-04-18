@@ -1,5 +1,5 @@
 ---
-date: 2020-04-16
+date: 2020-04-19
 title: "Who Goes Blogging 5: Updates Galore!"
 description: I update the theme, hugo version, fix bugs, and add some new functionality to the website
 type: posts
@@ -8,8 +8,9 @@ series:
 images:
   - images/jdheyburn_co_uk_card.png
 tags:
+ - emojis
+ - toc
  - hugo
-draft: true
 ---
 
 In this article we're going to continue making some improvements to our Hugo website. Some of the things going to be covered are:
@@ -293,7 +294,7 @@ Who doesn't love the use of emojis :interrobang: Well I don't when they render b
 
 Then in my markdown I would refer back to them such as `{{</* emoji ":wave:" */>}}`. However in headings they rendered as below...
 
-{{< figure src="bad-emojis-headings.png" class="center" caption="Hugo clearly finds this hysterical" alt="Screenshot showing poorly rendered emojis in Table of Contents" >}}
+{{< screenshot src="bad-emojis-headings.png" class="center" caption="Hugo clearly finds this hysterical" alt="Screenshot showing poorly rendered emojis in Table of Contents" >}}
 
 It's a weird one for sure - especially since they render fine in the headings themselves already...
 
