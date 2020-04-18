@@ -158,9 +158,9 @@ To...
 
 It turns out that my markdown for articles wasn't as watertight as I thought; Hugo is now a whole lot more strict in ensuring your syntax is correct. Check these two before and after for comparison.
 
-{{< figure src="old-render-list.png" caption="" alt="Screenshot showing old, proper list render" >}}
+{{< screenshot src="old-render-list.png" caption="" alt="Screenshot showing old, proper list render" >}}
 
-{{< figure src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render" >}}
+{{< screenshot src="new-render-list.png" caption="" alt="Screenshot showing new, incorrect list render" >}}
 
 For this I just needed to fix the markdown by adding another indent to the list item.
 
@@ -193,7 +193,7 @@ tags:
 
 Once this is done for all pages, hugo-coder will render the [**See also in ...**](#conclusion) section at the article footer.
 
-{{< figure src="series-footer-section.png" caption="" alt="Screenshot showing series rendered in the page footer" >}}
+{{< screenshot src="series-footer-section.png" caption="" alt="Screenshot showing series rendered in the page footer" >}}
 
 ## Adding Table of Contents
 
@@ -262,7 +262,7 @@ This is similar to [Hugo's example](https://gohugo.io/content-management/toc/#te
 
 Previewing it by `hugo serve` we should get something that appears as below.
 
-{{< figure src="completed-toc.png" caption="" alt="Screenshot showing rendered Table of Contents" >}}
+{{< screenshot src="completed-toc.png" caption="" alt="Screenshot showing rendered Table of Contents" >}}
 
 ### Bugs Along The Way
 
@@ -274,11 +274,11 @@ Per [Table of Contents Usage documentation](https://gohugo.io/content-management
 
 This is a problem for some of my articles since I've been writing headings liberally at the wrong level.
 
-{{< figure src="improper-toc-headings.png" class="center" caption="Notice the **Applying Cartography** heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
+{{< screenshot src="improper-toc-headings.png" class="center" caption="Notice the **Applying Cartography** heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
 
 The given example above shows what happens when we use `# Heading Name` instead of `## Heading Name`. To fix this I just need to go through each heading and make sure top-level headings begin with `##` and any subheadings have an additional `#`.
 
-{{< figure src="proper-toc-headings.png" class="center" caption="Much better!" alt="Screenshot showing table of contents fixed with correct heading indentation" >}}
+{{< screenshot src="proper-toc-headings.png" class="center" caption="Much better!" alt="Screenshot showing table of contents fixed with correct heading indentation" >}}
 
 #### Fix Emojis
 
@@ -297,25 +297,25 @@ Then in my markdown I would refer back to them such as `{{</* emoji ":wave:" */>
 
 It's a weird one for sure - especially since they render fine in the headings themselves already...
 
-{{< figure src="good-emoji-heading-1.png" class="center" caption="" alt="Screenshot with heading example with emoji 1" >}}
+{{< screenshot src="good-emoji-heading-1.png" class="center" caption="" alt="Screenshot with heading example with emoji 1" >}}
 
-{{< figure src="good-emoji-heading-2.png" class="center" caption="" alt="Screenshot with heading example with emoji 2" >}}
+{{< screenshot src="good-emoji-heading-2.png" class="center" caption="" alt="Screenshot with heading example with emoji 2" >}}
 
 There is a fix for these, and it's called _rendering emojis the correct way!_ :sweat_smile:
 
 Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{</* emoji ":emoji_name:" */>}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore.
 
-{{< figure src="correct-emoji-headings.png" class="center" caption="Nicely done" alt="Screenshot with correct emoji rendering in table of contents" >}}
+{{< screenshot src="correct-emoji-headings.png" class="center" caption="Nicely done" alt="Screenshot with correct emoji rendering in table of contents" >}}
 
 #### Markdown Not Rendering
 
 I also noticed that markdown wasn't rendering properly too. Given the markdown `## Spice Up Your ~~Life~~ Python :snake:`, which renders as a heading in the screenshot below...
 
-{{< figure src="markdown-heading-render.png" class="center" caption="" alt="Screenshot showing a heading formatted correctly with markdown" >}}
+{{< screenshot src="markdown-heading-render.png" class="center" caption="" alt="Screenshot showing a heading formatted correctly with markdown" >}}
 
 But in the table of contents it appears without the tilde strikethrough (`~`) rendering.
 
-{{< figure src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
+{{< screenshot src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
 
 This looks to be a bug within Hugo itself, since I was able to get **strong** and _emphasise_ to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project - I can live with it for now.
 
@@ -336,7 +336,7 @@ Having a look around the site we see these aren't getting rendered correctly in 
 
 **(1)** Post title
 
-{{< figure src="broken-emoji-post-title.png" class="center" caption="" alt="Screenshot of broken emoji on post title" >}}
+{{< screenshot src="broken-emoji-post-title.png" class="center" caption="" alt="Screenshot of broken emoji on post title" >}}
 
 **(2)** Browser title
 
@@ -344,7 +344,7 @@ Having a look around the site we see these aren't getting rendered correctly in 
 
 **(3)** Type list entry
 
-{{< figure src="broken-emoji-list.png" class="center" caption="" alt="Screenshot of broken emoji rendering on lists" >}}
+{{< screenshot src="broken-emoji-list.png" class="center" caption="" alt="Screenshot of broken emoji rendering on lists" >}}
 
 This is all to do with how the theme is rendering these, they are not "[emojifying](https://gohugo.io/functions/emojify/)" the text it is receiving. This is easy to fix but it involves us copying over the respective files where they are being rendered from in hugo-coder and overwriting thme in our project root (back to [template ordering](#template-lookup-order-primer) again!).
 
@@ -366,7 +366,7 @@ You'll notice I'm emojifying (surely I've said this enough times to make it into
 
 The end result for the title will look like this:
 
-{{< figure src="fixed-emoji-post-title.png" class="center" caption="" alt="Screenshot of fixed emoji on post title" >}}
+{{< screenshot src="fixed-emoji-post-title.png" class="center" caption="" alt="Screenshot of fixed emoji on post title" >}}
 
 And the browser title is fixed accordingly:
 
@@ -386,7 +386,7 @@ Likewise for the title in the previous section, we need to emojify the title of 
 
 Once done, we can see it reflect nicely in the list:
 
-{{< figure src="fixed-emoji-list.png" class="center" caption="" alt="Screenshot of fixed emoji rendering on lists" >}}
+{{< screenshot src="fixed-emoji-list.png" class="center" caption="" alt="Screenshot of fixed emoji rendering on lists" >}}
 
 ## Conclusion
 
