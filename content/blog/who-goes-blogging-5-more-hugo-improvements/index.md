@@ -12,8 +12,6 @@ tags:
 draft: true
 ---
 
-## Intro
-
 In this article we're going to continue making some improvements to our Hugo website. Some of the things going to be covered are:
 
 1. Upgrading our Hugo theme
@@ -21,15 +19,15 @@ In this article we're going to continue making some improvements to our Hugo web
 1. Adding table of contents
 1. Adding support for title emojis
 
-So far since this website has launched we haven't upgraded either the Hugo version used to build our website, alongside the theme being used. Hugo is a very active project with new features and bug fixes being added all the time.
+So far since this website has launched we haven't upgraded either the Hugo version used to build our website, alongside the theme being used. Hugo is a very active project with new features and bug fixes being added all the time. By not upgrading Hugo, we are missing out on enhancements that we can make to the site. 
 
-By not upgrading Hugo, we are missing out on enhancements that we can make to the site. As for upgrading the theme, improvements in the styling or even making use of said new features in Hugo can be added as part of the theme. Remember when you execute a `hugo` command which turns the website from markdown to rendered HTML files, that the theme chosen will be used to render those files.
+As for upgrading the theme, improvements in the styling or even making use of said new features in Hugo can be added as part of the theme. Remember that when you execute a `hugo` command, turning the website from markdown to rendered HTML files, that the theme chosen will be used to render those files.
 
 ## Upgrading Hugo
 
-This varies depending on what OS you are running on, but it is pretty much identical as the steps taken to install Hugo in the first place. Even the [documentation for upgrading](https://gohugo.io/getting-started/installing/#upgrade-hugo) is a one-liner:
+This varies depending on what OS you are running on, but it is pretty much identical as the steps taken to install Hugo in the [first place](/blog/who-goes-blogging-1-getting-started/#blog-bootstrapping). Even the [documentation for upgrading](https://gohugo.io/getting-started/installing/#upgrade-hugo) is a one-liner:
 
-> Upgrading Hugo is as easy as downloading and replacing the executable you’ve placed in your `PATH` or run `brew upgrade hugo` if using Homebrew.
+> Upgrading Hugo is as easy as downloading and replacing the executable you’ve placed in your `PATH`, or running `brew upgrade hugo` if using Homebrew on macOS.
 
 A quick execute of `hugo version` tells us what we're currently running. We can then have a look at the [Hugo release page](https://github.com/gohugoio/hugo/releases/) to find the latest one - which at the time of writing is [0.68.3](https://github.com/gohugoio/hugo/releases/tag/v0.68.3).
 
@@ -64,19 +62,23 @@ Hugo Static Site Generator v0.68.3-157669A0/extended linux/amd64 BuildDate: 2020
 
 At this point I would advise you do some testing with the new version to determine if your site is not only rendering as expected but functioning too. You can do this with the good old `hugo serve` command as you would have used before when writing out articles, and fixing anything that looks out of place.
 
-However, since I'm going to be upgrading the hugo theme too, I'll do my testing in one hit then.
+However, since I'm going to be upgrading the hugo theme too, I'll do my testing in one hit [later in this post](#validation-and-testing).
 
 ### Updating Hugo in CI/CD
 
 We've only upgrading Hugo on our machines, but we also need to upgrade it in our CI/CD pipeline to ensure it deploys with the correct rendering too. We set this up in parts [3.1](/blog/who-goes-blogging-3-1-deployment-methods-travisci/) and [3.2](/blog/who-goes-blogging-3-2-deployment-methods-github-actions/).
 
-I'm using GitHub Actions for my CI/CD pipeline, so I need to head to `.github/workflows/deploy.yml` and change `hugo-version: "0.58.3"` to `hugo-version: "0.68.3"`. t's as easy as that!
+I'm using GitHub Actions for my CI/CD pipeline, so I need to head to `.github/workflows/deploy.yml` and change `hugo-version: "0.58.3"` to `hugo-version: "0.68.3"`. 
+
+It's as easy as that thanks to the pre-made GitHub Action!
 
 ## Upgrading Hugo Theme
 
 ### A git submodules recap
 
-As mentioned before, I'm using hugo-coder as the theme for my Hugo website. One of the cool things about `git submodules` is I don't need to have a copy of the source code for the theme in my project. I can just reference the codebase at a particular point in time - or a commit, and `git` will pull in the resources for which then my Hugo website can utilise it.
+As mentioned before, I'm using hugo-coder as the theme for my Hugo website which is being pulled as a submodule in my git repository. I can interface with it via the command `git submodules`.
+
+One of the cool things about `git submodules` is I don't need to have a copy of the source code for the theme in my project. I can just reference the codebase at a particular point in time - or a commit, and git will pull in the resources for which then my Hugo website can utilise it.
 
 We already defined this back in the [first post of this series](/blog/who-goes-blogging-1-getting-started/), in our root directory we created a file called `.gitmodules` with the following contents:
 
@@ -86,7 +88,7 @@ We already defined this back in the [first post of this series](/blog/who-goes-b
 	url = https://github.com/luizdepra/hugo-coder.git
 ```
 
-Line by line, we are giving the submodule a name, telling `git` where to check out the module to, and lastly where `git` can find the repository for the module when we checkout our project.
+Line by line, we are giving the submodule a name, telling git where to check out the module to, and lastly where git can find the repository for the module when we checkout our project.
 
 When we pull in the submodule for the first time, it creates a tree in our projects `.git/modules` filled with metadata about the submodule.
 
@@ -119,7 +121,13 @@ We can even view this commit in the repository at https://github.com/luizdepra/h
 
 ### Upgrading Submodules
 
-To upgrade submodules in your project, you simply need to execute `git submodule update --recursive --remote`. We can then check the value in `.git/modules/themes/hugo-coder/HEAD` and see what this is updated to.
+To upgrade submodules in your project, you simply need to execute the command below:
+
+```bash
+git submodule update --recursive --remote
+```
+
+We can then check the value in `.git/modules/themes/hugo-coder/HEAD` and see what this is updated to.
 
 ```bash
 $ cat .git/modules/themes/hugo-coder/HEAD
@@ -128,25 +136,25 @@ acb4bf6f2dcce51a27dc0e1f1008afb369d378d8
 
 Nice - this has changed from the previous value. We can jump over to GitHub to verify this is indeed the latest version.
 
-{{< figure src="hugo-coder-commit.png" caption="Verify at the GitHub repo page https://github.com/luizdepra/hugo-coder/commit/master" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
+{{< figure src="hugo-coder-commit.png" caption="Verify at the [GitHub repo page](https://github.com/luizdepra/hugo-coder/commit/master)" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
 
 ## Validation and Testing
 
 Now comes the testing part, ensuring that everything is working as intended with both the new Hugo version and the latest hugo-coder submodule. Some of the issues I came across were:
 
-**`<center>` tags not rending correctly.**
+### `<center>` tags not rending correctly
 
-I believe the new Hugo version broke this one, where images that were wrapped in `<center>` tags were simply disappearing. I had been wrapping `{{ figure ... }}` shortcodes in `<center>` tags in order to horizontally centre images - but it looks like the new version causes these images to appear completely.
+I believe the new Hugo version broke this one, where images that were wrapped in `<center>` tags were simply disappearing. I had been wrapping `{{</* figure ... */>}}` shortcodes in `<center>` tags in order to horizontally centre images - but it looks like the new version causes these images to appear completely.
 
 It looks like the `figure` shortcodes now support `center` as a `class` property. Therefore we go from...
 
-`<center>{{ figure src="image-name.png" }}</center>`
+`<center>{{</* figure src="image-name.png" */>}}</center>`
 
 To...
 
-`{{ figure src="image-name.png" class="center" }}`
+`{{</* figure src="image-name.png" class="center" */>}}`
 
-**Lists not rendering as before**
+### Lists not rendering as before
 
 It turns out that my markdown for articles wasn't as watertight as I thought; Hugo is now a whole lot more strict in ensuring your syntax is correct. Check these two before and after for comparison.
 
@@ -166,7 +174,7 @@ The whole reason to upgrade both Hugo and the theme was to explore some of the n
 
 ## Adding Series Links in Content Footer
 
-The hugo-coder theme now has better support for series, articles that directly follow on from one another, such as this Who Goes Blogging one. Series are nothing new to Hugo and we could have done them with the version we upgraded from, only in [this commit for hugo-coder](https://github.com/luizdepra/hugo-coder/commit/27e83b1e5a9d8b7bbd42d202bd5ef57adcce659b) has it added a layout for it to be rendered.
+The hugo-coder theme now has better support for series - these are articles that directly follow on from one another, such as this Who Goes Blogging one. Series are nothing new to Hugo and we could have done them with the version we upgraded from, only in [this commit for hugo-coder](https://github.com/luizdepra/hugo-coder/commit/27e83b1e5a9d8b7bbd42d202bd5ef57adcce659b) has it added a layout for it to be rendered.
 
 To create a series, we use the `series` front matter setting for articles. For the Who Goes Blogging articles, adding the front matter to them looks like this.
 
@@ -183,21 +191,21 @@ tags:
 
 ```
 
-Once this is done for all pages, hugo-coder will render the **See also in ...** section at the article footer.
+Once this is done for all pages, hugo-coder will render the [**See also in ...**](#conclusion) section at the article footer.
 
 {{< figure src="series-footer-section.png" caption="" alt="Screenshot showing series rendered in the page footer" >}}
 
 ## Adding Table of Contents
 
-### Template Lookup Order Primer
-
-Okay this one isn't exactly a new feature of the theme, but since we're playing around with the theme we may as well make use of this opportunity. Table of contents (TOC) aren't included by default in the `hugo-coder` theme, so we need to add it in ourselves.
+Okay this one isn't exactly a new feature of the theme, but since we're playing around we may as well make use of this opportunity. Table of contents (TOC) aren't included by default in the `hugo-coder` theme, so we need to add it in ourselves.
 
 There is some [documentation](https://gohugo.io/content-management/toc/) on how to add TOC to your articles. Before we do that we need to revisit how layouts are organised as discussed briefly in [a previous post](/blog/who-goes-blogging-4-content-structure-and-refactoring/#fixing-article-rendering).
 
+### Template Lookup Order Primer
+
 The type of a markdown file (defined by the front matter setting `type`) tells Hugo where to look for in the `layouts/` directory of your project. The Hugo theme you're using will already have these all defined, hence why they are predefined themes! Before Hugo looks for these layout HTML files in your theme, it will check for them in your projects `layouts/` directory first.
 
-In other words, the order of presedence (or hierarchy) for HTML files is anything in the project `layouts/` directory takes a higher priority than that in your theme - as described in Hugo's [documentation for template lookup order](https://gohugo.io/templates/lookup-order/).
+In other words, the order of precedence (or hierarchy) for HTML files is anything in the project `layouts/` directory takes a higher priority than that in your theme - as described in Hugo's [documentation for template lookup order](https://gohugo.io/templates/lookup-order/).
 
 See below for a directory tree explaning this - a lot of content has been removed for brevity.
 
@@ -205,7 +213,7 @@ See below for a directory tree explaning this - a lot of content has been remove
 $ tree layouts
 layouts
 ├── posts
-│   └── single.html					# Hugo will use this file to render your HTML
+│   └── single.html					# hugo will use this file to render your HTML
 └── themes
     └── hugo-coder
 	    └── layouts
@@ -226,15 +234,17 @@ cp -v themes/hugo-coder/layouts/posts/single.html layouts/posts
 
 I want the TOC to appear before the main content, but after the featured image for the article (if there is any). Based on this the files is going to need the highlighted change below.
 
-```html {linenos=table,hl_lines=["33"],linenostart=29}
+```html {linenos=table,hl_lines=[5],linenostart=29}
 <div>
   {{ if .Params.featured_image }}
   <img src="{{ .Params.featured_image }}" alt="Featured image" />
-  {{ end }} {{ partial "toc.html" . }} {{ .Content }}
+  {{ end }}
+  {{ partial "toc.html" . }}
+  {{ .Content }}
 </div>
 ```
 
-We're not done there. We're referencing a [partial template file](https://gohugo.io/templates/partials/) here. These allow us to reuse HTML files in multiple places, or to break up a large HTML file into smaller, more easier to manage chunks.
+We're not done there - we've referenced a [partial template file](https://gohugo.io/templates/partials/) here. These allow us to reuse HTML files in multiple places, or to break up a large HTML file into smaller, more easier to manage chunks.
 
 Partial templates are found under the `layouts/partials` directory and follow the same principle as defined in the primer for template lookups, and are referenced back as `{{ partial "<partial_name>.html" . }}`.
 
@@ -248,7 +258,7 @@ Let's go ahead and create the `layouts/partials/toc.html` file and populate it a
 {{ end }}
 ```
 
-This is similar to [Hugo's example](https://gohugo.io/content-management/toc/#template-example-toc-partial) but just tweaked a bit. I'm not looking to do anything too fancy with it just yet, but maybe later on.
+This is similar to [Hugo's example](https://gohugo.io/content-management/toc/#template-example-toc-partial) but just tweaked a bit. I'm not looking to do anything too fancy with the styling just yet, but maybe later on.
 
 Previewing it by `hugo serve` we should get something that appears as below.
 
@@ -264,27 +274,28 @@ Per [Table of Contents Usage documentation](https://gohugo.io/content-management
 
 This is a problem for some of my articles since I've been writing headings liberally at the wrong level.
 
-{{< figure src="improper-toc-headings.png" class="center" caption="Notice the *Applying Cartography* heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
+{{< figure src="improper-toc-headings.png" class="center" caption="Notice the **Applying Cartography** heading doesn't appear in the TOC" alt="Screenshot showing table of contents not including all headings for a post" >}}
 
 The given example above shows what happens when we use `# Heading Name` instead of `## Heading Name`. To fix this I just need to go through each heading and make sure top-level headings begin with `##` and any subheadings have an additional `#`.
 
-{{< figure src="improper-toc-headings.png" class="center" caption="Much better!" alt="Screenshot showing table of contents fixed with correct heading indentation" >}}
+{{< figure src="proper-toc-headings.png" class="center" caption="Much better!" alt="Screenshot showing table of contents fixed with correct heading indentation" >}}
 
 #### Fix Emojis
 
 Who doesn't love the use of emojis :interrobang: Well I don't when they render badly. Before this exercise I was using a custom shortcode to render them.
 
 ```html
-# layouts/shortcodes/emoji.html {{ .Get 0 | emojify }}
+# layouts/shortcodes/emoji.html
+{{ .Get 0 | emojify }}
 ```
 
 > [Shortcodes](https://gohugo.io/content-management/shortcodes/) are similar to partial templates in that they contain HTML, but they are usually for referring to one HTML element as opposed to multiple.
 
-Then in my markdown I would refer back to them such as `{{<emoji ":wave:" >}}`. However in headings they rendered as below...
+Then in my markdown I would refer back to them such as `{{</* emoji ":wave:" */>}}`. However in headings they rendered as below...
 
 {{< figure src="bad-emojis-headings.png" class="center" caption="Hugo clearly finds this hysterical" alt="Screenshot showing poorly rendered emojis in Table of Contents" >}}
 
-It's a weird one for sure - especially since they render fine in the headings themselves already.
+It's a weird one for sure - especially since they render fine in the headings themselves already...
 
 {{< figure src="good-emoji-heading-1.png" class="center" caption="" alt="Screenshot with heading example with emoji 1" >}}
 
@@ -292,9 +303,9 @@ It's a weird one for sure - especially since they render fine in the headings th
 
 There is a fix for these, and it's called _rendering emojis the correct way!_ :sweat_smile:
 
-Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{<emoji ":emoji_name:" >}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore.
+Firstly in the site `config.toml` I added `enableEmoji = true` at the root level and then proceeded to change all occurrence of `{{</* emoji ":emoji_name:" */>}}` to `:emoji_name:`. With that I can then remove `layouts/shortcodes/emoji.html` since it's not being referred back to anymore.
 
-{{< figure src="correct-emoji-headings.png" class="center" caption="" alt="Screenshot with correct emoji rendering in table of contents" >}}
+{{< figure src="correct-emoji-headings.png" class="center" caption="Nicely done" alt="Screenshot with correct emoji rendering in table of contents" >}}
 
 #### Markdown Not Rendering
 
@@ -306,7 +317,7 @@ But in the table of contents it appears without the tilde strikethrough (`~`) re
 
 {{< figure src="incorrect-markdown-rendering-toc.png" class="center" caption="" alt="Screenshot showing tilde strikethrough not appearing in table of content entry" >}}
 
-This looks to be a bug within Hugo itself, since I was able to get **strong** and _emphasise_ to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project.
+This looks to be a bug within Hugo itself, since I was able to get **strong** and _emphasise_ to render fine - I [raised an issue](https://github.com/gohugoio/hugo/issues/7169) on the project - I can live with it for now.
 
 ## Emojify Everything!
 
@@ -315,7 +326,7 @@ Continuing on the theme of emojis; we were able to get them to appear in the Tab
 ```yml {hl_lines=["3"]}
 ---
 date: 2019-07-05
-title: ":snake: Three Ways To Spice Up Your Python Code"
+title: ":​​​snake: Three Ways To Spice Up Your Python Code"
 # ...
 ---
 
@@ -343,7 +354,7 @@ We can kill two birds with one stone since these are both found in the same file
 
 We need to go back to that file and _emojify_ both the main article heading, alongside the browser title to change any occurrence of `{{ .Title }}` to `{{ .Title | emojify }}`.
 
-By doing this we will _always_ emojify the titles even if in our `config.toml` we specified `enableEmoji = false`, or didn't specify it at all. This will conflict with the default state of the setting which is `false`. We could do some conditional logic on the `enableEmoji` setting, but unfortunately this isn't exposed to us to be able to perform something like <code>{{ if .Site.enableEmoji }}</code>. Because of this we cannot create a pull request (PR) to merge it in with the `hugo-coder` theme. I've raised a [couple](https://github.com/gohugoio/hugo/issues/7171) of [issues](https://github.com/gohugoio/hugo/issues/7170) against Hugo requesting these features.
+By doing this we will _always_ emojify the titles even if in our `config.toml` we specified `enableEmoji = false`, or didn't specify it at all. This will conflict with the default state of the setting which is `false`. We could do some conditional logic on the `enableEmoji` setting, but unfortunately this isn't exposed to us to be able to perform something like `{{ if .Site.enableEmoji }}`. Because of this we cannot create a pull request (PR) to merge it in with the `hugo-coder` theme. I've raised a [couple](https://github.com/gohugoio/hugo/issues/7171) of [issues](https://github.com/gohugoio/hugo/issues/7170) against Hugo requesting these features.
 
 Since this is just for my website I am okay with the overriding behaviour of emojiying the title.
 
