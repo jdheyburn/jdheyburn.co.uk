@@ -1,10 +1,14 @@
 ---
 title: ":file_folder: Projects"
+images:
+- jdheyburn-homepage.png
 ---
 
 ## Portfolio Website
 
-- [jdheyburn.co.uk](https://github.com/jdheyburn/jdheyburn.co.uk) is how you are reading this content
+{{< figure src="jdheyburn-homepage.png" class="center" alt="jdheyburn.co.uk homepage" >}}
+
+- [jdheyburn.co.uk](https://github.com/jdheyburn/jdheyburn.co.uk) is my portfolio website - how you are reading this content!
 - It is based the JAMstack framework [Hugo](https://gohugo.io/)
 - Hosted on [GitHub Pages](https://pages.github.com/) and built & deployed via [GitHub Actions](https://github.com/features/actions)
 - Globally distributed via [Cloudflare CDN](https://www.cloudflare.com/cdn/)
