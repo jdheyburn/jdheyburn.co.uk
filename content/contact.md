@@ -1,6 +1,9 @@
-+++
-title = "Contact"
-slug = "contact"
-+++
+---
+title: ":mailbox: Contact"
+---
 
-If you wish to get in touch - reach me via [@jdheyburn](https://twitter.com/jdheyburn/).
+You can get in contact with me via any of the below:
+
+:baby_chick: [Twitter](https://twitter.com/jdheyburn/)
+
+:email: jdheyburn [at] gmail [dot] com
