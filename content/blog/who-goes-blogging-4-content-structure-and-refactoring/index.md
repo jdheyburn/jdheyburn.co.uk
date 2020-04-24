@@ -6,7 +6,8 @@ type: posts
 series: 
 - Who Goes Blogging
 images:
-  - images/jdheyburn_co_uk_card.png
+#   - images/jdheyburn_co_uk_card.png
+    - images/jdheyburn-homepage.png
 tags:
   - bash
   - hugo

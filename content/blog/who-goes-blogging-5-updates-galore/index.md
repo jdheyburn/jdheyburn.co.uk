@@ -7,7 +7,7 @@ series:
 - Who Goes Blogging
 images:
   # - images/jdheyburn_co_uk_card.png
-  - jdheyburn-homepage.png
+  - images/jdheyburn-homepage.png
 tags:
  - emojis
  - toc
