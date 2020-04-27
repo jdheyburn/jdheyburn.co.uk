@@ -2,6 +2,8 @@
 date: 2019-07-05
 title: Three Ways To Spice Up Your Python Code
 description: I describe some simple methods to improve on your Python codes integrity and durability
+images:
+    - images/jdheyburn_co_uk_card.png
 type: posts
 tags:
 - python

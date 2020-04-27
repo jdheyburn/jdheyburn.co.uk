@@ -1,7 +1,7 @@
 ---
 title: ":file_folder: Projects"
 images:
-- jdheyburn-homepage.png
+    - images/jdheyburn_co_uk_card.png
 ---
 
 ## Portfolio Website

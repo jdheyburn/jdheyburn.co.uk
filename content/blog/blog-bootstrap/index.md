@@ -2,6 +2,8 @@
 date: 2019-02-11
 title: Blog Bootstrap
 description: A short introduction to the blog.
+images:
+    - images/jdheyburn_co_uk_card.png
 type: posts
 tags:
 - blabber
