@@ -5,8 +5,6 @@ description: I update the theme, hugo version, fix bugs, and add some new functi
 type: posts
 series: 
 - Who Goes Blogging
-images:
-  - images/jdheyburn_co_uk_card.png
 tags:
  - emojis
  - toc

@@ -29,6 +29,7 @@ enableEmoji = true
     avatarurl = "images/me.jpg"
     footercontent = ""
     toc = true
+    images = ["images/jdheyburn_co_uk_card.png"]
 
     dateformat = "2 January 2006"
 
