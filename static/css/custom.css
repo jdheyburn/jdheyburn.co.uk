@@ -3,3 +3,14 @@
   padding: 8px;
   box-shadow: 0px 0px 0px 3px gray;
 }
+
+.featimage {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-description {
+  font-size: 1.2em;
+}
