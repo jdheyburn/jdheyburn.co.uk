@@ -28,8 +28,10 @@
     {{ range $pages }}
     <item>
       <title>{{ .Title }}</title>
+      {{- $pagePermalink := .Permalink -}}
       {{- with .Params.images -}}
-      <enclosure url="{{ index . 0 | absURL }}" type="image/jpg"></enclosure>
+      {{- $img := index . 0 -}}
+      <enclosure url="{{ printf "%s%s" $pagePermalink $img }}" type="image/jpg"></enclosure>
       {{ else -}}
       {{- $images := .Resources.ByType "image" -}}
       {{- $featured := $images.GetMatch "*feature*" -}}
