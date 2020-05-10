@@ -5,8 +5,6 @@ description: Performing refactoring and reorganising how my Hugo website is stru
 type: posts
 series: 
 - Who Goes Blogging
-images:
-  - images/jdheyburn_co_uk_card.png
 tags:
   - bash
   - hugo
