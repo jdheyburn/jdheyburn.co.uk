@@ -1,6 +1,6 @@
 ---
 date: 2020-04-27
-title: "Who Goes Blogging 6: Fixing RSS"
+title: "Who Goes Blogging 6: Three Steps to Improve Hugo's RSS Feeds"
 description: Spending time to ensure that posts are rendered nicely for RSS feeds, along with other minor enhancements
 type: posts
 series:
@@ -146,3 +146,83 @@ TODO screenshot of rendered image on RSS
 
 ## Adding cards for posts
 
+Not dissimilar to [social media cards](https://barkersocial.com/social-cards/), you can also have cards appear for your RSS posts in order to make them more attractive for readers to click on!
+
+TODO screenshot of an example (perhaps for a good blog I recommend?)
+
+You can do these in RSS via the [enclosure](https://www.w3schools.com/xml/rss_tag_enclosure.asp) tag...
+
+```html
+<enclosure url="image-location" type="image/jpg"></enclosure>
+```
+
+If you have a look at our `layouts/_default/rss.xml` file, we don't have this defined. We could go and add it in now, but I would like a unified social media image to be used across all platforms. This will enable me to focus my effort on generating a single social media card image that is shared across all methods of consumption. 
+
+Based on the above, my theme (hugo-coder), renders the tags required for social media cards through the [internal template](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/twitter_cards.html) for [twitter_cards](https://gohugo.io/templates/internal/#use-the-twitter-cards-template). A snippet of the logic that determines this:
+
+```html
+{{- with $.Params.images -}}
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ index . 0 | absURL }}"/>
+{{ else -}}
+{{- $images := $.Resources.ByType "image" -}}
+{{- $featured := $images.GetMatch "*feature*" -}}
+{{- if not $featured }}{{ $featured = $images.GetMatch "{*cover*,*thumbnail*}" }}{{ end -}}
+{{- with $featured -}}
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ $featured.Permalink }}"/>
+{{- else -}}
+{{- with $.Site.Params.images -}}
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ index . 0 | absURL }}"/>
+{{ else -}}
+...
+```
+
+The hierarchy of images used to render the social media card goes like this:
+
+1. The first entry in the list of `images` found in the post front matter
+1. Any image in the post leaf bundle containing `feature` in its name
+1. Any image in the post leaf bundle containing either `cover` or `thumbnail` in its name
+1. The default image defined at the site level params
+
+### Adding enclosure tags
+
+We can effectively copy and paste the code being used for generating Twitter cards and modify it for enclosure tags. The snippet of code ultimately ends up looking like this.
+
+```html {linenos=table}
+{{- $pagePermalink := .Permalink -}}
+{{- with .Params.images -}}
+{{- $img := index . 0 -}}
+<enclosure url="{{ printf "%s%s" $pagePermalink $img }}" type="image/jpg"></enclosure>
+{{ else -}}
+{{- $images := .Resources.ByType "image" -}}
+{{- $featured := $images.GetMatch "*feature*" -}}
+{{- if not $featured }}{{ $featured = $images.GetMatch "{*cover*,*thumbnail*}" }}{{ end -}}
+{{- with $featured -}}
+<enclosure url="{{ $featured.Permalink }}" type="image/jpg"></enclosure>
+{{- else -}}
+{{- with .Site.Params.images -}}
+<enclosure url="{{ index . 0 | absURL }}" type="image/jpg"></enclosure>
+{{- end -}}
+{{- end -}}
+{{- end }}
+```
+
+Walking through what this is doing:
+
+- Lines 1-4 will use the image defined in the `images` in the post front matter, if it exists
+    - I had to define `{{-/* $pagePermalink := .Permalink */-}}` on line 1 to make `.Permalink` available inside the `with` block at line 4
+- Line 7 will find an image containing `feature` in its name, at the post leaf bundle section, if an image is not found previously
+- Line 8 will revert to an image containing either `cover` or `thumbnail`, if an image is not found previously
+- Lines 12-13 will default to the image defined at the site level params
+
+With lessons learnt trying to get images to display in RSS content (TODO link heading), I am rendering the full URL of the image to ensure RSS is always able to retrieve it.
+
+## Summarising changes to RSS XML
+
+You can view the gist below to see my complete RSS XML file after all the above has been added. If you wish to use it, you'll need to place it in `layouts/_default/rss.xml` in your project directory.
+
+{{< gist jdheyburn a0a2c678f8f9795088b2779ec6af9920 >}}
+
+[Click here](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920/revisions#diff-c166fdc5b553c1f4e101f56186da7017) for a `git diff` view on the changes I made from the default RSS XML file.
