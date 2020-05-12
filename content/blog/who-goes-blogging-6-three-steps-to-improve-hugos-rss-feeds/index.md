@@ -10,6 +10,12 @@ images:
 draft: true
 ---
 
+## tldr
+
+I "fixed" the default RSS template used by Hugo to show the full article content, along with images, and also talk about how to have social media cards appear in the RSS items too.
+
+I uploaded my modified RSS file to GitHub Gist. TODO link
+
 ## What is RSS?
 
 [RSS](https://en.wikipedia.org/wiki/RSS) is a great way to "subscribe" to websites to ensure that you don't miss content from them. The standard for how it is generated has been the same for decades now - however its still the best supported and most accepted way to receive updates. The format for these are usually defined from an XML file which would contain the content for your posts and then be consumed on an RSS aggregator or reader, for which there are many to choose from (RIP [Google Reader](https://en.wikipedia.org/wiki/Google_Reader)).
