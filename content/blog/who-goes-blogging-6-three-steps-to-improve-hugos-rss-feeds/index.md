@@ -1,25 +1,25 @@
 ---
-date: 2020-04-27
+date: 2020-05-14
 title: "Who Goes Blogging 6: Three Steps to Improve Hugo's RSS Feeds"
 description: Spending time to ensure that posts are rendered nicely for RSS feeds
 type: posts
 series:
     - Who Goes Blogging
-images:
-    - images/jdheyburn_co_uk_card.png
+tags:
+    - rss
+    - cards
 draft: true
 ---
 
 I "fixed" the default RSS template used by Hugo to show the full article content, along with images, and also talk about how to have social media cards appear in the RSS items too.
 
-I uploaded my modified RSS file to [GitHub Gist](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920).
+I uploaded my completed RSS file to [GitHub Gist](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920) :rocket:
 
 ## What is RSS?
 
 [RSS](https://en.wikipedia.org/wiki/RSS) is a great way to "subscribe" to websites to ensure that you don't miss content from them. The standard for how it is generated has been the same for decades now - however its still the best supported and most accepted way to receive updates. It is simply a standardised XML file that allows consumers such as RSS aggregators to parse the content of the post - for which there are many to choose from (RIP [Google Reader](https://en.wikipedia.org/wiki/Google_Reader)).
 
-
-TODO include screenshot of inoreader - mention I'll be using this in my examples My RSS aggregator of choice currently is [inoreader](https://www.inoreader.com/) - I'll be using this in my examples.
+{{< figure src="inoreader-complete.png" class="center" alt="inoreader as an RSS feed aggregator" caption="My RSS aggregator of choice currently is [inoreader](https://www.inoreader.com/) - I'll be using this in my examples" >}}
 
 Hugo [generates RSS XML](https://gohugo.io/templates/rss/) files from a template that will loop over your content and expose this at an endpoint for RSS aggregators to subscribe to and periodically check for updates against. Hugo generates a bunch of RSS XML files at different sections of the website, allowing consumers to subscribe to the section that interests them most - you can even subscribe to tags if that XML is being generated! 
 
@@ -31,7 +31,7 @@ Some (but not all) websites only include the first paragraph of their post in an
 
 This is a common feature of WordPress blogs - and it is done to have you load the full website and along with it, all the code for providing the owner with user analytics, and advertising - if they have it. So really they're getting the benefit of being able to publish updates via a standardised approach (RSS), to then lure you onto the website.
 
-TODO include screenshot for show further content
+{{< figure src="rss-post-show-more-content.png" class="center" alt="An RSS post loading incompletely" >}}
 
 Hugo *kind of* does this through the highlighted line in the [templated RSS XML file](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/_default/rss.xml):
 
@@ -39,13 +39,13 @@ Hugo *kind of* does this through the highlighted line in the [templated RSS XML 
 <description>{{ .Summary | html }}</description>
 ```
 
-`.Summary` will do what was just described, print out the first paragraph of your post. However unlike WordPress, it doesn't actually say if there is more content - so users may not load your full website.
+`.Summary` will do what was just described, print out the first paragraph of your post. However unlike WordPress, it doesn't actually say if there is more content. So users may not load your full website, instead thinking you've produced a very short article!
 
-TODO screenshot of Hugo doing thi
+{{< figure src="hugo-incomplete-post.png" class="center" alt="Hugo producing a summarised RSS post" >}}
 
-I'm not against the practice of previewing the post, if a blog provides revenue for an individual (or group of) then you will need to force readers to view the full  website for analytics and advertising (businesses gotta make money!). 
+I'm not against the practice of previewing the post, if a blog provides revenue for the author(s) then you will need to force readers to view the full  website for analytics and advertising (businesses gotta make money!). 
 
-Although I'm sure the initial purpose of RSS was only meant to be used to provide subscribers a pure text version of your content. At the end of the day, I believe it should be the user who decides how they want to view my content - and they accept the limitations that come from RSS.
+Although I'm sure the initial purpose of RSS was only meant to be used to provide subscribers a pure text version of your content. At the end of the day, I believe the author should give the reader choice on mediums of consumption - and they accept the limitations that come from RSS.
 
 So now, I'll be making several changes to the Hugo template RSS XML file to produce the full site content, along with some other enhancements.
 
@@ -86,13 +86,13 @@ We know that line 35 containing `.Summary` is causing the issue here. All we nee
 
 Let's now view the changes in the RSS reader.
 
-TODO screenshot of .Content
+{{< figure src="hugo-complete-post.png" class="center" alt="Hugo RSS post displaying all content" caption="We can now see much more content is being produced - and with proper HTML this time!" >}}
 
 ## Rendering images in RSS posts
 
 Depending on how you are retrieving images - you may find that they are not displaying, and that the image alterative (`alt`) text is being displayed instead.
 
-TODO screenshot of image not rendering
+{{< figure src="hugo-missing-images-post.png" class="center" alt="Hugo RSS post with missing images, alt text displayed instead" caption="Note the highlighted alt texts of images" >}}
 
 > If you're not already providing an `alt` field to your `<img>` blocks then **you absolutely need to**.
 >
@@ -101,7 +101,7 @@ TODO screenshot of image not rendering
 > They also provide a helpful description to your image in case it cannot load - which happens more often than you think!
 
 
-### Why it is breaking
+### Why it is breaking :triumph:
 
 In [part 4](/blog/who-goes-blogging-4-content-structure-and-refactoring/) of this series, we looked at placing resources for a post in the same directory as the content markdown file (also known as [leaf bundles](https://gohugo.io/content-management/page-bundles/#leaf-bundles)).
 
@@ -160,22 +160,22 @@ In the example above, we're placing a [capturing group](https://www.regular-expr
 
 `REPLACEMENT` is calling another Hugo function called [printf](https://gohugo.io/functions/printf/) to construct the replacement text. We're pretty much just injecting the page `.Permalink` prior to the captured text from the `PATTERN` - so that RSS can then display the complete URL. While adding back the `img src=""` that was removed.
 
-`INPUT` will be the page `.Content`, what we were printing out before
+`INPUT` will be the page `.Content`, what we were printing out before.
 
 Once we've made the change, images are now rendered properly!
 
-TODO screenshot of rendered image on RSS
+{{< figure src="hugo-images-post.png" class="center" alt="Hugo RSS post with images being correctly rendered" >}}
 
 ## Adding cards for posts
 
 Not dissimilar to [social media cards](https://barkersocial.com/social-cards/), you can also have cards appear for your RSS posts in order to make them more attractive for readers to click on!
 
-TODO screenshot of an example (perhaps for a good blog I recommend?)
+{{< figure src="inoreader-enclosure-card-view.png" class="center" alt="inoreader displaying images for each post when in card view" caption="While in card view for inoreader, we can see featured images being displayed" >}}
 
 You can do these in RSS via the [enclosure](https://www.w3schools.com/xml/rss_tag_enclosure.asp) tag...
 
 ```html
-<enclosure url="image-location" type="image/jpg"></enclosure>
+<enclosure url="image-location.png" type="image/jpg"></enclosure>
 ```
 
 If you have a look at our `layouts/_default/rss.xml` file, we don't have this defined. We could go and add it in now, but I would like a unified social media image to be used across all platforms. This will enable me to focus my effort on generating a single social media card image that is shared across all methods of consumption. 
@@ -210,7 +210,7 @@ The hierarchy of images used to render the social media card goes like this:
 
 ### Adding enclosure tags
 
-We can effectively copy and paste the code being used for generating Twitter cards and modify it for enclosure tags. The snippet of code ultimately ends up looking like this.
+We can effectively copy and paste the code being used for generating Twitter cards and modify it for enclosure tags. The snippet of code ultimately ends up looking like this  :point_down:
 
 ```html {linenos=table}
 {{- $pagePermalink := .Permalink -}}
@@ -241,7 +241,34 @@ Walking through what this is doing:
 
 With lessons learnt trying to get [images to display in RSS content](#rendering-images-in-rss-posts), I am rendering the full URL of the image to ensure RSS is always able to retrieve it.
 
-TODO screenshot of complete enclosure image
+I'm going to follow lines 12-13 above and have a default card defined at the site level parameters. In my `config.toml` I'll need to add the following...
+
+```toml
+[params]
+    images = ["images/jdheyburn_co_uk_card.png"]
+```
+
+...while also ensuring that I've placed the image under `static/images/jdheyburn_co_uk_card.png`.
+
+Once all that is done and deployed - we will have an RSS post card that looks like this  :raised_hands:
+
+{{< figure src="hugo-enclosure-card-view.png" class="center" alt="inoreader displaying an image for a Hugo post" >}}
+
+We can now advertise our RSS subscription URL to readers. My theme `hugo-coder` supports this as a social button on the home page. We just need to add the below block to the `config.toml` file.
+
+```toml
+[[params.social]]
+    name = "RSS"
+    icon = "fas fa-rss"
+    weight = 6
+    url = "https://jdheyburn.co.uk/index.xml"
+    rel = "alternate"
+    type = "application/rss+xml"
+```
+
+Once done - our homepage will have the button displayed.
+
+{{< figure src="rss-subscription-button.png" class="center" alt="RSS subscription button displayed on the homepage" >}}
 
 ## Summarising changes to RSS XML
 
@@ -250,3 +277,5 @@ You can view the gist below to see my complete RSS XML file after all the above 
 {{< gist jdheyburn a0a2c678f8f9795088b2779ec6af9920 >}}
 
 [Click here](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920/revisions#diff-c166fdc5b553c1f4e101f56186da7017) for a `git diff` view on the changes I made from the default RSS XML file.
+
+Thanks for reading! :100:
