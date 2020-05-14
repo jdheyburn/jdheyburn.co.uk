@@ -4,11 +4,13 @@
 {{ define "content" }}
   <section class="container post">
     <article>
-      {{ if .Params.featured_image }}
-        <div>
-          <img class="featimage" src='{{ .Params.featured_image }}' alt="Featured image"/>
-        </div>
-        {{ end }}
+      {{ $images := .Resources.ByType "image" }}
+      {{ $featured := $images.GetMatch "*cover*" }}
+      {{ with $featured }}
+      <div>
+        <img class="featimage" src='{{ $featured.Permalink }}' alt="Featured image"/>
+      </div>
+      {{ end }}
       <header>
         
 

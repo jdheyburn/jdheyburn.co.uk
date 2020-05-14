@@ -8,7 +8,6 @@ series:
 tags:
     - rss
     - cards
-draft: true
 ---
 
 I "fixed" the default RSS template used by Hugo to show the full article content, along with images, and also talk about how to have social media cards appear in the RSS items too.
