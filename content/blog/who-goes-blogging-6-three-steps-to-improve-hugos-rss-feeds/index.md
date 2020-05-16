@@ -165,6 +165,28 @@ Once we've made the change, images are now rendered properly!
 
 {{< figure src="hugo-images-post.png" class="center" alt="Hugo RSS post with images being correctly rendered" >}}
 
+> **UPDATE 2020-05-16**
+>
+> Upon posting this, I noticed I needed to do the same thing for hyperlinks referencing headings with the same post. For instance the markdown below which renders a hyperlink to a heading...
+>
+> ```markdown
+> [images to display in RSS content](#rendering-images-in-rss-posts)
+> ```
+>
+> Will render this in RSS:
+>
+> ```html
+> <a href="https://jdheyburn.co.uk/#rendering-images-in-rss-posts">
+> ```
+>
+> Which does not take the reader to the right location at all. What we need to do is repeat the regex used above in `rss.xml` to catch these and replace them with the complete URL. See below for the snippet.
+>
+> ```golang
+> {{- $content := replaceRE "a href=\"(#.*?)\"" (printf "%s%s%s" "a href=\"" .Permalink "$1\"") .Content -}}
+> {{- $content = replaceRE "img src=\"(.*?)\"" (printf "%s%s%s" "img src=\"" .Permalink "$1\"") $content -}}
+> <description>{{ $content | html }}</description>
+> ```
+
 ## Adding cards for posts
 
 Not dissimilar to [social media cards](https://barkersocial.com/social-cards/), you can also have cards appear for your RSS posts in order to make them more attractive for readers to click on!
@@ -275,6 +297,6 @@ You can view the gist below to see my complete RSS XML file after all the above 
 
 {{< gist jdheyburn a0a2c678f8f9795088b2779ec6af9920 >}}
 
-[Click here](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920/revisions#diff-c166fdc5b553c1f4e101f56186da7017) for a `git diff` view on the changes I made from the default RSS XML file.
+[Click here](https://gist.github.com/jdheyburn/a0a2c678f8f9795088b2779ec6af9920/revisions) for a `git diff` view on the changes I made from the default RSS XML file.
 
 Thanks for reading! :100:
