@@ -151,7 +151,7 @@ Despite doing this, we come across some problems...
     - All hyperlinks both internal and external are referring to articles at `/posts/`
 1. Blog landing page is now **Blogs**?? (see below)
 
-{{< figure src="blogs-landing-page.png" alt="Screenshot of Blog landing page with incorrect Blogs title" >}}
+{{< figure src="blogs-landing-page.png" link="blogs-landing-page.png" alt="Screenshot of Blog landing page with incorrect Blogs title" >}}
 
 Let's walk through them one by one.
 
@@ -191,7 +191,7 @@ themes/hugo-coder/layouts/posts
 
 When we change the section name the article sits in, Hugo will not know how to render it correctly and will resolve to the default rendering for the theme. This ends us with something like the below.
 
-{{< figure src="posts-blog-rendering-error.png" alt="Screenshot of comparison of correct and incorrect rendering - publish date, minutes to read, and tags are missing" caption="Correct rendering on the left - notice publish date, minutes to read, and tags are missing" >}}
+{{< figure src="posts-blog-rendering-error.png" link="posts-blog-rendering-error.png" alt="Screenshot of comparison of correct and incorrect rendering - publish date, minutes to read, and tags are missing" caption="Correct rendering on the left - notice publish date, minutes to read, and tags are missing" >}}
 
 One way of fixing this would be to also change the `hugo-coder` theme from `layouts/posts` to `layouts/blog` - however a much simpler solution exists. We can use the `type` front matter setting to tell Hugo what layout to use to render it.
 
@@ -264,7 +264,7 @@ You can read more about how `aliases` does its operations [here](https://gohugo.
 
 Earlier on, we came across this weird bug...
 
-{{< figure src="blogs-landing-page.png" alt="Screenshot of Blog landing page with incorrect Blogs title" >}}
+{{< figure src="blogs-landing-page.png" link="blogs-landing-page.png" alt="Screenshot of Blog landing page with incorrect Blogs title" >}}
 
 This is occurring because of the translation feature of Hugo (sourced from [i18n](https://gohugo.io/functions/i18n/)) which converts singular word titles to plural on content section landing pages, since Hugo is listing them out. This made sense when our previous section name was posts, but now we'd rather it have say blog.
 

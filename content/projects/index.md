@@ -6,7 +6,7 @@ images:
 
 ## Portfolio Website
 
-{{< figure src="jdheyburn-homepage.png" class="center" alt="jdheyburn.co.uk homepage" >}}
+{{< figure src="jdheyburn-homepage.png" link="jdheyburn-homepage.png" class="center" alt="jdheyburn.co.uk homepage" >}}
 
 - [jdheyburn.co.uk](https://github.com/jdheyburn/jdheyburn.co.uk) is my portfolio website - how you are reading this content!
 - It is based the JAMstack framework [Hugo](https://gohugo.io/)

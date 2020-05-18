@@ -135,7 +135,7 @@ acb4bf6f2dcce51a27dc0e1f1008afb369d378d8
 
 Nice - this has changed from the previous value. We can jump over to GitHub to verify this is indeed the latest version.
 
-{{< figure src="hugo-coder-commit.png" caption="Verify at the [GitHub repo page](https://github.com/luizdepra/hugo-coder/commit/master)" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
+{{< figure src="hugo-coder-commit.png" link="hugo-coder-commit.png" caption="Verify at the [GitHub repo page](https://github.com/luizdepra/hugo-coder/commit/master)" alt="Screenshot showing latest hugo-coder version in GitHub" >}}
 
 ## Validation and Testing
 
@@ -163,7 +163,7 @@ It turns out that my markdown for articles wasn't as watertight as I thought; Hu
 
 For this I just needed to fix the markdown by adding another indent to the list item.
 
-{{< figure src="git-diff-list.png" caption="" alt="Screenshot showing git diff between old and new list" >}}
+{{< figure src="git-diff-list.png" link="git-diff-list.png" caption="" alt="Screenshot showing git diff between old and new list" >}}
 
 I saw several cases of this, and including a [markdown linter](https://github.com/igorshubovych/markdownlint-cli) in the CI/CD pipeline would help to prevent this. This is something I'll look to include in the near future.
 
@@ -339,7 +339,7 @@ Having a look around the site we see these aren't getting rendered correctly in 
 
 **(2)** Browser title
 
-{{< figure src="broken-emoji-browser-title.png" class="center" caption="" alt="Screenshot of broken emoji on browser title" >}}
+{{< figure src="broken-emoji-browser-title.png" link="broken-emoji-browser-title.png" class="center" caption="" alt="Screenshot of broken emoji on browser title" >}}
 
 **(3)** Type list entry
 
@@ -369,7 +369,7 @@ The end result for the title will look like this:
 
 And the browser title is fixed accordingly:
 
-{{< figure src="fixed-emoji-browser-title.png" class="center" caption="" alt="Screenshot of fixed emoji on browser title" >}}
+{{< figure src="fixed-emoji-browser-title.png" link="fixed-emoji-browser-title.png" class="center" caption="" alt="Screenshot of fixed emoji on browser title" >}}
 
 ### Fix Type List Entry
 

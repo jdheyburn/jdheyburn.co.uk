@@ -31,7 +31,7 @@ That's when you can make true comparisons in any system. As such the aim of this
 
 Because we all love an architecture diagram, let's slap one in now.
 
-{{< figure src="blog-arch-cover.png" caption="" alt="An architecture diagram of my portfolio site" >}}
+{{< figure src="blog-arch-cover.png" link="blog-arch-cover.png" caption="" alt="An architecture diagram of my portfolio site" >}}
 
 Wow. That is... really not much at all. Apologies if you were expecting a lot more arrows and boxes!
 
@@ -67,7 +67,7 @@ Because everyone loves graphs and numbers... right??... Alright just me then...
 
 You'll be able to see how many requests are being served up, where requests originate from, amongst others. Take a look at an example below.
 
-{{< figure src="analytics_example.png" alt="A graph displaying total requests, and how many of them were cached" >}}
+{{< figure src="analytics_example.png" link="analytics_example.png" alt="A graph displaying total requests, and how many of them were cached" >}}
 
 #### Custom domain
 
