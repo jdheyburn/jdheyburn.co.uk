@@ -106,7 +106,7 @@ hugo serve
 
 That last command will locally serve the example site, so that you can view it at `http://localhost:1313/`.
 
-{{< figure src="local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
+{{< figure src="local_example_site.jpg" link="local_example_site.jpg" caption="Success!" alt="Screenshot depicting the locally run example site" >}}
 
 ### Experimenting
 

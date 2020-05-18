@@ -215,13 +215,13 @@ def increment_int_by_one(int_to_inc: int):
 
 Now when we pass in a `str` as the parameter, we still get the same error we saw before. However, if the IDE you are using supports it, you will receive **type hints**!
 
-{{< figure src="type_hinting.png" class="center" caption="" alt="Screenshot displaying type hinting provided by Visual Studio Code" >}}
+{{< figure src="type_hinting.png" link="type_hinting.png" class="center" caption="" alt="Screenshot displaying type hinting provided by Visual Studio Code" >}}
 
 I'm using VSCode with the Python extension installed too, you can see the hint that appears includes the type of the parameter.
 
 VSCode also has the ability to check the type of the value you are passing into the function:
 
-{{< figure src="type_checking.png" class="center" caption="" alt="Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright" >}}
+{{< figure src="type_checking.png" link="type_checking.png" class="center" caption="" alt="Screenshot displaying type checking provided by Visual Studio Code - the illegal type is highlighted by pyright" >}}
 
 Here we have a visual indicator that the string is incompatible with the int type of the function. Alongside this, in the Problems tab we have a full explanation on what has gone wrong. This is both provided by the `pyright` extension which can be found in the VSCode Extensions section.
 
@@ -237,11 +237,11 @@ def increment_int_by_one(int_to_inc: int) -> int:
 
 Note the only change here is the `-> int` which specifies the type it is returning. Now our type checker will highlight to us when we violate this in two scenarios:
 
-{{< figure src="type_checking_bad_return.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad return value" >}}
+{{< figure src="type_checking_bad_return.png" link="type_checking_bad_return.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad return value" >}}
 
 The IDE has shown us that the function is expected to return a type different to what it is actually returning...
 
-{{< figure src="type_checking_bad_assign.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad assigned variable" >}}
+{{< figure src="type_checking_bad_assign.png" link="type_checking_bad_assign.png" class="center" caption="" alt="Screenshot displaying type checking, highlighting the bad assigned variable" >}}
 
 And in this snapshot, we are trying to assign a variable of type `str` to the output of the function which returns an `int`!
 

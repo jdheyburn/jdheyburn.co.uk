@@ -44,29 +44,29 @@ One of those hosted solutions is [TravisCI](https://travis-ci.com/), where they 
 
 So it is a good idea to set your source code repository on GitHub to be public. TravisCI does include (at the time of writing) private projects in their free plan, but you are capped in some shape or form on how much the platform will do for you. 
 
-{{< figure src="travis-free.png" caption="Free is definitely a thing you love to see" alt="Screenshot of Travis free pricing plan" >}}
+{{< figure src="travis-free.png" link="travis-free.png" caption="Free is definitely a thing you love to see" alt="Screenshot of Travis free pricing plan" >}}
 
 ## TravisCI Account Setup
 
 The TravisCI account setup for TravisCI is very streamlined - instead of creating *another* account for you to manage, it integrates in with GitHub, so this is the account you use to sign-up with. Head over to https://travis-ci.com/ and click on `Sign in with GitHub`.
 
-{{< figure src="travis-landing.png" caption="You can't resist a big green button..." alt="Screenshot of Travis landing page" >}}
+{{< figure src="travis-landing.png" link="travis-landing.png" caption="You can't resist a big green button..." alt="Screenshot of Travis landing page" >}}
 
 GitHub will ask you if you *really* want to share some of your GitHub data with Travis.
 
-{{< figure src="travis-github-authorise.png" class="center" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
+{{< figure src="travis-github-authorise.png" link="travis-github-authorise.png" class="center" caption="Another green button? Why not!" alt="Screenshot of GitHub authorising Travis" >}}
 
 Once you've done that, you'll be redirected to your new Travis Dashboard which... is looking rather lonely :frowning: - let's fix that!
 
 All we've done so far is allowed Travis to reach GitHub for creating an account for us - we now need to activate GitHub Apps integration to permit it to read and write to our repositories. The https://travis-ci.com/account/repositories page is what you need for that - then click on the `Activate` button.
 
-{{< figure src="travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
+{{< figure src="travis-github-apps-integration.png" link="travis-github-apps-integration.png" caption="...More green buttons?!" alt="Screenshot of GitHub Apps Integration" >}}
 
 Now on the next screen you may or may not want the default selection of `All repositories` which will give Travis read and write access to all your repos. I completely trust Travis if I were to select this, however it is a best practice to follow the [*principle of least privilege*](https://en.wikipedia.org/wiki/Principle_of_least_privilege) (POLP); not just for users but for services too. 
 
 For the scope of this effort we're only wanting Travis to read and manipulate against two repos, `jdheyburn.co.uk` and `jdheyburn.github.io` - it also gives you a cleaner Travis dashboard too.
 
-{{< figure src="travis-github-repos-selection.png" class="center" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
+{{< figure src="travis-github-repos-selection.png" link="travis-github-repos-selection.png" class="center" caption="" alt="Screenshot of GitHub Travis Repository Authorisation" >}}
 
 ### Back to GitHub
 
@@ -78,11 +78,11 @@ You'll come across a page asking for the name of the token being created. It doe
 
 After this you don't need to provide any more permissions to the token. Scroll down to the end of the page and click `Generate token`.
 
-{{< figure src="travis-github-pat.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}
+{{< figure src="travis-github-pat.png" link="travis-github-pat.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - repos is checked" >}}
 
 The token's secret will display on the next screen. **Make sure you copy it** and place it somewhere you can refer back to it later such as a text editor like Notepad - we'll need it again in the next section.
 
-{{< figure src="travis-github-pat-created.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}
+{{< figure src="travis-github-pat-created.png" link="travis-github-pat-created.png" class="center" caption="" alt="Screenshot of GitHub Personal Access Token Creation - token complete" >}}
 
 ## TravisCI Configuration
 

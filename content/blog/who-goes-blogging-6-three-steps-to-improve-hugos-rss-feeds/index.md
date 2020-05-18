@@ -19,7 +19,7 @@ I uploaded my completed RSS file to [GitHub Gist](https://gist.github.com/jdheyb
 
 [RSS](https://en.wikipedia.org/wiki/RSS) is a great way to "subscribe" to websites to ensure that you don't miss content from them. The standard for how it is generated has been the same for decades now - however its still the best supported and most accepted way to receive updates. It is simply a standardised XML file that allows consumers such as RSS aggregators to parse the content of the post - for which there are many to choose from (RIP [Google Reader](https://en.wikipedia.org/wiki/Google_Reader)).
 
-{{< figure src="inoreader-complete.png" class="center" alt="inoreader as an RSS feed aggregator" caption="My RSS aggregator of choice currently is [inoreader](https://www.inoreader.com/) - I'll be using this in my examples" >}}
+{{< figure src="inoreader-complete.png" link="inoreader-complete.png" class="center" alt="inoreader as an RSS feed aggregator" caption="My RSS aggregator of choice currently is [inoreader](https://www.inoreader.com/) - I'll be using this in my examples" >}}
 
 Hugo [generates RSS XML](https://gohugo.io/templates/rss/) files from a template that will loop over your content and expose this at an endpoint for RSS aggregators to subscribe to and periodically check for updates against. Hugo generates a bunch of RSS XML files at different sections of the website, allowing consumers to subscribe to the section that interests them most - you can even subscribe to tags if that XML is being generated! 
 
@@ -31,7 +31,7 @@ Some (but not all) websites only include the first paragraph of their post in an
 
 This is a common feature of WordPress blogs - and it is done to have you load the full website and along with it, all the code for providing the owner with user analytics, and advertising - if they have it. So really they're getting the benefit of being able to publish updates via a standardised approach (RSS), to then lure you onto the website.
 
-{{< figure src="rss-post-show-more-content.png" class="center" alt="An RSS post loading incompletely" >}}
+{{< figure src="rss-post-show-more-content.png" link="rss-post-show-more-content.png" class="center" alt="An RSS post loading incompletely" >}}
 
 Hugo *kind of* does this through the highlighted line in the [templated RSS XML file](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/_default/rss.xml):
 
@@ -41,7 +41,7 @@ Hugo *kind of* does this through the highlighted line in the [templated RSS XML 
 
 `.Summary` will do what was just described, print out the first paragraph of your post. However unlike WordPress, it doesn't actually say if there is more content. So users may not load your full website, instead thinking you've produced a very short article!
 
-{{< figure src="hugo-incomplete-post.png" class="center" alt="Hugo producing a summarised RSS post" >}}
+{{< figure src="hugo-incomplete-post.png" link="hugo-incomplete-post.png" class="center" alt="Hugo producing a summarised RSS post" >}}
 
 I'm not against the practice of previewing the post, if a blog provides revenue for the author(s) then you will need to force readers to view the full  website for analytics and advertising (businesses gotta make money!). 
 
@@ -86,13 +86,13 @@ We know that line 35 containing `.Summary` is causing the issue here. All we nee
 
 Let's now view the changes in the RSS reader.
 
-{{< figure src="hugo-complete-post.png" class="center" alt="Hugo RSS post displaying all content" caption="We can now see much more content is being produced - and with proper HTML this time!" >}}
+{{< figure src="hugo-complete-post.png" link="hugo-complete-post.png" class="center" alt="Hugo RSS post displaying all content" caption="We can now see much more content is being produced - and with proper HTML this time!" >}}
 
 ## Rendering images in RSS posts
 
 Depending on how you are retrieving images - you may find that they are not displaying, and that the image alterative (`alt`) text is being displayed instead.
 
-{{< figure src="hugo-missing-images-post.png" class="center" alt="Hugo RSS post with missing images, alt text displayed instead" caption="Note the highlighted alt texts of images" >}}
+{{< figure src="hugo-missing-images-post.png" link="hugo-missing-images-post.png" class="center" alt="Hugo RSS post with missing images, alt text displayed instead" caption="Note the highlighted alt texts of images" >}}
 
 > If you're not already providing an `alt` field to your `<img>` blocks then **you absolutely need to**.
 >
@@ -164,7 +164,7 @@ In the example above, we're placing a [capturing group](https://www.regular-expr
 
 Once we've made the change, images are now rendered properly!
 
-{{< figure src="hugo-images-post.png" class="center" alt="Hugo RSS post with images being correctly rendered" >}}
+{{< figure src="hugo-images-post.png" link="hugo-images-post.png" class="center" alt="Hugo RSS post with images being correctly rendered" >}}
 
 > **UPDATE 2020-05-16**
 >
@@ -192,7 +192,7 @@ Once we've made the change, images are now rendered properly!
 
 Not dissimilar to [social media cards](https://barkersocial.com/social-cards/), you can also have cards appear for your RSS posts in order to make them more attractive for readers to click on!
 
-{{< figure src="inoreader-enclosure-card-view.png" class="center" alt="inoreader displaying images for each post when in card view" caption="While in card view for inoreader, we can see featured images being displayed" >}}
+{{< figure src="inoreader-enclosure-card-view.png" link="inoreader-enclosure-card-view.png" class="center" alt="inoreader displaying images for each post when in card view" caption="While in card view for inoreader, we can see featured images being displayed" >}}
 
 You can do these in RSS via the [enclosure](https://www.w3schools.com/xml/rss_tag_enclosure.asp) tag...
 
@@ -274,7 +274,7 @@ I'm going to follow lines 12-13 above and have a default card defined at the sit
 
 Once all that is done and deployed - we will have an RSS post card that looks like this  :raised_hands:
 
-{{< figure src="hugo-enclosure-card-view.png" class="center" alt="inoreader displaying an image for a Hugo post" >}}
+{{< figure src="hugo-enclosure-card-view.png" link="hugo-enclosure-card-view.png" class="center" alt="inoreader displaying an image for a Hugo post" >}}
 
 We can now advertise our RSS subscription URL to readers. My theme `hugo-coder` supports this as a social button on the home page. We just need to add the below block to the `config.toml` file.
 
@@ -290,7 +290,7 @@ We can now advertise our RSS subscription URL to readers. My theme `hugo-coder` 
 
 Once done - our homepage will have the button displayed.
 
-{{< figure src="rss-subscription-button.png" class="center" alt="RSS subscription button displayed on the homepage" >}}
+{{< figure src="rss-subscription-button.png" link="rss-subscription-button.png" class="center" alt="RSS subscription button displayed on the homepage" >}}
 
 ## Summarising changes to RSS XML
 
