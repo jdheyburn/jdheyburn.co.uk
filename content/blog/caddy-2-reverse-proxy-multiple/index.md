@@ -14,43 +14,97 @@ If you've stumbled across this looking for the end config file for [Caddy](https
 
 ## Background
 
-A few months back I kitted out my home with some Ubiquiti UniFi gear to fix our crappy Wifi at home, following inspiration from [Troy Hunt](https://www.troyhunt.com/ubiquiti-all-the-things-how-i-finally-fixed-my-dodgy-wifi/) and [Scott Helme](https://scotthelme.co.uk/my-ubiquiti-home-network/). It's been a slow burner getting it to a state where I'm happy to share about it - that won't be today however. 
+A few months back I kitted out my home with some [Ubiquiti UniFi](https://www.ui.com/products/#unifi) gear to fix our crappy Wifi at home, following inspiration from [Troy Hunt](https://www.troyhunt.com/ubiquiti-all-the-things-how-i-finally-fixed-my-dodgy-wifi/) and [Scott Helme](https://scotthelme.co.uk/my-ubiquiti-home-network/). 
 
-In order to administrate UniFi devices, you need the UniFi Cloud Key which runs the Controller software to do just that. Although if you have a spare Raspberry Pi lying around, you can download the software for free and run it on there.
+In order to administrate UniFi devices, you'll need the [UniFi Cloud Key](https://www.ui.com/unifi/unifi-cloud-key/) which runs the Controller software to do just that. Although if you have a spare Raspberry Pi lying around, you can download the [software](https://www.ui.com/download/unifi/) for free and run it on there.
 
 I've also wanted to protect my home network with a self-hosted DNS server, such as PiHole. I won't go into depth about how that was done, but you can follow [Scott Helme's guide](https://scotthelme.co.uk/securing-dns-across-all-of-my-devices-with-pihole-dns-over-https-1-1-1-1/) on how you can set the same up.
 
-Both of these services can be accessed through web browsers at the IP address and ports where they are being hosted, such as http://192.168.3.14:80/admin/. But having to remember the IP address and the port can be a pain. We can front these services with a rememberable domain name which points to these services - of which I've written about in a previous post. TODO link to custom domain
+Both of these services can be accessed through web browsers at the IP address and ports where they are being hosted, such as http://192.168.3.14:80/admin/ in the case of PiHole. Having to remember the IP address and the port can be a pain. We can front these services with a rememberable domain name which points to these services - of which I've written about in a [previous post](/blog/who-goes-blogging-2-custom-domain/).
 
-The web is evolving, and there is no reason why we should access services via insecure HTTP, so for HTTPS we need to have a certificate to encrypt the communications. 
+The web is evolving, and there is no reason why we should access services via insecure HTTP, so for HTTPS we need to have a certificate to encrypt the communications. That includes services that are only running on an internal network, such as a home network. Web browsers nowadays give you a warning when you are connecting to website over an unencrypted connection.
 
-Caddy is a web server similar to Apache, nginx, et al., but it is different in that it enables HTTPS by default and upgrading requests from HTTP to HTTPS. Managing certificates for HTTPS is a pain - so Caddy does that too. We can use Caddy in a reverse proxy mode, allowing us to access services at domains such as `pihole.domain.local` and forward them to the corresponding IP address hosting the service.
+TODO add screenshot
 
+[Caddy](https://caddyserver.com/) is a web server similar to Apache, nginx, et al., but it is different in that it enables HTTPS by default and upgrading requests from HTTP to HTTPS. Managing certificates for HTTPS is a pain - so Caddy does that too, so long as you can prove you own the domain you are hosting requests at. We can use Caddy in a reverse proxy mode, allowing us to access services at endpoints such as `https://pihole.domain.local` in our browsers and forward them to the corresponding IP address hosting the service.
 
-Plan:
+> A [reverse proxy](https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/) is a service that simply forwards client requests onto the server on the clients behalf.
 
-- introduction to the background
-- Caddy setup
-    - Acquire domains
-    - Build caddy
-- Config for caddy
-- Run it, verify the endpoints
+## Proving Domain Ownership
+
+Caddy uses [Let's Encrypt](https://letsencrypt.org/) (LE) to provide certificates for domains. Since domains can be exposed publicly, we will have to prove ownership of the domain to have LE issue certificates on our behalf - so we'll have to purchase the domain from a registrar. I [talked about how to do this](/blog/who-goes-blogging-2-custom-domain/#acquire-a-domain) for this website in the past.
+
+LE supports several [challenge methods](https://letsencrypt.org/docs/challenge-types/) in order to prove you own the domain. This helps mitigates attacks by adversaries by claiming they own a domain such as natwest.co.uk - allowing them to create phishing attacks and steal banking information. 
+
+Since my network is only visible internally for the moment (i.e. the domain will only resolve to an IP address on my network) I cannot use HTTP or TLS, because this required the domain to resolve to a public IP address. Therefore the only option I have is DNS challenge, where some string is placed into the [TXT record](https://www.cloudflare.com/learning/dns/dns-records/dns-txt-record/) of a DNS record to confirm ownership.
 
 ## Building Our Caddy
 
-Caddy 2 allows for extensions to be built into the binary depending on your use case.  comes with a bunch of extensions
+For this exercise I'll be using the latest version, Caddy 2, which allows for plugins to be built into the binary depending on your use case - including [DNS challenge](https://caddyserver.com/docs/automatic-https#dns-challenge). This plugin isn't included by default, so we'll need to build our own Caddy binary. The tool to do this is called [xcaddy](https://github.com/caddyserver/xcaddy).
 
-## Configuration
+> To build using xcaddy, you need to make sure you have [Go installed](https://golang.org/doc/install) on your machine.
 
-The end result looks like this in it's entirety.
+Note that I am building Caddy on my laptop, and I will be running Caddy on a Pi, so I will have to specify what architecture Go should build the binary for.
 
-TODO add config
+```bash
+# Download xcaddy
+go get -u github.com/caddyserver/xcaddy/cmd/xcaddy
+
+# Build custom Caddy binary for Raspberry Pi
+GOOS=linux GOARCH=arm GOARM=7 xcaddy build --with github.com/caddy-dns/cloudflare
+
+# Copy the new binary across to the Pi
+scp caddy pi:/home/pi/caddy/
+```
+
+## Caddy Configuration
+
+The configuration I'm using can be seen below. Some things to note:
+
+- I'm using Cloudflare as the DNS name servers for the domain, even though I purchased my domain from namecheap
+    - This repeats an [exercise I've done previously](/blog/who-goes-blogging-2-custom-domain/#adding-our-cdn-layer)
+    - I've done this for two reasons:
+        - Caddy at the time of writing does not have a namecheap DNS challenge plugin
+        - It's a proven method I know already 
+- A `CLOUDFLARE_API_TOKEN` is required to have Caddy set the TXT record DNS challenge received from LE
+    - [Guide for the same](https://support.cloudflare.com/hc/en-us/articles/200167836-Managing-API-Tokens-and-Keys)
+- Caddy is reverse proxying traffic to services running locally on the Pi
+- Caddy is not verifying the certificate being hosted by the UniFi Controller (`insecure_skip_verify = true`)
+    - The controller self-signs a certificate, and the reverse proxy has no means of establishing a chain of trust to verify the certificate
+    - It's not a best practice to not verify the chain of trust, however I'm happy to accept the risk for now
+
+[Click here](https://caddyserver.com/docs/json/) to see documentation on Caddy JSON config files.
+
+{{< gist jdheyburn ca668a9d162535ab92db2cfa6f4e4e54 >}}
+
+## Updating DNS Records
+
+Remember that the domain names aren't actually publicly accessible. At a basic level we can update the `/etc/hosts` file of the machine we're running on to add a record telling our machine how to resolve the domain.
+
+```bash
+sudo sh -c "echo \"192.168.1.10 pihole.joannet.casa\n192.168.1.10 unifi.joannet.casa\" >> /etc/hosts"
+```
+
+However, we're already using PiHole as our own DNS server right? We can add the records there instead.
+
+TODO add screenshot
 
 
+## Verifying Caddy
+
+Once the config file is built, you can perform a test run to confirm everything is working by executing this command.
+
+```bash
+sudo ./caddy run --config config.json
+```
+
+> We need to execute using `sudo` so that we can expose the service to restricted ports 80 and 443 (HTTP and HTTPS respectively).
+
+TODO add screenshot of nice display, and of the certificate
 
 ## Enabling Caddy Service
 
-Since we're not using the standard Caddy installation method, we will need to specify a service unit file so that Caddy starts up at the same time as the host - which is what my services PiHole and UniFi are doing currently.
+Since we're not using the standard Caddy installation method, we will need to specify a service unit file so that Caddy starts up at the same time as the host - which is what PiHole and UniFi are doing currently.
 
 First check to see if there is a stale service there already.
 
