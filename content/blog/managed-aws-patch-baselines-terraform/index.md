@@ -73,7 +73,9 @@ In the case of Terraform, it keeps the current state of your infrastructure stac
 
 ## Patch Baselines in an Enterprise Environment
 
-In an enterprise environment, you are more than likely to have a team dedicated to defining security policies, who will also write up patching policies. These policies will be followed by individual product teams to understand at minimum what patches should be installed on a server, and how quickly to install them.
+When managing Terraform in an enterprise environment, it is a best practice to split up the infrastructure on the structure of the teams working on them, known as workspaces. This is something advised by [Terraform themselves](https://www.terraform.io/docs/cloud/guides/recommended-practices/part1.html#the-recommended-terraform-workspace-structure). For example, you would have a workspace for billing, and one for networking. That way you can ensure teams can work effectively without treading on each others' toes.
+
+The same principle can be applied to a security team that defines security policies, who will also write up patching policies. These policies will be followed by teams working in different workspaces to understand at minimum what patches should be installed on a server, and how quickly to install them.
 
 > Check out the University of Exeter’s own [patching policy](https://www.exeter.ac.uk/media/level1/academicserviceswebsite/it/recordsmanagementservice/policydocuments/Patch_Management_Policy_FINAL.pdf) for an example.
 
@@ -81,7 +83,30 @@ For example, an enterprise may have a patching policy that states all patches wi
 
 These folk are the same lot who will also conjure up the **Patch Baselines** we learned about earlier.
 
-They may deploy these patch baselines in an IAC stack that differs from yours. In the case of Terraform, they would result in a different state file from your application. If you are creating **patch groups** in Terraform - you won’t be able to reference the **patch baselines** they’ve created, because they are in a different state file.
+They may deploy these patch baselines in a different Terraform workspace from yours. If that were the case, then if you wanted to refer back to these in your Terraform workspace, then the [`remote_state`](https://www.terraform.io/docs/providers/terraform/d/remote_state.html) resource is something you might need.
+
+```hcl
+# This example references a subnet_id created in another workspace
+data "terraform_remote_state" "vpc" {
+  backend = "remote"
+
+  config = {
+    organization = "hashicorp"
+    workspaces = {
+      name = "vpc-prod"
+    }
+  }
+}
+
+resource "aws_instance" "foo" {
+  # ...
+  subnet_id = data.terraform_remote_state.vpc.outputs.subnet_id
+}
+```
+
+So the above works if all parties are using Terraform workspaces. But what if you're using Terraform, and the security team (who are managing patch baselines) are using something different like the mentioned CloudFormation or Pulumi.
+
+If you are creating **patch groups** in Terraform - you won’t be able to reference the **patch baselines** they’ve created, because they are in a different state file.
 
 ```hcl
 resource "aws_ssm_patch_group" "front_end_servers" {
