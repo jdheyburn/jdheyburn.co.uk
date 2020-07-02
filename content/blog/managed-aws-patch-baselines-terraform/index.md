@@ -1,11 +1,8 @@
 ---
-date: 2020-05-26
+date: 2020-07-02
 title: "Using Terraform to Manage AWS Patch Baselines at Enterprise Scale"
 description: I discuss an enhancement I made to terraform-aws-provider enabling enterprises to effectively manage patch baselines in AWS with Terraform
 type: posts
-images:
-  - images/jdheyburn_co_uk_card.png
-draft: true
 ---
 
 If you’re new to AWS and patching principles then continue reading, else you can [skip to juicy stuff below](#data-sources-for-patch-baselines).
@@ -50,6 +47,15 @@ To then perform a patch event on an instance, you will need to execute an SSM Do
 > However if an EC2 instance is not assigned to a patch group, then AWS will pick the **default baseline** for that instances operating system
 
 Say you had a security policy of ensuring instances must check for patches once a week - there's no need to manually execute the SSM Document yourself. [Maintenance Windows](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-maintenance.html) can help with that. They are essentially a [cron expression](https://en.wikipedia.org/wiki/Cron#CRON_expression) that you define to then execute a task. In this case we can create a maintenance window to execute the AWS-RunPatchBaseline document on a weekly basis.
+
+The resulting relationship of all the above looks like this:
+
+```
+Maintenance Windows ──┬── invokes ───> SSM Document ─── queries ───> Patch Baseline
+                      |
+                      |
+                      └── targets ───> Patch Groups ─── assigned to ───> EC2 Instances
+```
 
 ## Infrastructure as Code Primer
 
