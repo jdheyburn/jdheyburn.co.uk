@@ -21,7 +21,7 @@ images:
 
 - Adding a data source component to `aws_ssm_patch_baseline` enables retrieval of AWS SSM Patch Baselines that already exist in your AWS account
 - You can assign baselines that have been created by AWS, or managed outside of your Terraform configuration.
-- A blog post detailing its capability will be linked here when available
+- Check out [this post](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/) for what capability it allows for
 
 **Status**: Merged :white_check_mark:
 
