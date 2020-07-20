@@ -11,6 +11,12 @@ aliases:
 - /posts/extending-gotests-for-strict-error-tests/
 ---
 
+> **UPDATE 2020-07-17**
+>
+> I wrote a follow up post to this one using the [assert](https://godoc.org/github.com/stretchr/testify/assert) package instead. 
+>
+> Awesome - [take me there](/blog/assertions-in-gotests-test-generation/)!
+
 ## Strict Error Tests in Java
 
 I love confirming the stability of my code through writing tests and practicing Test-driven development (TDD).  For Java, JUnit was my preferred testing framework of choice. When writing tests to confirm an exception had been thrown, I used the optional parameter `expected` for the annotation `@Test`, however I quickly found that this solution would not work for methods where I raised the same exception class multiple times for different error messages, and testing on those messages. 
