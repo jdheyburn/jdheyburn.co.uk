@@ -15,8 +15,6 @@ pygmentscodefencesguesssyntax = true
 
 #disqusShortname = "yourdiscussshortname"
 
-googleAnalytics = "UA-139246187-1"
-
 lastmod = [":fileModTime", ":default"]
 
 enableEmoji = true
