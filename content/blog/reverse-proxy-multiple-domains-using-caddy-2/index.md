@@ -10,6 +10,7 @@ tags:
  - unifi
  - certificates
  - https
+lastmod: 2020-09-30
 ---
 
 During lockdown, I've spent a bit of time improving our home network. The bigger picture of which I'll write about in a future post. But for now, I came across some challenges with running [Caddy 2](https://caddyserver.com/) as a reverse proxy for multiple domains used internally.
@@ -48,7 +49,13 @@ Since my network is only visible internally for the moment (i.e. the domain will
 
 For this exercise I'll be using the latest version, Caddy 2, which allows for plugins to be built into the binary depending on your use case - including [DNS challenge](https://caddyserver.com/docs/automatic-https#dns-challenge). This plugin isn't included by default, so we'll need to build our own Caddy binary. The tool to do this is called [xcaddy](https://github.com/caddyserver/xcaddy).
 
-> To build using xcaddy, you need to make sure you have [Go installed](https://golang.org/doc/install) on your machine.
+> **UPDATE 2020-09-30**
+>
+> Looks like Caddy now comes with a [nice web interface](https://caddyserver.com/download) for downloading a Caddy binary with whatever plugins you desire. I just tested out the `Linux arm 7` platform with just the `github.com/caddy-dns/cloudflare` plugin, and it was able to run my Caddy configuration below perfectly!
+>
+> Once you've got the binary downloaded, copy it to the Pi then skip to [Caddy Configuration](#caddy-configuration).
+
+To build using xcaddy, you need to make sure you have [Go installed](https://golang.org/doc/install) on your machine.
 
 Note that I am building Caddy on my laptop, but running it on a Pi, so I will have to specify the architecture that Pi is running on so that Go can correctly build it.
 
