@@ -194,6 +194,10 @@ resource "aws_instance" "active_directory" {
 }
 ```
 
+### Tying together with maintenance windows
+
+TODO add in example of maintenance window with Terraform here
+
 ## Conclusion
 
 This is a relatively short post - but it was just a quick introduction to AWS Patch Manager. I hope you find it helpful in applying your enterprise patching strategy to your product teams!
