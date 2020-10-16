@@ -40,24 +40,240 @@ There are also [other types](https://docs.aws.amazon.com/systems-manager/latest/
 
 ## Command Documents Example
 
-All documents, for better or for worse, are defined in YAML. You can also define what OS each command should be executed on.
+All documents, [for better or for worse](https://github.com/cblp/yaml-sucks), are defined in YAML - though you have the option to define them in JSON too. You can also define what OS each command should be executed on.
 
-TODO include example of running ps on each OS. (or maybe a healthcheck example? so that it leads onto the next post easily)
+```yaml
+# list_services.yml
+---
+schemaVersion: "2.2"
+description: List out services running on hosts
+mainSteps:
+  - action: aws:runPowerShellScript
+    name: ListServicesWindows
+    precondition:
+      StringEquals:
+        - platformType
+        - Windows
+    inputs:
+      runCommand:
+        - Get-Service
+  - action: aws:runShellScript
+    name: ListServicesLinux
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      runCommand:
+        - ps -ef
+```
 
-That was a relatively simple example of a command document. However you may have a document which is much more verbose and has several more steps, and trying to read lines of code in amongst all that YAML can be tedious. 
+Since a document is meant to perform an action on a group of instances regardless of their operating system (OS), only the steps that apply to the OS platform for the instance they are being applied to will run. TODO reword? Therefore when we target this document to run on two EC2 instances, one Windows and one Linux, the step `ListServicesWindows` will be executed on the Windows box and vice versa for `ListServicesLinux`. This is because of the `precondition` key we have that filters on the `platformType`. Notably as well, we are targeting the appropriate actions for each platform; `aws:runPowerShellScript` for Windows and `aws:runShellScript` for Linux.
 
-A common pattern when executing command documents is to have two steps:
+> [See here](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-plugins.html) for a full list of what actions you can perform in a command document.
+
+Using Terraform you can deploy out the document to your environment like so.
+
+```hcl
+resource "aws_ssm_document" "list_services" {
+  name            = "ListServices"
+  document_type   = "Command"
+  document_format = "YAML"
+
+  content = file("list_services.yml")
+}
+```
+
+Once deployed, we can navigate to System Manager in the AWS Console to trigger it.
+
+TODO include screenshots on applying in the console
+
+### Verbose command document
+
+You may have a document which is much more verbose and has several more commands that need to be executed in it, and trying to read lines of code in amongst all that markup can be tedious. Here is a snippet of the **AWS-RunPatchBaseline** document which is written in JSON.
+
+```json
+{
+  // ... 
+  "mainSteps": [
+    {
+      "precondition": {
+        "StringEquals": [
+          "platformType",
+          "Windows"
+        ]
+      },
+      "action": "aws:runPowerShellScript",
+      "name": "PatchWindows",
+      "inputs": {
+        "timeoutSeconds": 7200,
+        "runCommand": [
+          "# Check the OS version",
+          "if ([Environment]::OSVersion.Version.Major -le 5) {",
+          "    Write-Error 'This command is not supported on Windows 2003 or lower.'",
+          "    exit -1",
+          "} elseif ([Environment]::OSVersion.Version.Major -ge 10) {",
+          "    $sku = (Get-CimInstance -ClassName Win32_OperatingSystem).OperatingSystemSKU",
+          "    if ($sku -eq 143 -or $sku -eq 144) {",
+          "        Write-Host 'This command is not supported on Windows 2016 Nano Server.'",
+          "        exit -1",
+          "    }",
+          "}",
+          "# Check the SSM agent version",
+          "$ssmAgentService = Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\AmazonSSMAgent\\'",
+          "if (-not $ssmAgentService -or $ssmAgentService.Version -lt '2.0.533.0') {",
+          "    Write-Host 'This command is not supported with SSM Agent version less than 2.0.533.0.'",
+          "    exit -1",
+          "}",
+          "",
+          // ... 
+        ]
+      }
+    }
+  ]
+}
+```
+
+> You can see the [whole thing](https://eu-west-1.console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content) on AWS. 
+
+We can see there's a lot going on here - if we wanted to make updates to the script we lose out on [syntax highlighting](https://en.wikipedia.org/wiki/Syntax_highlighting) which helps to improve code readability and type hinting.
+
+We can avoid this by adopting a common pattern when composing command documents. We can externalise the script to execute outside of the document (by storing it in S3), then have the command perform these steps:
 
 1. Download the script in question from S3
 2. Execute the script from the download location
 
 Such a command document would have a composition as below, for the same scenario provided previously.
 
-TODO include example of running ps on each OS, downloading from S3. 
+```yaml
+# list_services_verbose.yml
+---
+schemaVersion: "2.2"
+description: List out services running on hosts
+mainSteps:
+  - action: aws:downloadContent
+    name: DownloadScriptWindows
+    precondition:
+      StringEquals:
+        - platformType
+        - Windows
+    inputs:
+      sourceType: S3
+      sourceInfo: '{"path":"https://s3.amazonaws.com/script_bucket_location/ListServices.ps1"}'
+      destinationPath: ListServices.ps1
+  - action: aws:runPowerShellScript
+    name: ExecuteListServicesScriptWindows
+    precondition:
+      StringEquals:
+        - platformType
+        - Windows
+    inputs:
+      runCommand:
+        - ..\downloads\ListServices.ps1
+  - action: aws:downloadContent
+    name: DownloadScriptLinux
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      sourceType: S3
+      sourceInfo: '{"path":"https://s3.amazonaws.com/script_bucket_location/list_services.sh"}'
+      destinationPath: list_services.sh
+  - action: aws:runShellScript
+    name: ListServicesLinux
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      runCommand:
+        - ../downloads/list_services.sh
+```
 
+Note the additional action we've included called `aws:downloadContent` - which you can view the documentation for [here](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-plugins.html#aws-downloadContent). Again we're using the `precondition` flag to filter what platform should be downloading what script. We're also using the `inputs` key to instruct the action where it can download the script from; in this case, from S3, at the given S3 location - finalised with a location to save it on the instance.
+
+Once the script is downloaded to the instance, we will need to have it executed. `aws:downloadContent` actually saves the script to a temporary directory for executing SSM commands on instances, so we need to reference it in the `downloads` directory for it; indicated by the `../downloads/list_services.sh` command.
+
+#### Terraform
+ 
 This involves having your script first uploaded to S3. Thankfully, through the power of [infrastructure-as-code](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#infrastructure-as-code-primer), you can have this automatically deployed to your environment once the module is written. An example of this can be seen below.
 
-TODO include TF example of above 
+```hcl
+# First upload the scripts to S3
+resource "aws_s3_bucket" "script_bucket" {
+  bucket = "script-bucket"
+
+  # ... removed for brevity
+}
+
+resource "aws_s3_bucket_object" "list_services_windows" {
+  bucket  = aws_s3_bucket.script_bucket.id
+  key     = "ssm_scripts/${local.linux_script_loc}"
+  content = file("ListServices.ps1")
+}
+
+resource "aws_s3_bucket_object" "list_services_linux" {
+  bucket  = aws_s3_bucket.script_bucket.id
+  key     = "ssm_scripts/list_service.sh"
+  content = file("list_service.sh")
+}
+
+resource "aws_ssm_document" "list_services" {
+  name            = "ListServices"
+  document_type   = "Command"
+  document_format = "YAML"
+
+  content = <<DOC
+---
+schemaVersion: "2.2"
+description: List out services running on hosts
+mainSteps:
+  - action: aws:downloadContent
+    name: DownloadScriptWindows
+    precondition:
+      StringEquals:
+        - platformType
+        - Windows
+    inputs:
+      sourceType: S3
+      sourceInfo: '{"path":"https://s3.amazonaws.com/${aws_s3_bucket.script_bucket.id}/${aws_s3_bucket_object.list_services_windows.id}"}'
+      destinationPath: ListServices.ps1
+  - action: aws:runPowerShellScript
+    name: ExecuteListServicesScriptWindows
+    precondition:
+      StringEquals:
+        - platformType
+        - Windows
+    inputs:
+      runCommand:
+        - ..\downloads\ListServices.ps1
+  - action: aws:downloadContent
+    name: DownloadScriptLinux
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      sourceType: S3
+      sourceInfo: '{"path":"https://s3.amazonaws.com/${aws_s3_bucket.script_bucket.id}/${aws_s3_bucket_object.list_services_linux.id}"}'
+      destinationPath: list_services.sh
+  - action: aws:runShellScript
+    name: ListServicesLinux
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      runCommand:
+        - ../downloads/list_services.sh
+DOC
+}
+```
+
+You'll notice the Terraform config for `aws_ssm_document.list_services` is different to the previous example, whereby we have the document contents listed directly in the resource itself instead of within a file. This allows us to make use of Terraform's [string interpolation](https://www.terraform.io/docs/configuration-0-11/interpolation.html) to infer the dependency `aws_ssm_document.list_services` has on the scripts (`aws_s3_bucket_object`), and to dynamically set the location of the scripts location in S3.
+
+TODO iam roles will be needed on the instance to allow the script to be downloaded
 
 ## Automation Documents Example
 
