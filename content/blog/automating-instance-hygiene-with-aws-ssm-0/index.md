@@ -1,18 +1,27 @@
 ---
-date: 2020-09-26
-title: "Using SSM Automation "
-description: WIP
+date: 2020-10-21
+title: "Automating Instance Hygiene with AWS SSM: Command Documents"
+description: Exploring how AWS SSM can help to automate processes to keep instances healthy
 type: posts
+series:
+- Automating Instance Hygiene with AWS SSM
 tags:
   - aws
   - ssm
   - automation
+  - patching
 draft: true
 ---
 
 It's been a while since my [last post](/blog/assertions-in-gotests-test-generation/)... which could be down to me trying to salvage something out of summer! :sweat_smile:
 
 In this post I want to talk a little bit more about AWS SSM. This was something I touched on when discussing patch baselines in a [previous post](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#ssm--patch-manager), and within there is another service known as [Automation](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation.html). On first glance it may look pretty dull, but once you scratch the surface there are a number of capabilities it can unlock for you. I found a distinct lack of resources on how to write these documents, so this post will aim to help you get started on doing so!
+
+This will be part one of a three part series about SSM Automation. The outline of the posts will be:
+
+1. Re-introduction to SSM Documents in general, specifically the `Command` document
+2. Moving onto `Automation` documents
+3. Advanced use case for `Automation` documents
 
 ## SSM Re-primer
 
@@ -38,11 +47,46 @@ I like to use the below to differentiate between the two:
 - Command documents are ran on instances themselves
 - Automation document can call and orchestrate AWS API endpoints on your behalf, including executing Command documents on instances
 
-There are also [other types](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html) too which are beyond the scope of this post.
+There are also [other types](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html) too which are beyond the scope of this series.
 
 ## Command documents
 
-Documents are defined in either JSON or, [for better or for worse](https://github.com/cblp/yaml-sucks), YAML. You can also define what OS each command should be executed on. Check out this basic example below, which will list running processes on instances  :point_down:
+Documents are defined in either JSON or, [for better or for worse](https://github.com/cblp/yaml-sucks), YAML. You can also define what OS each command should be executed on. This could be helpful if you wanted a healthcheck script to be executed across all (or a subset of) your instances in one swoop. As an example, my healthcheck script could be to check to see if the CPU is overloaded. 
+
+### Constructing a healthcheck script
+
+I could use the below to perform a healthcheck on a Windows box:
+
+```powershell
+$Avg = (Get-WmiObject Win32_Processor | Measure-Object -Property LoadPercentage -Average | Select Average).Average
+If ($Avg -gt 90) {
+  Throw "Instance is unhealthy"
+}
+Write-Output "Instance is healthy"
+```
+
+And the equivalent for Linux would be:
+
+```bash
+# Sources: 
+# https://stackoverflow.com/a/9229580
+# https://bits.mdminhazulhaque.io/linux/round-number-in-bash-script.html
+avg_cpu=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print int(usage)+1}')
+if (( avg_cpu > 90 )); then
+  echo "Instance is unhealthy"
+  return 1
+fi
+echo "Instance is healthy
+```
+
+Note this are just rudimentary examples of healthcheck scripts. Your healthcheck script may be checking that services are running ok, whether a task can be performed, etc. For the sake of this example, I've decided to do a simple check against the CPU load for demonstration.
+
+Let's now test them in the AWS SSM Console. For this example I've spun up two EC2 instances, one Linux and one Windows. TODO add terraform to do this?
+
+
+
+
+ :point_down:
 
 ```yaml
 # list_services.yml
@@ -67,7 +111,7 @@ mainSteps:
         - Linux
     inputs:
       runCommand:
-        - ps -ef
+        - systemctl
 ```
 
 Since a document is meant to perform an action (or group of actions) on a set of instances regardless of their operating system (OS), only the steps that apply to the OS platform for the instance they are being executed on will be invoked.
@@ -357,254 +401,3 @@ TODO ssm console for triggering the above
 
 After that, you'll have adopted a means of executing command documents on your EC2 instances!
 
-## Automation documents
-
-So now we have a command document that gets services that are currently running on the instance, what if we wanted to have this script executed after a patching event - so that we can confirm services are running fine?
-
-In the simplest form, the automation document would look something like this:
-
-```yaml
----
-schemaVersion: '0.3'
-description: Patch an instance then check instances are running OK
-parameters:
-  InstanceIds:
-    type: StringList
-    description: The instance to target
-mainSteps:
-  - name: PatchInstance
-    action: 'aws:runCommand'
-    inputs:
-      DocumentName: AWS-RunPatchBaseline
-      InstanceIds: '{{InstanceIds}}'
-      OutputS3BucketName: script-bucket
-      OutputS3KeyPrefix: ssm_output/
-      ServiceRoleArn: >-
-        arn:aws:iam::ACCOUNT_ID:role/system/ROLE_NAME
-      TimeoutSeconds: 3600
-      Parameters:
-        Operation: Install
-  - name: CheckInstancesPostPatch
-    action: 'aws:runCommand'
-    inputs:
-      DocumentName: ListServices
-      InstanceIds: '{{InstanceIds}}'
-      OutputS3BucketName: script-bucket
-      OutputS3KeyPrefix: ssm_output/
-      ServiceRoleArn: >-
-        arn:aws:iam::ACCOUNT_ID:role/system/ROLE_NAME
-      TimeoutSeconds: 3600
-```
-
-On the face of it there is not a whole lot of difference here between this automation and the command documents. Some of the similarties include:
-
-- `schemaVersion`
-- `description`
-- `mainSteps`, containing:
-  - `name`
-  - `action`
-  - `inputs` for the `action`
-
-Something new in this automation document is `parameters`. This allows the executor of this document to specify parameters that can be passed into the input of the steps. For now, AWS will recognise the `InstanceIds` name and provide some GUI assistance, which I'll touch on later.
-
-### Steps breakdown
-
-This document is made up of two steps, one is calling **AWS-RunPatchBaseline**, while the next one is calling the command document we made in the previous section, **ListServices**. In both steps we're specifying the action to be `aws:runCommand`. To understand further about the inputs we're providing to the action, see the [AWS documentation](https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-action-runcommand.html).
-
-You will notice the line containing `InstanceIds: '{{InstanceIds}}'`. The curly braces (`{{`) indicate to the document that we want to reference the parameter named that value at the start of the document. This is how we pass what instances we want to have the document executed on.
-
-Additionally we have `OutputS3BucketName` and `OutputS3KeyPrefix` specified in the inputs, this allows us to tell the command document where to store the output of the commands being executed in case we want to debug them for later on.
-
-If the command document you are executing takes in parameters of its own like **AWS-RunPatchBaseline**, then you can enter a `Parameters` key like what we're doing above.
-
-Just this document alone isn't needed, we need to create some other resources too to piece everything together.
-
-### Terraforming automation document
-
-Just like with the command document, we can Terraform this in a similar manner. Note the differing `document_type`.
-
-```hcl
-resource "aws_ssm_document" "patch_instance_with_healthcheck" {
-  name            = "PatchInstanceWithHealthcheck"
-  document_type   = "Automation"
-  document_format = "YAML"
-
-  content = <<DOC
----
-schemaVersion: '0.3'
-description: Patch an instance then check instances are running OK
-parameters:
-  InstanceIds:
-    type: StringList
-    description: The instance to target
-mainSteps:
-  - name: PatchInstance
-    action: 'aws:runCommand'
-    inputs:
-      DocumentName: AWS-RunPatchBaseline
-      InstanceIds: '{{InstanceIds}}'
-      OutputS3BucketName: ${aws_s3_bucket.script_bucket.id}
-      OutputS3KeyPrefix: ssm_output/
-      ServiceRoleArn: >-
-        ${aws_iam_role.automation.arn}
-      TimeoutSeconds: 3600
-      Parameters:
-        Operation: Install
-  - name: CheckInstancesPostPatch
-    action: 'aws:runCommand'
-    inputs:
-      DocumentName: '${aws_ssm_document.list_services.arn}'
-      InstanceIds: '{{InstanceIds}}'
-      OutputS3BucketName: ${aws_s3_bucket.script_bucket.id}
-      OutputS3KeyPrefix: ssm_output/
-      ServiceRoleArn: >-
-        ${aws_iam_role.automation.arn}
-      TimeoutSeconds: 3600
-DOC
-}
-```
-
-You'll notice we're referencing the `aws_s3_bucket.script_bucket` resource, we're going to reuse this bucket to store the output of the commands, at the prefix `ssm_output/`.
-
-> Read up more [about S3](https://docs.aws.amazon.com/AmazonS3/latest/gsg/GetStartedWithS3.html), and about [S3 prefixes](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/using-folders.html).
-
-There is also another resource referenced here called `aws_iam_role.automation`. This is the role that SSM will assume to execute this command. We didn't need to specify this when we were executing our command document earlier because AWS Console uses your permissions when logged in to execute the command. In most cases your permissions would include `AdministratorAccess`, which is God-like powers on everything. Since we are automating this document, we need to tell it what role it can use to perform the tasks as.
-
-To Terraform that, this is what is needed:
-
-```hcl
-resource "aws_iam_role" "automation" {
-  name = "Automation"
-  assume_role_policy = data.aws_iam_policy_document.automation_assume_policy.json
-}
-
-data "aws_iam_policy_document" "automation_assume_policy" {
-  statement {
-    actions = [
-      "sts:AssumeRole",
-    ]
-
-    principals {
-      type = "Service"
-
-      identifiers = [
-        "ec2.amazonaws.com",
-        "ssm.amazonaws.com",
-      ]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "automation_policy" {
-  statement {
-    sid    = "AllowSSM"
-    effect = "Allow"
-
-    actions = [
-      "ssm:DescribeInstanceInformation",
-      "ssm:ListCommandInvocations",
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
-    sid     = "AllowIAM"
-    effect  = "Allow"
-    actions = ["iam:PassRole"]
-
-    resources = [
-      aws_iam_role.automation.arn,
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "iam:PassedToService"
-      values   = ["ssm.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_policy" "automation_policy" {
-  name   = "AutomationPolicy"
-  policy = data.aws_iam_policy_document.automation_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "automation_policy" {
-  role       = aws_iam_role.automation.name
-  policy_arn = aws_iam_policy.automation_policy.arn
-}
-```
-
-> Describing the semantics of IAM permissions is out of scope for this post. You can check the [AWS docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html) for more info.
-
-There is a lot going on here, but rest assured it is everything that is needed for the automation document to run.
-
-We will need to also provide permissions for the EC2 instances to be able to upload the output of the command documents to S3.
-
-```hcl
-data "aws_iam_policy_document" "ssm_commands_output" {
-  statement {
-    sid = "AllowS3"
-    effect = "Allow"
-
-    actions = ["s3:PutObject"]
-
-    resources = ["${aws_s3_bucket.script_bucket.arn}/ssm_output/*"]
-  }
-
-  statement {
-    sid = "AllowKMS"
-    effect = "Allow"
-
-    actions = ["kms:GenerateDataKey"]
-
-    resources = [aws_kms_key.script_bucket_key.arn]
-  }
-}
-
-resource "aws_iam_policy" "ssm_commands_output_upload" {
-  name        = "SSMCommandsOutputUpload"
-  description = "Enables instances to upload output of SSM commands to S3"
-
-  policy = data.aws_iam_policy_document.ssm_commands_output.json
-}
-
-resource "aws_iam_role_policy_attachment" "instance_upload_ssm_output_to_s3" {
-  # Assuming the role below already exists for your EC2 instances
-  role       = aws_iam_role.ec2_instance_role.arn
-  policy_arn = aws_iam_policy.ssm_commands_output_upload.arn
-}
-```
-
-### Executing the automation
-
-Similarly to the command document, we can trigger the automation document via the AWS Console.
-
-TODO add screenshots of this.
-
-### Attaching automation to maintenance window
-
-Now we can modify our patching maintenance window (TODO where to reference?) to use the new automation document we created instead.
-
-TODO show updated mw and show this running in a screenshot
-
-- Highlight the issue of it executing on multiple instances all at once
-
-### Executing one instance at a time
-
-We can then do some cool stuff with maintenance window properties, such as ensuring only one instances is being patched at a time, and to abort any further patching if the automation document failed for whatever reason (such as a bad healthcheck post-patching).
-
-TODO show this config
-
-Note that you can replicate this behaviour in the AWS Console should you want to test your Automation document outside of a maintenance window.
-
-TODO show the automation rate control example in Execute Automation SSM bit, then talk about how users can get set up on that
-
-## Proactively removing instances from circulation
-
-The previous examples have been pretty basic thus far - only calling run commands that we have written ourselves.
-
-- Talk about how we are not proactively removing nodes from circulation
-- Could disrupt user experience
-- need to remove the instance from the target group first
