@@ -565,8 +565,27 @@ Let's now dive into one of the instances outputs.
 
 {{< figure src="s3-command-document-success-linux.png" link="s3-command-document-success-linux.png" class="center" alt="Breakdown of steps invoked on Linux, Windows steps are skipped" >}}
 
-Just like with the previous document with the script embedded `PerformHealthcheck`, we can see the steps conditioned for Windows have been skipped (steps 1-2). Step 3 is where the document is doing real work, downloading the Linux script from the S3 location into the temp directory for SSM, and then executing it in step 4. 
+Just like with the previous document with the script embedded `PerformHealthcheck`, we can see the steps conditioned for Windows have been skipped (steps 1-2). Step 3 is where the document is doing real work, downloading the Linux script from the S3 location into the temp directory for SSM, and then executing it in step 4.
 
-## Maintenance Windows executing command documents
+## Automating command documents with maintenance windows
 
-Optional additional heading?
+So what's the purpose of all that we've done? Well we're not going to be manually invoking these command documents like what we have been doing so far- as engineers we need to be automating as many repetitive tasks as possible.
+
+To summarise where we are now, we've produced a Command document which when executed, automates the following:
+
+1. Downloads a healthcheck script from S3
+2. Executes the healthcheck script, failing the command invocation if healthcheck does not pass
+
+- Healthchecks are typically useful for executing after a change in our environment.
+- Remember back to last time we spoke about SSM, we were covering aws-runpatchbaseline
+- it is a best practice to perform a healthcheck on the instance after a patch event
+
+
+TODO
+- intro to MW if not done already
+- how to create MW
+- IAM roles and permissions
+
+- have only one executed at a time? throw a failure and discontinue if there is one?
+- afterward, how to log out command output
+
