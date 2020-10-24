@@ -197,7 +197,7 @@ We can see that both executed successfully! You can view the output of each comm
 
 Let's dive into some more intermediate documents.
 
-### Verbose command documents
+## Verbose command documents
 
 The example above was a very basic example of such a document where we only had a few lines of code to execute. The healthcheck script you write for your service may have several more lines of code to execute, and trying to read lines of code in amongst the document markup format is not easy amongst the eyes. Here is a snippet of the **AWS-RunPatchBaseline** document as an example of what I mean. It is written in JSON and has over 100 lines in the `runCommand` section.
 
@@ -299,7 +299,7 @@ Note the new action called `aws:downloadContent` - which you can view the docume
 
 Once the script is downloaded to the instance, we will need to have it executed. `aws:downloadContent` actually saves the script to a temporary directory for executing SSM command invocations on instances, so we need to reference it in the `downloads` directory for it; indicated by the `../downloads/perform_healthcheck.sh` command.
 
-#### Terraforming verbose command documents
+### Terraforming verbose command documents
 
 This involves having your script first uploaded to S3. Thankfully, through the power of [infrastructure-as-code](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#infrastructure-as-code-primer), you can have this automatically deployed to your environment once the module is written. 
 
@@ -436,7 +436,7 @@ resource "aws_ssm_document" "perform_healthcheck_s3" {
 
 You'll notice that I am still referencing a file for the SSM Document YAML config, but with a twist...
 
-```
+```yaml
 # documents/perform_healthcheck_s3_template.yml
 ---
 schemaVersion: "2.2"
@@ -551,9 +551,15 @@ resource "aws_iam_role_policy_attachment" "instance_download_scripts" {
 }
 ```
 
+### Testing verbose documents
+
 Now, let's give this command a spin in the console. We're going to execute it the same way we did for other documents earlier, except now targeting `PerformHealthcheckS3`.
 
 {{< figure src="s3-command-document-success.png" link="s3-command-document-success.png" class="center" alt="Successful invocations for the new document pulling the script to be executed from S3" >}}
+
+If you got any failures, make sure to dive into the failed invocation and see why it failed. Did it fail because of your healthcheck command? Then it is working as intended! Although if it failed on `aws:downloadContent`, check to make sure your instances are running the latest version of SSM agent. You can do this with the `AWS-UpdateSSMAgent` SSM document. Don't be like me and spend hours troubleshooting against an out-of-date SSM agent! :joy:
+
+{{< tweet 1320011701480284162 >}}
 
 Let's now dive into one of the instances outputs.
 
