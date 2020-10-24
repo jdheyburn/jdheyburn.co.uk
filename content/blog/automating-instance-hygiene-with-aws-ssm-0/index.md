@@ -73,9 +73,10 @@ In order to have scripts executed remotely on your instances, they will need to 
   - `https://ssm.REGION.amazonaws.com`
   - `https://ssmmessages.REGION.amazonaws.com`
   - `https://ec2messages.REGION.amazonaws.com`
-- the [correct IAM permissions](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html) to interface with SSM
+- the [correct IAM permissions](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html) applied on your EC2 instance profile
   - this are all provided by the AWS IAM policy [AmazonSSMManagedInstanceCore](https://console.aws.amazon.com/iam/home#/policies/arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore$serviceLevelSummary)
   - the example for this post shows the [policy being attached](https://github.com/jdheyburn/terraform-examples/aws-ssm-automation-1/ec2_iam.tf) to the EC2 IAM role
+- **Optional**: [additional policies](https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-instance-profile.html) that may be required based on your use case
 
 If your instances are appearing in the [managed instances console](https://console.aws.amazon.com/systems-manager/managed-instances) then everything is set up correctly; if not then follow the [troubleshooting guide](https://aws.amazon.com/premiumsupport/knowledge-center/systems-manager-ec2-instance-not-appear/).
 
@@ -259,7 +260,6 @@ mainSteps:
     inputs:
       sourceType: S3
       sourceInfo: '{"path":"https://s3.amazonaws.com/jdheyburn-scripts/ssm_scripts/PerformHealthcheck.ps1"}'
-      destinationPath: PerformHealthcheck.ps1
   - action: aws:runPowerShellScript
     name: ExecutePerformHealthCheckWindows
     precondition:
@@ -278,7 +278,6 @@ mainSteps:
     inputs:
       sourceType: S3
       sourceInfo: '{"path":"https://s3.amazonaws.com/jdheyburn-scripts/ssm_scripts/perform_healthcheck.sh"}'
-      destinationPath: perform_healthcheck.sh
   - action: aws:runShellScript
     name: ExecutePerformHealthCheckLinux
     precondition:
@@ -290,19 +289,67 @@ mainSteps:
         - ../downloads/perform_healthcheck.sh
 ```
 
-Note the new action called `aws:downloadContent` - which you can view the documentation for [here](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-plugins.html#aws-downloadContent). Again we're using the `precondition` key to ensure each platforms downloads their respective script. We're also using the `inputs` key to instruct the action where it can download the script from; in this case, from S3, at the given S3 location - finalised with a location to save it on the instance.
+Note the new action called `aws:downloadContent` - which you can view the documentation for [here](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-plugins.html#aws-downloadContent). Again we're using the `precondition` key to ensure each platforms downloads their respective script. We're also using the `inputs` key to instruct the action where it can download the script from; in this case, from S3, at the given S3 location. There is an optional `destinationPath` field which allows you to change where it downloads to.
 
-Once the script is downloaded to the instance, we will need to have it executed. `aws:downloadContent` actually saves the script to a temporary directory for executing SSM commands on instances, so we need to reference it in the `downloads` directory for it; indicated by the `../downloads/perform_healthcheck.sh` command.
+Once the script is downloaded to the instance, we will need to have it executed. `aws:downloadContent` actually saves the script to a temporary directory for executing SSM command invocations on instances, so we need to reference it in the `downloads` directory for it; indicated by the `../downloads/perform_healthcheck.sh` command.
 
 #### Terraforming verbose command documents
 
-This involves having your script first uploaded to S3. Thankfully, through the power of [infrastructure-as-code](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#infrastructure-as-code-primer), you can have this automatically deployed to your environment once the module is written. An example of this can be seen below.
+This involves having your script first uploaded to S3. Thankfully, through the power of [infrastructure-as-code](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#infrastructure-as-code-primer), you can have this automatically deployed to your environment once the module is written. 
 
-TODO up to here
+An example of this can be seen below. I have the scripts used earlier saved in a directory called `scripts`.
+
+TODO use gist instead?
 
 ```hcl
+data "aws_iam_policy_document" "kms_allow_decrypt" {
+  statement {
+    sid    = "AllowKMSAdministration"
+    effect = "Allow"
+
+    actions = [
+      "kms:Create*",
+      "kms:Describe*",
+      "kms:Enable*",
+      "kms:List*",
+      "kms:Put*",
+      "kms:Update*",
+      "kms:Revoke*",
+      "kms:Disable*",
+      "kms:Get*",
+      "kms:Delete*",
+      "kms:ScheduleKeyDeletion",
+      "kms:CancelKeyDeletion"
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/jdheyburn"]
+    }
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowDecrypt"
+    effect = "Allow"
+
+    actions = ["kms:Decrypt"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      # TIP: For increased security only give decrypt permissions to roles that need it
+      # identifiers = [aws_iam_role.vm_base.arn]
+    }
+
+    resources = ["*"]
+  }
+}
+
 resource "aws_kms_key" "script_bucket_key" {
   description = "This key is used to encrypt bucket objects"
+  policy      = data.aws_iam_policy_document.kms_allow_decrypt.json
 }
 
 resource "aws_s3_bucket" "script_bucket" {
@@ -319,27 +366,75 @@ resource "aws_s3_bucket" "script_bucket" {
   }
 }
 
-resource "aws_s3_bucket_object" "per_windows" {
-  bucket  = aws_s3_bucket.script_bucket.id
-  key     = "ssm_scripts/ListServices.ps1"
-  content = file("ListServices.ps1") # Ensure the script exists at this location
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "s3_allow_script_download" {
+  statement {
+    sid    = "AllowAccountAccess"
+    effect = "Allow"
+
+    actions = ["s3:GetObject"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      # TIP: For increased security only give decrypt permissions to roles that need it
+      # identifiers = [aws_iam_role.vm_base.arn]
+    }
+
+    resources = ["${aws_s3_bucket.script_bucket.arn}/*"]
+  }
 }
 
-resource "aws_s3_bucket_object" "list_services_linux" {
-  bucket  = aws_s3_bucket.script_bucket.id
-  key     = "ssm_scripts/list_service.sh"
-  content = file("list_service.sh") # Ensure the script exists at this location
+resource "aws_s3_bucket_policy" "script_bucket_policy" {
+  bucket = aws_s3_bucket.script_bucket.id
+  policy = data.aws_iam_policy_document.s3_allow_script_download.json
 }
 
-resource "aws_ssm_document" "list_services" {
-  name            = "ListServices"
+
+locals {
+  perform_healthcheck_script_fname_windows = "PerformHealthcheck.ps1"
+  perform_healthcheck_script_fname_linux   = "perform_healthcheck.sh"
+}
+
+resource "aws_s3_bucket_object" "perform_healthcheck_windows" {
+  bucket  = aws_s3_bucket.script_bucket.id
+  key     = "ssm_scripts/${local.perform_healthcheck_script_fname_windows}"
+  content = file("scripts/${local.perform_healthcheck_script_fname_windows}")
+}
+
+resource "aws_s3_bucket_object" "perform_healthcheck_linux" {
+  bucket  = aws_s3_bucket.script_bucket.id
+  key     = "ssm_scripts/${local.perform_healthcheck_script_fname_linux}"
+  content = file("scripts/${local.perform_healthcheck_script_fname_linux}")
+}
+
+resource "aws_ssm_document" "perform_healthcheck_s3" {
+  name            = "PerformHealthcheckS3"
   document_type   = "Command"
   document_format = "YAML"
 
-  content = <<DOC
+  content = templatefile(
+    "documents/perform_healthcheck_s3_template.yml",
+    {
+      bucket_name   = aws_s3_bucket.script_bucket.id,
+      linux_fname   = local.perform_healthcheck_script_fname_linux,
+      linux_key     = aws_s3_bucket_object.perform_healthcheck_linux.id,
+      windows_fname = local.perform_healthcheck_script_fname_windows,
+      windows_key   = aws_s3_bucket_object.perform_healthcheck_windows.id,
+    }
+  )
+}
+
+```
+
+You'll notice that I am still referencing a file for the SSM Document YAML config, but with a twist...
+
+```
+# documents/perform_healthcheck_s3_template.yml
 ---
 schemaVersion: "2.2"
-description: List out services running on hosts
+description: Perform a healthcheck on the target instance
 mainSteps:
   - action: aws:downloadContent
     name: DownloadScriptWindows
@@ -349,17 +444,16 @@ mainSteps:
         - Windows
     inputs:
       sourceType: S3
-      sourceInfo: '{"path":"https://s3.amazonaws.com/${aws_s3_bucket.script_bucket.id}/${aws_s3_bucket_object.list_services_windows.id}"}'
-      destinationPath: ListServices.ps1
+      sourceInfo: '{"path":"https://s3.amazonaws.com/${bucket_name}/${windows_key}"}'
   - action: aws:runPowerShellScript
-    name: ExecuteListServicesScriptWindows
+    name: ExecutePerformHealthCheckWindows
     precondition:
       StringEquals:
         - platformType
         - Windows
     inputs:
       runCommand:
-        - ..\downloads\ListServices.ps1
+        - ..\downloads\${windows_fname}
   - action: aws:downloadContent
     name: DownloadScriptLinux
     precondition:
@@ -368,24 +462,25 @@ mainSteps:
         - Linux
     inputs:
       sourceType: S3
-      sourceInfo: '{"path":"https://s3.amazonaws.com/${aws_s3_bucket.script_bucket.id}/${aws_s3_bucket_object.list_services_linux.id}"}'
-      destinationPath: list_services.sh
+      sourceInfo: '{"path":"https://s3.amazonaws.com/${bucket_name}/${linux_key}"}'
   - action: aws:runShellScript
-    name: ListServicesLinux
+    name: ExecutePerformHealthCheckLinux
     precondition:
       StringEquals:
         - platformType
         - Linux
     inputs:
       runCommand:
-        - ../downloads/list_services.sh
-DOC
-}
+        - ../downloads/${linux_fname}
 ```
 
-You'll notice the Terraform config for `aws_ssm_document.list_services` is different to the previous example, whereby we have the document contents listed directly in the resource itself instead of within a file. This allows us to make use of Terraform's [string interpolation](https://www.terraform.io/docs/configuration-0-11/interpolation.html) to infer the dependency `aws_ssm_document.list_services` has on the scripts (`aws_s3_bucket_object`), and to dynamically set the location of the scripts location in S3.
+Notice how we have the presence of `${bucket_name}` and others? These are template variables. With the use of the [Terraform function](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) `templatefile()`, we can insert Terraform variables into the config to have the template name replaced with the value we're passing in. In this case, `${bucket_name}` will get replaced with the output of `aws_s3_bucket.script_bucket.id`, which is `jdheyburn-scripts`. 
 
-For the pattern to work, you'll need to attach an IAM policy to the instance to allow it to pull the scripts from the S3 bucket. The JSON for this would look like:
+The same will occur for the rest of the template variables. This promotes a clean layout for your SSM Documents by allowing your IDE to apply the correct syntax highlighting to each file (Terraform, bash/PowerShell, and YAML)!
+
+For the pattern to work, you'll need to attach an IAM policy to the instance to allow it to pull the scripts from the S3 bucket. If we don't do this then the `aws:downloadContent` action will fail. From the Terraform above we've already applied the corresponding permissions on the S3 bucket, allowing all users and roles in the account to perform `s3:GetObject` on the scripts. We've also allowed done the same for performing `kms:Decrypt` on the KMS key that encrypts the S3 objects.
+
+The JSON for the EC2 instance policy would look like:
 
 ```json
 {
@@ -395,7 +490,7 @@ For the pattern to work, you'll need to attach an IAM policy to the instance to 
       "Sid": "AllowS3Get",
       "Effect": "Allow",
       "Action": ["s3:GetObject"],
-      "Resource": "arn:aws:s3:::script-bucket/ssm_scripts/*"
+      "Resource": "arn:aws:s3:::jdheyburn-scripts/ssm_scripts/*"
     },
     {
       "Sid": "AllowKMS",
@@ -409,23 +504,25 @@ For the pattern to work, you'll need to attach an IAM policy to the instance to 
 
 > You can read up more about IAM policies [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html).
 
-If you have an encryption policy set on the S3 bucket (you **should** have one if you don't - the example above shows how to do this in Terraform), you'll need to give the instance permission to decrypt the S3 objects using the same KMS key used to encrypt them with - this is what the statement `AllowKMS` is permitting in the policy.
+If you have an encryption policy set on the S3 bucket (you **should** have one if you don't - the example above shows how to do this in Terraform), you'll need to give the instance permission to decrypt the S3 objects using the same KMS key used to encrypt them with - this is what the statement `AllowKMS` is permitting in the policy. `AllowS3Get` simply allows the instance to download the script from S3.
 
 Once again, we can have Terraform configure all of this for us:
 
 ```hcl
 data "aws_iam_policy_document" "ssm_scripts" {
   statement {
-    sid = "AllowS3"
+    sid    = "AllowS3"
     effect = "Allow"
 
     actions = ["s3:GetObject"]
 
-    resources = ["${aws_s3_bucket.script_bucket.arn}/ssm_scripts/*"]
+    resources = [
+      "${aws_s3_bucket.script_bucket.arn}/ssm_scripts/*",
+    ]
   }
 
   statement {
-    sid = "AllowKMS"
+    sid    = "AllowKMS"
     effect = "Allow"
 
     actions = ["kms:Decrypt"]
@@ -442,13 +539,13 @@ resource "aws_iam_policy" "ssm_scripts" {
 }
 
 resource "aws_iam_role_policy_attachment" "instance_download_scripts" {
-  # Assuming the role below already exists for your EC2 instances
-  role       = aws_iam_role.ec2_instance_role.arn
+  # Change this to point to the role(s) for your instances
+  role       = aws_iam_role.vm_base.name
   policy_arn = aws_iam_policy.ssm_scripts.arn
 }
 ```
 
-Once done, you'll need to attach the IAM policy to the IAM role that your EC2 instance is assuming.
+Now, let's give this command a spin in the console. We're going to execute it the same way we did for the other one initially.
 
 TODO ssm console for triggering the above
 
