@@ -80,7 +80,7 @@ In order to have scripts executed remotely on your instances, they will need to 
 
 If your instances are appearing in the [managed instances console](https://console.aws.amazon.com/systems-manager/managed-instances) then everything is set up correctly; if not then follow the [troubleshooting guide](https://aws.amazon.com/premiumsupport/knowledge-center/systems-manager-ec2-instance-not-appear/).
 
-TODO screenshot
+{{< figure src="managed-instances.png" link="managed-instances.png" class="center" alt="AWS SSM Managed Instances view with two instances appearing as online and managed" >}}
 
 ## Command documents
 
@@ -118,15 +118,17 @@ Note these scripts are just rudimentary examples of healthcheck scripts. Your he
 
 ### Testing in AWS SSM Console
 
-Let's now test them in the AWS SSM Console. For this example I've spun up two EC2 instances, one Linux and one Windows, [using Terraform](https://github.com/jdheyburn/terraform-examples/aws-ssm-automation-1). To run the commands we can navigate to [this URL](https://console.aws.amazon.com/systems-manager/run-command/send-command), and running `AWS-RunPowerShellScript` and `AWS-RunShellScript` for both Windows and Linux EC2s respectively. We don't care about logging the output of the scripts just yet.
+Let's now test them in the AWS SSM Console. For this example I've spun up two EC2 instances, one Linux and one Windows, [using Terraform](https://github.com/jdheyburn/terraform-examples/aws-ssm-automation-1). To run the commands we can navigate to [this URL](https://console.aws.amazon.com/systems-manager/run-command/send-command), and run `AWS-RunPowerShellScript` and `AWS-RunShellScript` for both Windows and Linux EC2s respectively. We don't care about logging the output of the scripts just yet. Make sure when running the script you manually select what instance to run it on.
 
-TODO screenshot of happy case
+{{< figure src="run-command-script-success-linux.png" link="run-command-script-success-linux.png" class="center" alt="Executing the Linux script successfully on the Linux instance" >}}
 
-We can see they have executed fine. Let's flip the condition so we can test them failing.
+{{< figure src="run-command-script-success-windows.png" link="run-command-script-success-windows.png" class="center" alt="Executing the Windows script successfully on the Windows instance" >}}
 
-TODO screenshot of bad case
+We can see they have executed fine. Let's flip the condition so we can test them failing (done by changing `>` to `<` in the command).
 
-This is cool - in the script we can define what constitutes as a failure and have this propagate up to AWS. This will come in use later on in the post.
+{{< figure src="run-command-script-failure-linux.png" link="run-command-script-failure-linux.png" class="center" alt="AWS indicating a failure in the command due to a failure occuring in the script" >}}
+
+This is cool - in the script we can define what constitutes as a failure and have this propagate up to AWS - notice how the status was Failed. This will come in use later on in the post.
 
 ### Terraforming command documents
 
@@ -169,7 +171,7 @@ mainSteps:
 
 Since a document is meant to perform an action (or group of actions) on a set of instances regardless of their operating system (OS), only the steps that apply to the OS platform for the instance they are being executed on will be invoked.
 
-Therefore when we target this document to run on two EC2 instances, one Windows and one Linux, the step `PerformHealthCheckWindows` will be executed on the Windows box and vice versa for `PerformHealthCheckLinux`. This is because of the `precondition` key which filters on the `platformType`. Notably as well, we are targeting the appropriate actions for each platform; `aws:runPowerShellScript` for Windows and `aws:runShellScript` for Linux.
+Therefore when we target this document to run on two types of EC2 instances, one Windows and one Linux, the step `PerformHealthCheckWindows` will be executed on the Windows box and vice versa for `PerformHealthCheckLinux`. This is because of the `precondition` key which filters on the `platformType`. Notably as well, we are targeting the appropriate actions for each platform; `aws:runPowerShellScript` for Windows and `aws:runShellScript` for Linux.
 
 > [See here](https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-plugins.html) for a full list of what actions you can perform in a command document.
 
@@ -185,15 +187,19 @@ resource "aws_ssm_document" "perform_healthcheck" {
 }
 ```
 
-Once deployed, we can navigate to System Manager in the AWS Console to trigger it.
+Once deployed, we can navigate to System Manager in the AWS Console to invoke the document on our estate. This is done in the same manner as when we ran `AWS-RunShellScript` above, except now we are targeting `PerformHealthcheck`. Since our document has commands for both Linux and Windows, we can have it invoked across both platform types and only the scripts written for their platform will be invoked.
 
-TODO include screenshots on applying in the console
+{{< figure src="command-document-success.png" link="command-document-success.png" class="center" alt="Successfully executing the new command document across both Linux and Windows instances" >}}
 
-We can see that both executed successfully! Let's dive into some more intermediate documents.
+We can see that both executed successfully! You can view the output of each command invocation on each instance like previously. For the screenshot below of the Linux instance, only the Linux step was executed, whereas the Windows step was skipped. You'll notice our message from earlier "` - Linux`" is there, reassuring us that only the Linux script was executed.
+
+{{< figure src="command-document-success-linux.png" link="command-document-success-linux.png" class="center" alt="Focusing on the Linux invocation, highlighting that only the Linux step was invoked" >}}
+
+Let's dive into some more intermediate documents.
 
 ### Verbose command documents
 
-The example above was a very basic example of such a document where we only had a few lines of code to execute. The healthcheck script you write for your service may have several more lines of code to execute,and trying to read lines of code in amongst the document markup format can be tedious. Here is a snippet of the **AWS-RunPatchBaseline** document, written in JSON, which has over 100 lines in the `runCommand` section.
+The example above was a very basic example of such a document where we only had a few lines of code to execute. The healthcheck script you write for your service may have several more lines of code to execute, and trying to read lines of code in amongst the document markup format is not easy amongst the eyes. Here is a snippet of the **AWS-RunPatchBaseline** document as an example of what I mean. It is written in JSON and has over 100 lines in the `runCommand` section.
 
 ```json
 {
@@ -236,7 +242,7 @@ The example above was a very basic example of such a document where we only had 
 
 > You can see the [whole thing](https://console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content) on AWS.
 
-Even from this snippet it is hard to distinguish what is going on. Losing out on [syntax highlighting](https://en.wikipedia.org/wiki/Syntax_highlighting) means the code is readable by any means, and since this is a JSON file format, we lose type hinting for the language we are writing the script in (PowerShell in this case).
+Even from this snippet it is hard to distinguish what is going on. Losing out on [syntax highlighting](https://en.wikipedia.org/wiki/Syntax_highlighting) means the code isn't readable by any means, and since this is a JSON file format, we lose type hinting for the language we are writing the script in (PowerShell in this case).
 
 We can fix all these issues by adopting a common pattern when composing command documents. We can have S3 store the script, then have the command document perform these actions:
 
@@ -545,11 +551,15 @@ resource "aws_iam_role_policy_attachment" "instance_download_scripts" {
 }
 ```
 
-Now, let's give this command a spin in the console. We're going to execute it the same way we did for the other one initially.
+Now, let's give this command a spin in the console. We're going to execute it the same way we did for other documents earlier, except now targeting `PerformHealthcheckS3`.
 
-TODO ssm console for triggering the above
+{{< figure src="s3-command-document-success.png" link="s3-command-document-success.png" class="center" alt="Successful invocations for the new document pulling the script to be executed from S3" >}}
 
-After that, you'll have adopted a means of executing command documents on your EC2 instances!
+Let's now dive into one of the instances outputs.
+
+{{< figure src="s3-command-document-success-linux.png" link="s3-command-document-success-linux.png" class="center" alt="Breakdown of steps invoked on Linux, Windows steps are skipped" >}}
+
+Just like with the previous document with the script embedded `PerformHealthcheck`, we can see the steps conditioned for Windows have been skipped (steps 1-2). Step 3 is where the document is doing real work, downloading the Linux script from the S3 location into the temp directory for SSM, and then executing it in step 4. 
 
 ## Maintenance Windows executing command documents
 
