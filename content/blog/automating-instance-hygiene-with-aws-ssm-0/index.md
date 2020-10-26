@@ -568,16 +568,3 @@ Let's now dive into one of the instances outputs.
 
 Just like with the previous document with the script embedded `PerformHealthcheck`, we can see the steps conditioned for Windows have been skipped (steps 1-2). Step 3 is where the document is doing real work, downloading the Linux script from the S3 location into the temp directory for SSM, and then executing it in step 4.
 
-## Automating command documents with maintenance windows
-
-So what's the purpose of all that we've done? Well we're not going to be manually invoking these command documents like what we have been doing so far - as engineers we need to be automating as many repetitive tasks as possible.
-
-To summarise where we are now, we've produced a Command document which when executed, automates the following:
-
-1. Downloads a healthcheck script from S3
-2. Executes the healthcheck script, failing the command invocation if healthcheck does not pass
-
-Healthchecks are important to run both continuously in our environment, as a means of monitoring and verifying the estate is working as intended, before your users notice. They are also necessary to run after a change has been introduced to the environment, such as a new code deployment, or even a patching event via the **AWS-RunPatchBaseline** document.
-
-It's typical to use SSM Maintenance Windows to automate events in your AWS environment. You can even use it to execute **AWS-RunPatchBaseline**. This is something I've [covered before](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#ssm--patch-manager), but want to extend on that to show how its done.
-
