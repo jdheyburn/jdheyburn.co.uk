@@ -33,7 +33,7 @@ To summarise the key parts of this post:
 - How to write a [basic command document](#terraforming-command-documents) in Terraform
 - How to write a [verbose command document](#terraforming-verbose-command-documents) in Terraform
 
-## Pre-requisites
+## Prerequisites
 
 This series assumes you have some knowledge of:
 
