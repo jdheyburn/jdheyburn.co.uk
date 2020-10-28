@@ -1,6 +1,6 @@
 ---
-date: 2020-10-21
-title: "Automate Instance Hygiene with AWS SSM: How to Write Command Documents"
+date: 2020-10-29
+title: "Automate Instance Hygiene with AWS SSM: Command Documents"
 description: Exploring how to execute scripts across multiple platforms with AWS SSM Command Documents
 type: posts
 series:
@@ -9,8 +9,8 @@ tags:
   - aws
   - ssm
   - automation
+  - terraform
   - patching
-draft: true
 ---
 
 It's been a while since my [last post](/blog/assertions-in-gotests-test-generation/)... which could be down to me trying to salvage something out of summer! :sweat_smile:
@@ -29,7 +29,7 @@ This will be part one of a four part series about SSM Automation. The outline of
 To summarise the key parts of this post:
 
 - SSM can be used to automate several parts of your estate
-- Command documents are a means of you being able to execute logically indifferent commands across multiple platforms
+- Command documents are a means of executing logically indifferent commands across multiple platforms
 - How to write a [basic command document](#terraforming-command-documents) in Terraform
 - How to write a [verbose command document](#terraforming-verbose-command-documents) in Terraform
 
