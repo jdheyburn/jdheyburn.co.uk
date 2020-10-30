@@ -11,6 +11,7 @@ tags:
   - automation
   - terraform
   - patching
+lastmod: 2020-10-30
 ---
 
 It's been a while since my [last post](/blog/assertions-in-gotests-test-generation/)... which could be down to me trying to salvage something out of summer! :sweat_smile:
@@ -466,7 +467,7 @@ resource "aws_ssm_document" "perform_healthcheck_s3" {
 
 Here we're creating an `aws_ssm_document` as we had done [before](#terraforming-command-documents), but the document file we're targeting this time is a template file.
 
-Notice how we have the presence of `${bucket_name}` and others? These are template variables. With the use of the [Terraform function](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) `templatefile()`, we can insert Terraform variables into the config to have the template name replaced with the value we're passing in. In this case, `${bucket_name}` will get replaced with the output of `aws_s3_bucket.script_bucket.id`, which is `jdheyburn-scripts`, and the same for the remaining variables.
+Notice how we have the presence of `${bucket_name}` and others? These are template variables. With the use of the [Terraform function](https://www.terraform.io/docs/configuration/functions/templatefile.html) `templatefile()`, we can insert Terraform variables into the config to have the template name replaced with the value we're passing in. In this case, `${bucket_name}` will get replaced with the output of `aws_s3_bucket.script_bucket.id`, which is `jdheyburn-scripts`, and the same for the remaining variables.
 
 ```yaml
 # documents/perform_healthcheck_s3_template.yml
