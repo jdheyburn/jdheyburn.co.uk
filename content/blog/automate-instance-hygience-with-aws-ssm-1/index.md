@@ -1,17 +1,24 @@
 ---
-date: 2020-10-23
-title: "Automating Instance Hygiene with AWS SSM: Maintenance Windows"
-description: Exploring how AWS SSM can help to automate processes to keep instances healthy
+date: 2020-11-12
+title: "Automate Instance Hygiene with AWS SSM: Maintenance Windows"
+description: Using SSM Maintenance Windows to automate SSM Documents
 type: posts
 series:
-  - Automating Instance Hygiene with AWS SSM
+  - Automate Instance Hygiene with AWS SSM
 tags:
   - aws
   - ssm
   - automation
+  - terraform
   - patching
 draft: true
 ---
+
+[Last time](/blog/automate-instance-hygiene-with-aws-ssm-0/) we looked at writing our own SSM Command Document for the purpose of executing a healthcheck script on a set of EC2 instances across multiple platforms.
+
+In this post we'll be exploring how we can automate this using maintenance windows - also within the SSM suite.
+
+## Intro to Maintenance Windows
 
 ## Automating command documents with maintenance windows
 
