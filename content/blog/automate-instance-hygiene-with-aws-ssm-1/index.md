@@ -267,13 +267,14 @@ Take the **AWS-RunPatchBaseline** output on a Linux instance for example. It's p
 To combat this, maintenance windows allow you to dump command output to an S3 bucket, so that you can retrieve it later. In the last post we created an S3 bucket to store our SSM scripts (`aws_s3_bucket.script_bucket.arn`), we can reuse that bucket to keep our command logs. In order to do this there are some steps we need to take:
 
 1. The S3 bucket policy needs to permit the EC2 instance role `aws_iam_role.vm_base` to `s3:PutObject` on `"${aws_s3_bucket.script_bucket.arn}/ssm_output/*"`
-    - `ssm_output/` is the directory/prefix in the S3 bucket where we will store the logs
+   - `ssm_output/` is the directory/prefix in the S3 bucket where we will store the logs
 1. The KMS key used to encrypt objects in the target S3 bucket needs to permit instance role `aws_iam_role.vm_base` to `kms:GenerateDataKey`
 1. The instance role `aws_iam_role.vm_base` needs permissions to do the above on its respective side
 
 You can view the changes required in GitHub:
 
 TOOD links to github code
+
 1. Link 1
 1. Link 2
 1. Link 3
@@ -308,20 +309,46 @@ Now you can open this using the **Object actions** button in the top-right hand 
 
 {{< figure src="open-logs-in-browser.png" link="open-logs-in-browser.png" class="center" alt="Opening the logs in the browser, we see the complete text output of the run patch baseline command invoked" >}}
 
-It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above. 
+It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above.
 
 {{< figure src="failed-log-upload-to-s3.png" link="failed-log-upload-to-s3.png" class="center" alt="An empty S3 object page, caused by incorrectly setting up S3 output logging" caption="An example showing if logs were not successfully uploaded to S3 - if you get this then double check you've set everything up right!" >}}
 
+## Removing old command logs
+
+Now that we have maintenance windows storing our logs in S3, we should ensure we're maintaining a good level of hygiene by removing old logs - otherwise our S3 bucket is going to store more and more logs, costing us more money.
+
+S3 has a feature called [Lifecycle Policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) which tells S3 how to handle objects throughout their lifecycle. We can tell it to move old files to a cheaper storage class, archive them to [S3 Glacier](https://aws.amazon.com/glacier/) (AWS's long-term storage service), or just simply delete them!
+
+Given we're not exactly sentimental with logs, we can define a policy that will remove any logs older than 3 months (90 days).
+
+Fortunately this is very easy for us to add, we simply need to make the addition below to our `aws_s3_bucket` resource.
+
+```hcl
+resource "aws_s3_bucket" "script_bucket" {
+  # ... other attributes hidden
+
+  # Remove old SSM command output logs
+  lifecycle_rule {
+    id = "RemoveOldSSMOutputLogs"
+    enabled = true
+
+    prefix = "ssm_output/"
+
+    expiration {
+      days = 90
+    }
+  }
+}
+```
+
+You can add more rules if you like, such as a `transition` block to move it to cold storage before deleting if you wish. Take a look at the [Terraform documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#using-object-lifecycle) for the resource for example of this.
 
 TODO update policy document resource names with their new names (find better names for them)
 
 TODO
 
-- have only one executed at a time? throw a failure and discontinue if there is one?
-- afterward, how to log out command output
+TODO ensure headings are all correct
 
 TODO link MW from previous post to this page
-
-TODO S3 lifetime policy for log output?
 
 TODO emojis on figure captions
