@@ -104,6 +104,8 @@ resource "aws_ssm_maintenance_window_target" "patch_with_healthcheck_target" {
 
 #### Maintenance Window Tasks
 
+##### Patching task
+
 Now for the tasks... remember that we want to execute our healthcheck SSM document after a patch event right? We need to build a task for executing the **AWS-RunPatchBaseline** document.
 
 ```hcl
@@ -163,9 +165,11 @@ Lastly the `task_invocation_parameters` allows us to customise how the document 
 
 A full list of available commands can be found in the [command document](https://console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content).
 
-TODO screenshot of runpatchbaseline command paremters in console
+{{< figure src="run-patch-baseline-parameters.png" link="run-patch-baseline-parameters.png" class="center" alt="Available parameters for the Run Patch Baseline document; Operation, Snapshot ID, Install Override List, and Reboot Option" >}}
 
-That was just the patch task, next we want to define the healthcheck task.
+##### Healthcheck task
+
+Next we want to define the healthcheck task.
 
 ```hcl
 resource "aws_ssm_maintenance_window_task" "healthcheck_task" {
@@ -240,7 +244,17 @@ Once we've ran `terraform apply` on all the above, let's test the maintenance wi
 
 Once it's done executing, you can navigate to the history tab to view the execution.
 
-TODO add screenshot of execution history
+{{< figure src="maintenance-window-history.png" link="maintenance-window-history.png" class="center" alt="The execution history for the maintenance window, showing both successful and failed executions" caption="Let's hope you have more luck on your first attempts running this than I did! :sweat_smile:" >}}
+
+You can select any execution and drill down into it with the **View details** button.
+
+{{< figure src="mw-execution-details.png" link="mw-execution-details.png" class="center" alt="A detailed look into a maintenance window execution" caption="You can see that the tasks got executed in the order we defined them in" >}}
+
+We can go deeper in the execution details and pull out the result of individual commands by selecting **View details** on the task invocation.
+
+{{< figure src="task-invocation-command-detail.png" link="task-invocation-command-detail.png" class="center" alt="Detailed breakdown of the RunPatchBaseline command, showing success all round" caption="The maintenance window has redirected us to the same page as when we manually invoked the command documents in the last post" >}}
+
+Clicking on one of the instance IDs in the above screenshot will take us to the command output for that instance.
 
 ## Logging command output to S3
 
@@ -248,14 +262,12 @@ Maintenance windows by default only capture the first 2500 characters of a comma
 
 Take the **AWS-RunPatchBaseline** output on a Linux instance for example. It's pretty hefty, and so we lose a lot of context on what actually happened:
 
-TODO screenshot of linux task
+{{< figure src="truncated-command-output.png" link="truncated-command-output.png" class="center" alt="Log output of the patch event on a Linux instance, with the words Output Truncated at the end." >}}
 
 To combat this, maintenance windows allow you to dump command output to an S3 bucket, so that you can retrieve it later. In the last post we created an S3 bucket to store our SSM scripts (`aws_s3_bucket.script_bucket.arn`), we can reuse that bucket to keep our command logs. In order to do this there are some steps we need to take:
 
 1. The S3 bucket policy needs to permit the EC2 instance role `aws_iam_role.vm_base` to `s3:PutObject` on `"${aws_s3_bucket.script_bucket.arn}/ssm_output/*"`
-
-- `ssm_output/` is the directory/prefix in the S3 bucket where we will store the logs
-
+    - `ssm_output/` is the directory/prefix in the S3 bucket where we will store the logs
 1. The KMS key used to encrypt objects in the target S3 bucket needs to permit instance role `aws_iam_role.vm_base` to `kms:GenerateDataKey`
 1. The instance role `aws_iam_role.vm_base` needs permissions to do the above on its respective side
 
@@ -282,17 +294,23 @@ resource "aws_ssm_maintenance_window_task" "task_name" {
     }
   }
 }
-
 ```
 
 When you have the new config down, then you can `terraform apply` and run another test on the maintenance window.
 
+{{< figure src="command-s3-output-button.png" link="command-s3-output-button.png" class="center" alt="Detailed view of the run patch baseline task, showing a button called Amazon S3 which redirects us to where the logs are stored in S3" caption="We now get a button that can redirect us to where the logs are stored in S3" >}}
 
-TODO screenshot of it working, add some more text too
+If we click on this button, we can view the logs being stored in S3 - follow the path in S3 until you reach the S3 object containing the logs.
 
-> It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above.
+{{< figure src="log-object-in-s3.png" link="log-object-in-s3.png" class="center" alt="The S3 object containing the logs" >}}
 
-TODO screenshot of bad job invocation where logs did not get uploaded
+Now you can open this using the **Object actions** button in the top-right hand corner to view the entire logs!
+
+{{< figure src="open-logs-in-browser.png" link="open-logs-in-browser.png" class="center" alt="Opening the logs in the browser, we see the complete text output of the run patch baseline command invoked" >}}
+
+It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above. 
+
+{{< figure src="failed-log-upload-to-s3.png" link="failed-log-upload-to-s3.png" class="center" alt="An empty S3 object page, caused by incorrectly setting up S3 output logging" caption="An example showing if logs were not successfully uploaded to S3 - if you get this then double check you've set everything up right!" >}}
 
 
 TODO update policy document resource names with their new names (find better names for them)
@@ -305,3 +323,5 @@ TODO
 TODO link MW from previous post to this page
 
 TODO S3 lifetime policy for log output?
+
+TODO emojis on figure captions
