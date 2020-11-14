@@ -16,9 +16,23 @@ draft: true
 
 [Last time](/blog/automate-instance-hygiene-with-aws-ssm-0/) we looked at writing our own SSM Command Document for the purpose of executing a healthcheck script on a set of EC2 instances across multiple platforms.
 
-In this post we'll be exploring how we can automate this using maintenance windows - also within the SSM suite.
+In this post we'll be exploring how we can automate this using maintenance windows - also within the SSM suite. This is something I've [covered before](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#ssm--patch-manager), but want to extend on that to show how its done.
 
 ## Intro to Maintenance Windows
+
+[Maintenance Windows](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-maintenance.html), are a means of executing some automation workflow in your AWS estate. Got an SSM Document you've written and want it automated? Got a [Lambda](https://aws.amazon.com/lambda/) you want invoked at a regular schedule? Or maybe it's a [Step Function](https://aws.amazon.com/step-functions/)? Whatever the use case, Maintenance Windows are for you - just don't be fooled by the name - they don't necessarily have to be _just_ for maintenance!
+
+**But wait**, _I hear you ask_, **don't CloudWatch/EventBridge Rules also allow you to invoke events on a schedule too?**
+
+Yes they do - both Maintenance Windows and EventBridge Rules (the big sibling of CloudWatch Rules) use [cron expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression) to define the schedule they should run in. The primary difference between the two is that Maintenance Windows allow you to **specify the timezone** that the cron expression adheres to, whereas EventBridge is tied to UTC.
+
+This can be handy if you're in a non-UTC timezone and you don't have to constantly convert your local timezone to UTC to trigger events. More importantly, mainteance windows will respect daylight savings time (DST), if your timezone observes it, so you can be sure your automation will be invoked at the same time throughout the year. On the other hand, EventBridge Events is fixed to UTC, so if your timezone does observe DST, then you'll find your automation could be off by an hour for some portion of the year (unless you change it of course - but who wants to be changing automation twice a year??).
+
+Notably as well, you can view the execution history of maintenance windows as they've occurred in the past, allowing you to quickly see whether a particular invocation was successful or not - and drill down into any failures.
+
+I'm not bashing EventBridge Events, in fact, it is easier to set up than Maintenance Windows. But there's always the right tool for the job.
+
+For the rest of this post, we're going to be exploring how to automate the command document we created last time. Later on in the series we'll be looking at using maintenance windows to automate automation documents.
 
 ## Automating command documents with maintenance windows
 
@@ -31,75 +45,163 @@ To summarise where we are now, we've produced a Command document which when exec
 
 Healthchecks are important to run both continuously in our environment, as a means of monitoring and verifying the estate is working as intended, before your users notice. They are also necessary to run after a change has been introduced to the environment, such as a new code deployment, or even a patching event via the **AWS-RunPatchBaseline** document.
 
-It's typical to use SSM Maintenance Windows to automate events in your AWS environment. You can even use it to execute **AWS-RunPatchBaseline**. This is something I've [covered before](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#ssm--patch-manager), but want to extend on that to show how its done.
-
 ### Barebones maintenance window with AWS-RunPatchBaseline
 
-We're going to use Terraform again to build out a minimal maintenance window. You can view the code for it here TODO add link. A breakdown
+We're going to use Terraform again to build out a minimal maintenance window. You can view the code for it here TODO add link. Here is a breakdown of each of the resources we're going to create.
+
+#### Maintenance Window
+
+This creates the maintenance window resource, which is then referred to in the subsequent resources we create. It's nothing more than that cron expression I mentioned earlier, along with what timezone it should execute in. We specify how long the window lasts for, and the cutoff; both of which are specified in hours. The cutoff indicates how long before the end of the window should AWS not schedule any new tasks in that window.
 
 ```hcl
-resource "aws_iam_role" "patch_mw_role" {
-  name               = "PatchingMaintWindow"
-  assume_role_policy = data.aws_iam_policy_document.patch_mw_role_assume.json
-}
-
-resource "aws_ssm_maintenance_window" "patch_window" {
-  name              = "PatchInstances"
-  schedule          = "cron(0 9 * * ? *)"
+resource "aws_ssm_maintenance_window" "patch_with_healthcheck" {
+  name              = "PatchWithHealthcheck"
+  description       = "Daily patch event with a healthcheck afterward"
+  schedule          = "cron(0 9 ? * * *)" # Everyday at 9am UK time
   schedule_timezone = "Europe/London"
-  duration          = 4
+  duration          = 3
   cutoff            = 1
 }
+```
 
-resource "aws_ssm_maintenance_window_target" "patch_window_targets" {
-  name          = "PatchInstanceTargets"
-  window_id     = aws_ssm_maintenance_window.patch_window.id
+#### Maintenance Window Target
+
+We need a means of telling the window what instances to target, and the `aws_ssm_maintenance_window_target` resource is how you do it. Below I'm demonstrating two methods of doing this:
+
+1. Specify the instance IDs directly
+
+- Handy if you have a fixed list of instances you only want to be included in the maintenance window
+
+1. Target instances by their tags
+
+- This is much for scalable, and means you don't have to keep adding instance IDs to the list
+- When the maintenance window executes, it will filter instances with this tag key and value combo for what to target
+
+> An optimum tag to use would be `Patch Group` [described here](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-patch-patchgroups.html) - which I have [mentioned previously](/blog/using-terraform-to-manage-aws-patch-baselines-at-enterprise-scale/#ssm--patch-manager). For the sake of this demo, we will keep it simple.
+
+```hcl
+resource "aws_ssm_maintenance_window_target" "patch_with_healthcheck_target" {
+  window_id     = aws_ssm_maintenance_window.patch_with_healthcheck.id
+  name          = "PatchWithHealthcheckTargets"
+  description   = "All instances that should be patched with a healthcheck after"
   resource_type = "INSTANCE"
 
   targets {
-    key    = "tag:Terraform"
-    values = ["true"]
+    key = "InstanceIds"
+    values = concat(
+      module.windows_ec2.id,
+      module.linux_ec2.id
+    )
   }
-}
 
-resource "aws_ssm_maintenance_window_task" "patch_instance" {
-  name             = "PatchInstance"
-  window_id        = aws_ssm_maintenance_window.patch_window.id
-  service_role_arn = aws_iam_role.patch_mw_role.arn
+  # Using tags is more scalable
+  #   targets {
+  #     key    = "tag:Terraform"
+  #     values = ["true"]
+  #   }
+}
+```
+
+#### Maintenance Window Tasks
+
+Now for the tasks... remember that we want to execute our healthcheck SSM document after a patch event right? We need to build a task for executing the **AWS-RunPatchBaseline** document.
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "patch_task" {
+  window_id        = aws_ssm_maintenance_window.patch_with_healthcheck.id
   task_type        = "RUN_COMMAND"
   task_arn         = "AWS-RunPatchBaseline"
   priority         = 10
-  max_concurrency  = "100%"
-  max_errors       = "0"
+  service_role_arn = aws_iam_role.patch_mw_role.arn
+
+  max_concurrency = "100%"
+  max_errors      = 0
 
   targets {
     key    = "WindowTargetIds"
-    values = [aws_ssm_maintenance_window_target.patch_window_targets.id]
+    values = [aws_ssm_maintenance_window_target.patch_with_healthcheck_target.id]
   }
 
   task_invocation_parameters {
     run_command_parameters {
-        output_s3_bucket     = aws_s3_bucket.script_bucket.id
-        output_s3_key_prefix = "ssm_output/"
+      timeout_seconds  = 3600
 
       parameter {
-        name   = "Operation"
-        values = ["Install"]
+        name = "Operation"
+        values = ["Scan"]
       }
     }
   }
 }
 ```
 
-These set of resources lay out the foundations of the maintenance window. In this example this window will be executed at 9am UK time every day.
+Let's run through the main attributes:
 
-We need to give it some instances to target, and we're doing this by specifying the tags of instances to include in the scope. Since our EC2 instances are already tagged with `Terraform = true`, this seems a good criteria to use.
+- `window_id` is what maintenance window to associate this task with
+- `task_type` is what kind of task this is
+  - since we're executing a command document, the value here is `RUN_COMMAND`
+- `task_arn` is the ARN of the document you wish to run
+  - note the document name can also be used here, as demonstrated above
+- `priority` defines in what order should tasks be executed in, whereby the lower the number given, the earlier the task is executed in the window
+  - e.g. a task priority of `1` gets executed before one with `10`
+  - tasks with the same priority get executed in parallel
+- `service_role_arn` tells which IAM role should be assumed to execute this task as
+  - we'll get an explanation of this later
+- `max_concurrency` specifies how many instances this task should be invoked on simultaenously
+  - it can take a percentage as a value, only applying to that percentage of target instances at a time (i.e. `50%` indicates only half of targeted instances will have the task executed at one point)
+  - or it can take a fixed number, such as `1`, indicating that only one instance should have this task executed at one time
+  - `100%` indicates this task will be invoked on all targets at the same time
+  - we'll revisit this later in the series
+- `max_errors` indicates how many errors should be thrown before we abort further invocations
+  - `0` indicates any error will abort the maintenance window
 
-> A more optimum tag to use would be `Patch Group` [described here](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-patch-patchgroups.html).
+The `targets` block allows us to define what instances to target this on - we're referencing the `aws_ssm_maintenance_window_target` resource we created previously.
 
-Lastly we need to give the window some tasks, since this is a barebones example we only want to specify a `RUN_COMMAND` type of **AWS-RunPatchBaseline**.
+Lastly the `task_invocation_parameters` allows us to customise how the document should be ran via the `parameter` setting - which is passed to the document. For this example we're only performing the `Scan` operation on the document, for testing purposes.
 
-The task requires an IAM role for it to assume and execute the tasks, we'll also need to give it the appropriate permissions. There is a box-standard AWS policy we can utilise for this called [AmazonSSMMaintenanceWindowRole](https://console.aws.amazon.com/iam/home#/policies/arn:aws:iam::aws:policy/service-role/AmazonSSMMaintenanceWindowRole$jsonEditor).
+> `Scan` will only check for missing patches - it won't actually install them.
+
+A full list of available commands can be found in the [command document](https://console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content).
+
+TODO screenshot of runpatchbaseline command paremters in console
+
+That was just the patch task, next we want to define the healthcheck task.
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "healthcheck_task" {
+  window_id        = aws_ssm_maintenance_window.patch_with_healthcheck.id
+  task_type        = "RUN_COMMAND"
+  task_arn         = aws_ssm_document.perform_healthcheck_s3.arn
+  priority         = 20
+  service_role_arn = aws_iam_role.patch_mw_role.arn
+
+  max_concurrency = "100%"
+  max_errors      = 0
+
+  targets {
+    key    = "WindowTargetIds"
+    values = [aws_ssm_maintenance_window_target.patch_with_healthcheck_target.id]
+  }
+
+  task_invocation_parameters {
+    run_command_parameters {
+      timeout_seconds  = 600
+    }
+  }
+}
+```
+
+There's not a whole lot of difference here compared to the patching task; our healthcheck script takes no `parameters` so we can leave them out (although if yours does, you'll need to add it here!), and the `task_arn` points to the command document we created last time.
+
+Probably the most significant change though is the `priority`. Remember that the priority number indicates the ordering of tasks to be invoked? Our patching task had a priority of `10`, whereby our healthcheck task is `20`. This means the patch task will be invoked _before_ the healthcheck one.
+
+> I could have set the priority of the patching and healthcheck tasks to `1` and `2` respectively to achieve the same thing. However, giving some distance between them means you can programatically add new tasks before/after each other. Want a post-patch, pre-healthcheck task? Create a new task with priority `15`!
+
+#### IAM role for maintenance window
+
+We've been referencing `aws_iam_role.patch_mw_role.arn` as our task `service_role_arn`. You can view the code for it here (TODO add link) - but let's run through them quickly.
+
+All we're doing is creating an IAM role, allowing the EC2 and SSM AWS services to assume said role, and applying the pre-defined AWS policy [AmazonSSMMaintenanceWindowRole](https://console.aws.amazon.com/iam/home#/policies/arn:aws:iam::aws:policy/service-role/AmazonSSMMaintenanceWindowRole) to that role - enabling it to execute commands and more on the instances.
 
 ```hcl
 data "aws_iam_policy_document" "patch_mw_role_assume" {
@@ -117,6 +219,11 @@ data "aws_iam_policy_document" "patch_mw_role_assume" {
   }
 }
 
+resource "aws_iam_role" "patch_mw_role" {
+  name               = "PatchingMaintWindow"
+  assume_role_policy = data.aws_iam_policy_document.patch_mw_role_assume.json
+}
+
 data "aws_iam_policy" "ssm_maintenance_window" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonSSMMaintenanceWindowRole"
 }
@@ -127,107 +234,74 @@ resource "aws_iam_role_policy_attachment" "patch_mw_role_attach" {
 }
 ```
 
-#### Logging command output to S3
+### Testing the barebones maintenance window
 
-Notice in the barebones example we're now logging the output of the commands to an S3 bucket. We do this because only the first 2500 characters of a command output are captured by default - if you wish to view any more then you need to set up your command job to output to either S3 or CloudWatch (currently only S3 is supported for maintenance windows). You'll notice we are using the same S3 bucket that is storing our scripts from earlier, whereby we are using the S3 prefix `ssm_output/`.
+Once we've ran `terraform apply` on all the above, let's test the maintenance window out. Currently we have it set to run at 9am UK time, which may or may not be a long time away - so change it manually in [the console](https://console.aws.amazon.com/systems-manager/maintenance-windows) to a time not far away from your time now.
 
-In order to set this up, we need to set up the following IAM permissions:
+Once it's done executing, you can navigate to the history tab to view the execution.
 
-1. The S3 bucket policy needs to permit instance role `aws_iam_role.vm_base` to `s3:PutObject` on `"${aws_s3_bucket.script_bucket.arn}/ssm_output/*"`
-2. The KMS key used to encrypt objects in the target S3 bucket needs to permit instance role `aws_iam_role.vm_base` to `kms:GenerateDataKey`
-3. The instance role `aws_iam_role.vm_base` needs permissions to do the above on its respective side
+TODO add screenshot of execution history
 
-To accomplish this we will need to add the following statements to each of their respective `aws_iam_policy_documents`
+## Logging command output to S3
 
-1.
+Maintenance windows by default only capture the first 2500 characters of a command output, if your command outputs more than this then it gets truncated. This can be a problem if you have a task failure and need to examine the output for the reason why it failed.
+
+Take the **AWS-RunPatchBaseline** output on a Linux instance for example. It's pretty hefty, and so we lose a lot of context on what actually happened:
+
+TODO screenshot of linux task
+
+To combat this, maintenance windows allow you to dump command output to an S3 bucket, so that you can retrieve it later. In the last post we created an S3 bucket to store our SSM scripts (`aws_s3_bucket.script_bucket.arn`), we can reuse that bucket to keep our command logs. In order to do this there are some steps we need to take:
+
+1. The S3 bucket policy needs to permit the EC2 instance role `aws_iam_role.vm_base` to `s3:PutObject` on `"${aws_s3_bucket.script_bucket.arn}/ssm_output/*"`
+
+- `ssm_output/` is the directory/prefix in the S3 bucket where we will store the logs
+
+1. The KMS key used to encrypt objects in the target S3 bucket needs to permit instance role `aws_iam_role.vm_base` to `kms:GenerateDataKey`
+1. The instance role `aws_iam_role.vm_base` needs permissions to do the above on its respective side
+
+You can view the changes required in GitHub:
+
+TOOD links to github code
+1. Link 1
+1. Link 2
+1. Link 3
+
+Once that is done we'll need to add some new attributes to the maintenance window tasks, telling it where to dump the command output to.
 
 ```hcl
-data "aws_iam_policy_document" "s3_allow_script_download" {
-  # ...
+resource "aws_ssm_maintenance_window_task" "task_name" {
 
-  statement {
-    sid    = "AllowS3Put"
-    effect = "Allow"
+  # ... other attributes hidden
 
-    actions = ["s3:PutObject"]
+  task_invocation_parameters {
+    run_command_parameters {
+      output_s3_bucket     = aws_s3_bucket.script_bucket.id
+      output_s3_key_prefix = "ssm_output/"
 
-    principals {
-      type        = "AWS"
-      identifiers = [aws_iam_role.vm_base.arn]
+      # ... other attributes hidden
     }
-
-    resources = ["${aws_s3_bucket.script_bucket.arn}/ssm_output/*"]
   }
 }
+
 ```
 
-2.
+When you have the new config down, then you can `terraform apply` and run another test on the maintenance window.
 
-```hcl
-data "aws_iam_policy_document" "kms_allow_decrypt" {
-  # ...
 
-  statement {
-    sid    = "AllowGenerateDataKey"
-    effect = "Allow"
+TODO screenshot of it working, add some more text too
 
-    actions = [
-      "kms:GenerateDataKey",
-    ]
+> It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above.
 
-    principals {
-      type        = "AWS"
-      identifiers = [aws_iam_role.vm_base.arn]
-    }
+TODO screenshot of bad job invocation where logs did not get uploaded
 
-    resources = ["*"]
-  }
-```
-
-3.
-
-```hcl
-data "aws_iam_policy_document" "ssm_scripts" {
-  # ...
-
-  statement {
-    sid    = "AllowS3Put"
-    effect = "Allow"
-
-    actions = ["s3:PutObject"]
-
-    resources = [
-      "${aws_s3_bucket.script_bucket.arn}/ssm_output/*",
-    ]
-  }
-
-  statement {
-    sid    = "AllowKMS"
-    effect = "Allow"
-
-    actions = [
-      "kms:GenerateDataKey",
-      "kms:Decrypt",
-      ]
-
-    resources = [aws_kms_key.script_bucket_key.arn]
-  }
-}
-```
 
 TODO update policy document resource names with their new names (find better names for them)
 
-- Healthchecks are typically useful for executing after a change in our environment.
-- Remember back to last time we spoke about SSM, we were covering aws-runpatchbaseline
-- it is a best practice to perform a healthcheck on the instance after a patch event
-
 TODO
-
-- intro to MW if not done already
-- how to create MW
-- IAM roles and permissions
 
 - have only one executed at a time? throw a failure and discontinue if there is one?
 - afterward, how to log out command output
 
 TODO link MW from previous post to this page
+
+TODO S3 lifetime policy for log output?
