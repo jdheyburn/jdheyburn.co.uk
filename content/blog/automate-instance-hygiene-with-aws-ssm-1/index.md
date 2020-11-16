@@ -1,5 +1,5 @@
 ---
-date: 2020-11-12
+date: 2020-11-16
 title: "Automate Instance Hygiene with AWS SSM: Maintenance Windows"
 description: Using SSM Maintenance Windows to automate SSM Documents
 type: posts
@@ -11,7 +11,6 @@ tags:
   - automation
   - terraform
   - patching
-draft: true
 ---
 
 [Last time](/blog/automate-instance-hygiene-with-aws-ssm-0/) we looked at writing our own SSM Command Document for the purpose of executing a healthcheck script on a set of EC2 instances across multiple platforms.
@@ -24,7 +23,7 @@ In this post we'll be exploring how we can automate this using maintenance windo
 - Multiple command documents can be combined in a maintenance window, such as a patching event followed by a healthcheck
 - This provides us with a means of viewing historical invocations on whatever workflow we've automated
 - By storing command outputs to S3, we can ensure we can recover logs that are too large to display in the console
-- Using S3 Lifecycle Policies we can remove aged logs
+- Using S3 Lifecycle Rules we can remove aged logs
 
 Once again all the Terraform code for this post is available on GitHub. It is split into two parts:
 
@@ -41,7 +40,9 @@ Once again all the Terraform code for this post is available on GitHub. It is sp
 
 Yes they do - both Maintenance Windows and [EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) Rules (the bigger sibling of CloudWatch Rules) use [cron expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression) to define the schedule they should run on. The primary difference between the two is that Maintenance Windows allow you to **specify the timezone** that the cron expression adheres to, whereas EventBridge is **tied to UTC**.
 
-So using maintenance windows can be handy if you're in a non-UTC timezone and you don't have to constantly convert your local timezone to UTC to trigger events. More importantly, maintenance windows will respect daylight savings time (DST) if your timezone observes it, so you can be sure your automation will be invoked at the same time in the specified timezone throughout the year.
+TODO screenshot eventbridge rules
+
+So using maintenance windows can be handy if you're in a non-UTC timezone and you don't have to constantly convert your local timezone to UTC to schedule events. More importantly, maintenance windows will respect daylight savings time (DST) if your timezone observes it, so you can be sure your automation will be invoked at the same time in the specified timezone throughout the year.
 
 On the other hand, EventBridge Rules are fixed to UTC; meaning if your timezone does observe DST, then you'll find your automation could be off by an hour for some portion of the year (unless you change it of course - but who wants to be changing automation twice a year??).
 
@@ -55,7 +56,7 @@ For the rest of this post, we're going to be exploring how to automate the comma
 
 ### Automating command documents with maintenance windows
 
-So what's the purpose of all that we've done? Well we're not going to be manually invoking these command documents like what we have been doing so far - as engineers we need to be automating as many repetitive tasks as possible.
+So what's the purpose of creating the command document we achieved last time? Well we're not going to be manually invoking it like what we have been doing so far - as engineers we need to be automating as many repetitive tasks as possible.
 
 To summarise where we are now, we've produced a Command document which when executed, automates the following:
 
@@ -185,7 +186,7 @@ Lastly the `task_invocation_parameters` allows us to customise how the document 
 
 > `Scan` will only check for missing patches - it won't actually install them.
 
-A full list of available commands can be found in the [command document](https://console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content).
+A full list of available commands can be found in the AWS-RunPatchBaseline [command document](https://console.aws.amazon.com/systems-manager/documents/AWS-RunPatchBaseline/content).
 
 {{< figure src="run-patch-baseline-parameters.png" link="run-patch-baseline-parameters.png" class="center" alt="Available parameters for the Run Patch Baseline document; Operation, Snapshot ID, Install Override List, and Reboot Option" caption="In the console GUI we can see the available parameters for the AWS-RunPatchBaseline document" >}}
 
@@ -219,13 +220,13 @@ resource "aws_ssm_maintenance_window_task" "healthcheck_task" {
 
 There's not a whole lot of difference here compared to the patching task; our healthcheck script takes no `parameters` so we can leave them out (although if yours does, you'll need to add it here!), and the `task_arn` points to the command document we created last time.
 
-Probably the most significant change though is the `priority`. Remember that the priority number indicates the ordering of tasks to be invoked? Our patching task had a priority of `10`, whereby our healthcheck task is `20`. This means the patch task will be invoked _before_ the healthcheck one.
+Probably the most significant change though is the `priority`. Remember that the priority number indicates the ordering of tasks to be invoked? Our patching task had a priority of `10`, whereby our healthcheck task is `20`. **This means the patch task will be invoked _before_ the healthcheck one.**
 
 > I could have set the priority of the patching and healthcheck tasks to `1` and `2` respectively to achieve the same thing.
 >
-> However, giving some distance between them means you can programatically add new tasks before/after each other.
+> However, giving some distance between them means you can programmatically add new tasks before/after each other.
 >
-> Want a post-patch, pre-healthcheck task? Create a new task with priority `15`!
+> Want a post-patch, pre-healthcheck task? Attach a new task with priority `15`!
 
 ### IAM role for maintenance window
 
@@ -339,7 +340,7 @@ Now you can open this using the **Object actions** button in the top-right hand 
 
 ### Logging problems
 
-It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the Amazon S3 button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above.
+It's worth noting that SSM does not raise an error if an instance cannot push logs to S3 - the **Amazon S3** button will redirect you to an object in S3 that does not exist. So if your logs are not appearing in S3 then ensure you've followed the steps above.
 
 {{< figure src="failed-log-upload-to-s3.png" link="failed-log-upload-to-s3.png" class="center" alt="An empty S3 object page, caused by incorrectly setting up S3 output logging" caption="An example showing if logs were not successfully uploaded to S3 - if you get this then double check you've set everything up right!" >}}
 
@@ -347,7 +348,7 @@ It's worth noting that SSM does not raise an error if an instance cannot push lo
 
 Now that we have maintenance windows storing our logs in S3, we should ensure we're maintaining a good level of hygiene by removing old logs - otherwise our S3 bucket is going to store more and more logs, costing us more money.
 
-S3 has a feature called [Lifecycle Policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) which tells S3 how to handle objects throughout their lifecycle. We can tell it to move old files to a cheaper storage class, archive them to [S3 Glacier](https://aws.amazon.com/glacier/) (AWS's long-term storage service), or just simply delete them!
+S3 has a feature called [Lifecycle Rules](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) which tells S3 how to handle objects throughout their lifecycle. We can tell it to move old files to a cheaper storage class, archive them to [S3 Glacier](https://aws.amazon.com/glacier/) (AWS's long-term storage service), or just simply delete them!
 
 Given we're not exactly sentimental with logs, we can define a policy that will remove any logs older than 3 months (90 days).
 
@@ -373,7 +374,7 @@ resource "aws_s3_bucket" "script_bucket" {
 
 You can add more rules if you like, such as a `transition` block to move it to cold storage before deleting if you wish. Take a look at the [Terraform documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#using-object-lifecycle) for the resource for example of this.
 
-{{< figure src="s3-lifecycle-policy.png" link="s3-lifecycle-policy.png" class="center" alt="The created S3 lifecycle policy can be seen here, indicating that objects in the ssm_output directory are discarded after 90 days" caption="Logs older than 90 days certainly do not spark joy...!" >}}
+{{< figure src="s3-lifecycle-policy.png" link="s3-lifecycle-policy.png" class="center" alt="The created S3 lifecycle rule can be seen here, indicating that objects in the ssm_output directory are discarded after 90 days" caption="Logs older than 90 days certainly do not spark joy...!" >}}
 
 ## Conclusion
 
