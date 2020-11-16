@@ -1,7 +1,7 @@
 ---
 date: 2020-11-16
 title: "Automate Instance Hygiene with AWS SSM: Maintenance Windows"
-description: Using SSM Maintenance Windows to automate SSM Documents
+description: Using SSM Maintenance Windows to automate SSM Documents, tracking historical invocations, and storing their log output in S3
 type: posts
 series:
   - Automate Instance Hygiene with AWS SSM
@@ -38,9 +38,9 @@ Once again all the Terraform code for this post is available on GitHub. It is sp
 
 > **"But wait"**, _I hear you ask_, **"don't CloudWatch/EventBridge Rules also allow you to invoke events on a schedule too?"**
 
-Yes they do - both Maintenance Windows and [EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) Rules (the bigger sibling of CloudWatch Rules) use [cron expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression) to define the schedule they should run on. The primary difference between the two is that Maintenance Windows allow you to **specify the timezone** that the cron expression adheres to, whereas EventBridge is **tied to UTC**.
+Yes they do - both Maintenance Windows and [EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) Rules (the bigger sibling of CloudWatch Rules) use [cron expressions](https://en.wikipedia.org/wiki/Cron#CRON_expression) to define the schedule they should run on. The primary difference between the two is that Maintenance Windows allow you to **specify the timezone** that the cron expression adheres to, whereas EventBridge is [**tied to UTC**](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
 
-TODO screenshot eventbridge rules
+{{< figure src="eventbridge-rule-create.png" link="eventbridge-rule-create.png" class="center" alt="The EventBridge rule creation page, there is no option to schedule the rule to a timezone" caption="No timezone, no party" >}}
 
 So using maintenance windows can be handy if you're in a non-UTC timezone and you don't have to constantly convert your local timezone to UTC to schedule events. More importantly, maintenance windows will respect daylight savings time (DST) if your timezone observes it, so you can be sure your automation will be invoked at the same time in the specified timezone throughout the year.
 
