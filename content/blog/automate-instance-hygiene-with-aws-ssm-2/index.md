@@ -14,6 +14,45 @@ tags:
 draft: true
 ---
 
+Structure:
+
+Recap on what we've done
+
+Intro to automation docs
+- add that they can be used to combined command documents
+- why do this? rate limiting (1 instance at a time)
+- having two maintenance window tasks means you cannot perform the tasks synchronously one at a time on instances
+- therefore automation doucments help us to piece command documents together
+- beyond this, they can also be used to 
+
+
+Prerequisites
+- where to follow along, link the code here
+- mention the folder restructure (either in here or in tldr?)
+  - and the new architecture, ALB in front of 3 nodes
+
+Automation doc combining the two
+- whats different about what we have so far (new yaml format)
+- show how to test in create automation
+  - then with rate limiting
+  - indicate max errors, and throw an error to test out rate limiting
+- then show how to include it in a MW
+  - show a good run
+  - then show a bad run, highlight that max errors is differnet to executing automation, because it is written by different teams
+
+
+Extend the doc to gracefully take the nodes out of rotation from the ALB
+- the one that requires the target group arn being passed in
+
+
+
+Bonus: 
+- Improve the automation doc so that you can pass in whatever document you like to invoke it (i.e. a maintenance command wrapper)
+- Improve the automation doc so that you do not have to specify the target groups for that instnace
+  - it should just dynamically look it up
+
+
+
 ## Automation documents
 
 So now we have a command document that gets services that are currently running on the instance, what if we wanted to have this script executed after a patching event - so that we can confirm services are running fine?
