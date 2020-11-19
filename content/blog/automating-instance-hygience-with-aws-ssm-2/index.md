@@ -1,14 +1,15 @@
 ---
-date: 2020-10-23
-title: "Automating Instance Hygiene with AWS SSM: Automation Documents"
-description: Exploring how AWS SSM can help to automate processes to keep instances healthy
+date: 2020-11-24
+title: "Automate Instance Hygiene with AWS SSM: Automation Documents"
+description: TBC
 type: posts
 series:
-  - Automating Instance Hygiene with AWS SSM
+  - Automate Instance Hygiene with AWS SSM
 tags:
   - aws
   - ssm
   - automation
+  - terraform
   - patching
 draft: true
 ---
