@@ -14,24 +14,208 @@ tags:
 draft: true
 ---
 
-Structure:
+In [part two]() of this [series]() we look at how we can automate SSM command documents using SSM Maintenance Windows.
 
-Recap on what we've done
+This part will now explore another type of SSM Document; Automation.
 
-Intro to automation docs
-- add that they can be used to combined command documents
-- why do this? rate limiting (1 instance at a time)
-- having two maintenance window tasks means you cannot perform the tasks synchronously one at a time on instances
-- therefore automation doucments help us to piece command documents together
-- beyond this, they can also be used to 
+## Prerequisites
 
+All the code for this post can be found on [Github]().
 
-Prerequisites
-- where to follow along, link the code here
-- mention the folder restructure (either in here or in tldr?)
-  - and the new architecture, ALB in front of 3 nodes
+You'll notice that we have changed some things around in this post, so if you've been using `terraform apply` in other posts to deploy to your AWS environment, you will notice some destructions.
 
-Automation doc combining the two
+TODO add architecture of this post (ALB in front of 3 nodes)
+
+## Automation Documents
+
+Back in [part one]() I gave a brief intro to automation documents. To save the click:
+
+> Automation document can call and orchestrate AWS API endpoints on your behalf, including executing Command documents on instances
+
+Essentially we can combine two command documents into one with an automation document. But why would we want to do this?
+
+### Introducing proactive healthchecks
+
+Well in the last post, we set up a maintenance window with two tasks; one for invoking **AWS-RunPatchBaseline** and another for **PerformHealthcheckS3** (our healthcheck SSM Document) - both of these are _command documents_. Say if we had a policy that wanted to ensure that after **AWS-RunPatchBaseline** was invoked, we would _always_ want the **PerformHealthcheckS3** invoked afterward... the Automation Document would help us get there.
+
+Not only that, the way that our maintenance window is currently structured is it will invoke **AWS-RunPatchBaseline** across all instances in scope at the same time. Once they are all done then it will invoke **PerformHealthcheckS3** across all instances at the same time. This looks like this:
+
+```
+Given we have 2 instances; i-111, i-222
+T+0: Invoke AWS-RunPatchBaseline on i-111, i-222
+T+1: AWS-RunPatchBaseline finishes: i-111, i-222
+T+2: Invoke PerformHealthcheckS3 on i-111, i-222
+T+3: PerformHealthcheckS3 finishes: i-111, i-222
+```
+
+Say if you wanted to limit the rate of patching across these instances so that only one instance at a time was patched, and any healthcheck failures aborted the rest of patching, then simply changing `max_concurrency` from `100%` to `1` for each maintenance window task _will not achieve this_.
+
+Maintenance windows complete one task across all instances in scope before moving onto the next task. If we have Task 1 for Patching and Task 2 for Healthchecking (is that even a word?), then the maintenance window is going to patch **all** instances first before it performs healthchecks on the instances. There is no way to execute the tasks synchronously on one instance at a time.
+
+This means that if a bad patch were to be installed in your estate, you could have this order of events:
+
+```
+Given we have 2 instances; i-111, i-222
+T+0: Invoke AWS-RunPatchBaseline on i-111
+T+1: AWS-RunPatchBaseline finishes: i-111
+T+2: Invoke AWS-RunPatchBaseline on i-222
+T+3: AWS-RunPatchBaseline finishes: i-222
+T+4: Invoke PerformHealthcheckS3 on i-111
+T+5: PerformHealthcheckS3 FAILS: i-111
+T+6: Invoke PerformHealthcheckS3 on i-222
+T+7: PerformHealthcheckS3 FAILS: i-222
+```
+
+Now the healthcheck has failed for `i-222` as well because the bad patch landed on both instances, and production now has an outage.
+
+Thankfully, Automation Documents help us avoid that - by combining the two command documents (AWS-RunPatchBaseline and PerformHealthcheckS3), we can mark this new automation document as a _solo maintenance window task_ and have it invoked one at a time on instances, and have it abort further invocations if any sub-documents failed within in:
+
+```
+Given we have 2 instances; i-111, i-222
+T+0: Invoke AWS-RunPatchBaseline on i-111
+T+1: AWS-RunPatchBaseline finishes: i-111
+T+2: Invoke PerformHealthcheckS3 on i-111
+T+3: PerformHealthcheckS3 FAILS: i-111
+T+4: Abort invoking AWS-RunPatchBaseline on i-222
+T+5: Abort invoking PerformHealthcheckS3 on i-222
+```
+
+Notice how the failed healthcheck on the first instance caused the rest of task invocations to abort? Here is the order of events for a hapyp path.
+
+```
+Given we have 2 instances; i-111, i-222
+T+0: Invoke AWS-RunPatchBaseline on i-111
+T+1: AWS-RunPatchBaseline finishes: i-111
+T+2: Invoke PerformHealthcheckS3 on i-111
+T+3: PerformHealthcheckS3 succeeds: i-111
+T+4: Invoke AWS-RunPatchBaseline on i-222
+T+5: AWS-RunPatchBaseline finishes: i-222
+T+6: Invoke PerformHealthcheckS3 on i-222
+T+7: PerformHealthcheckS3 succeeds: i-222
+```
+
+### Additional automation actions
+
+So we know that automation documents allow us to combine command documents together - this is done using the `aws:runCommand` action, though there are [many more](https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-actions.html) actions available to you, some of which we'll explore later.
+
+## Combining command docs into automation
+
+We combine command documents as below in YAML; like command documents they can also be defined in JSON.
+
+For the first time we are defining a parameter called `InstanceIds`, which takes in a list of instance IDs to then pass down to the command documents, as they will need to know what instances to invoke the commands on. The value assigned to this parameter is retrieved back with the notation `"{{ InstanceIds }}"`, which you can see being passed into the inputs of the sub-documents.
+
+We're also following logging best practices by having the command output logged to S3.
+
+Other than that, there's not really a whole lot of difference between this and a command document, so far!
+
+> It's important to note the `schemaVersion` must be `0.3` for automation documents.
+
+```yaml
+---
+schemaVersion: "0.3"
+description: Executes a patching event on the instance followed by a healthcheck
+parameters:
+  InstanceIds:
+    type: StringList
+    description: The instance to target
+mainSteps:
+  - name: InvokePatchEvent
+    action: aws:runCommand
+    inputs:
+      DocumentName: AWS-RunPatchBaseline
+      InstanceIds: "{{ InstanceIds }}"
+      OutputS3BucketName: jdheyburn-scripts
+      OutputS3KeyPrefix: ssm_output/
+      Parameters:
+        Operation: Scan
+  - name: ExecuteHealthcheck
+    action: aws:runCommand
+    inputs:
+      DocumentName: PerformHealthcheckS3
+      InstanceIds: "{{ InstanceIds }}"
+      OutputS3BucketName: jdheyburn-scripts
+      OutputS3KeyPrefix: ssm_output/
+```
+
+### Terraform automation documents
+
+We can deploy these to AWS using Terraform once again. Note that the `document_type` is `Automation` and that we're using templating to set the variables in the document, such as referencing the PerformHealthcheckS3 command document ARN.
+
+You can see the templated version of the document in Github TODO add link.
+
+```hcl
+resource "aws_ssm_document" "patch_with_healthcheck" {
+  name            = "PatchWithHealthcheck"
+  document_type   = "Automation"
+  document_format = "YAML"
+
+  content = templatefile(
+    "documents/patch_with_healthcheck_template.yml",
+    {
+      healthcheck_document_arn = aws_ssm_document.perform_healthcheck_s3.arn,
+      output_s3_bucket_name    = aws_s3_bucket.script_bucket.id,
+      output_s3_key_prefix     = "ssm_output/",
+    }
+  )
+}
+```
+
+### Testing automation documents
+
+TODO screenshots and caption on testing automation documents in the console
+
+## Automating automation awesomeness
+
+I apologise for the heading immediately...
+
+Now that we've tested the automation document and we're happy to have it automated, let's get this added to a maintenance window task. We can reuse the same maintenance window as we created last time, but with some differences.
+
+Since we are targeting an automation document, we need to specify the `task_type` as `AUTOMATION`, and we update the `task_arn` to our new document accordingly.
+
+As mentioned above (TODO link), we want to ensure our new combined document is only invoked on one instance at a time, so `max_concurrency` is set to `1`.
+
+Within `task_invocation_parameters` we use `automation_parameters` as opposed to `run_command_parameters`.
+
+- `document_version` allows us to target a specific document version
+- any parameters required by the document are defined within `parameter`
+
+Remember that our document takes in `InstanceIds` as a parameter? Well you'll notice that the value is set to `"{{ TARGET_ID }}"`. This is known in AWS as a [pseudo parameter](https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-register-tasks-parameters.html), whereby the instance ID returned by `WindowTargetIds` will be passed into the automation document.
+
+> Depending on what `resource_type` your `aws_ssm_maintenance_window_target` is set up as will result in a different value to `{{ TARGET_ID }}` - in our case ours is `INSTANCE`, so this becomes the instance ID.
+>
+> See the [AWS docs](https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-register-tasks-parameters.html#pseudo-parameters) for a full breakdown.
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
+  window_id        = aws_ssm_maintenance_window.patch_with_healthcheck.id
+  task_type        = "AUTOMATION"
+  task_arn         = aws_ssm_document.patch_with_healthcheck.arn
+  priority         = 10
+  service_role_arn = aws_iam_role.patch_mw_role.arn
+
+  max_concurrency = "1"
+  max_errors      = 0
+
+  targets {
+    key    = "WindowTargetIds"
+    values = [aws_ssm_maintenance_window_target.patch_with_healthcheck_target.id]
+  }
+
+  task_invocation_parameters {
+    automation_parameters {
+      document_version = "$LATEST"
+
+      parameter {
+        name = "InstanceIds"
+        values = ["{{ TARGET_ID }}"]
+      }
+    }
+  }
+}
+```
+
+`InstanceIds` is a special parameter name that AWS recognises and so will provide an instance picker in the GUI of Execute Automation.
+
 - whats different about what we have so far (new yaml format)
 - show how to test in create automation
   - then with rate limiting
@@ -40,18 +224,15 @@ Automation doc combining the two
   - show a good run
   - then show a bad run, highlight that max errors is differnet to executing automation, because it is written by different teams
 
-
 Extend the doc to gracefully take the nodes out of rotation from the ALB
+
 - the one that requires the target group arn being passed in
 
+Bonus:
 
-
-Bonus: 
 - Improve the automation doc so that you can pass in whatever document you like to invoke it (i.e. a maintenance command wrapper)
 - Improve the automation doc so that you do not have to specify the target groups for that instnace
   - it should just dynamically look it up
-
-
 
 ## Automation documents
 
