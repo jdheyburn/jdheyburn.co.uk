@@ -188,6 +188,12 @@ We'll need to select what instances are our targets. The instances in scope for 
 
 {{< figure src="execute-automation-2.png" link="execute-automation-2.png" class="center" alt="A screenshot of the execute automation page with tag key App and tag value HelloWorld specified" >}}
 
+> Because we used the special parameter `InstanceIds` in our document, the execution setup has displayed a nice instance picker for us to choose from!
+>
+> We're not using it in this example, but this is helpful if you just wanted to target a particular subset of instances.
+
+{{< figure src="instance-id-picker.png" link="instance-id-picker.png" class="center" alt="A screenshot of the execute automation page with the instance ID picker being used to select instances in scope" >}}
+
 Then we need to specify how the rate of invocation should be controlled. Our criteria for this is:
 
 - Execute on 1 instance at a time
