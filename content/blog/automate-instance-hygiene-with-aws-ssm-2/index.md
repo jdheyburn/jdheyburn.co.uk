@@ -162,7 +162,72 @@ resource "aws_ssm_document" "patch_with_healthcheck" {
 
 ### Testing automation documents
 
-TODO screenshots and caption on testing automation documents in the console
+Now let's go and test this by manually invoking it. This can be done by navigating to [Automation](https://console.aws.amazon.com/systems-manager/automation/executions) within Systems Manager and clicking [Execute Automation](https://console.aws.amazon.com/systems-manager/automation/execute).
+
+> For a shortcut of invoking the commands, you can use the below command to invoke the below CLI command. Then you may skip to [the results](#results).
+
+```bash
+aws ssm start-automation-execution \
+  --document-name "PatchWithHealthcheck" \
+  --document-version "\$DEFAULT" \
+  --target-parameter-name InstanceIds \
+  --max-errors "0" \
+  --max-concurrency "1" \
+  --region eu-west-1
+```
+
+#### Setup
+
+Navigate to the **Owned by me** tab and select the name of your created document, **PatchWithHealthcheck**, then click **Next**.
+
+Because we want to test this document executing one at a time on an instance, we'll need to select the **Rate control** option.
+
+{{< figure src="execute-automation-1.png" link="execute-automation-1.png" class="center" alt="Execute automation document page for PatchHealthcheck, Rate Control is selected" >}}
+
+We'll need to select what instances are our targets. The instances in scope for this document are tagged with the key `App` with the value `HelloWorld`, so let's use that as our criteria. Note this is the most scalable solution for targeting instances. TODO link to github terraform for the tag being set?
+
+{{< figure src="execute-automation-2.png" link="execute-automation-2.png" class="center" alt="A screenshot of the execute automation page with tag key App and tag value HelloWorld specified" >}}
+
+Then we need to specify how the rate of invocation should be controlled. Our criteria for this is:
+
+- Execute on 1 instance at a time
+- Abort further invocations if any produce a error
+
+Therefore we need to set the concurrency to 1 and the error threshold to 0.
+
+{{< figure src="execute-automation-3.png" link="execute-automation-3.png" class="center" alt="A screenshot of the execute automation page with concurrency set to 1 and the error threshold set to 0" >}}
+
+Once all done then click **Execute**.
+
+#### Results
+
+As the execution progresses you'll notice it invoke the document on one instance at a time. As it completes you'll have a screen that looks like the below as you click onto the execution detail page. Notice that the start and end times of each instance invocation do not overlap with one another. 
+
+> Step name is the same as the instance ID in this case
+
+{{< figure src="execute-automation-4.png" link="execute-automation-4.png" class="center" alt="A screenshot of the successfully completed execution detail page, all executed steps across all instances are successful and did not overlap one another" >}}
+
+We can dive into each step invocation (the blue text in the above screenshot) to view the commands that were invoked.
+
+{{< figure src="execute-automation-5.png" link="execute-automation-5.png" class="center" alt="A screenshot of a successful automation step, there is a clickable URL for the step execution ID" >}}
+
+{{< figure src="execute-automation-6.png" link="execute-automation-6.png" class="center" alt="A screenshot of a successful automation document PatchWithHealthcheck - both patching and healthcheck run command steps are successful" >}}
+
+At this detail we can see the individual `aws:runCommand` actions performed on the instance.
+
+### Failure testing
+
+Okay so we've confirmed the document now only invokes synchronously. Let's now test to see if further invocations are aborted when there is a failure.
+
+To simulate the failure, we can borrow a trick from the [first post](/blog/automate-instance-hygiene-with-aws-ssm-0/#testing-in-aws-ssm-console) in this series by flipping the healthcheck script from `>` to `<`. Once that change is deployed we can re-run the document using the same method as [above](#testing-automation-documents).
+
+{{< figure src="failed-automation-1.png" link="failed-automation-1.png" class="center" alt="Simulating a failure, now the rate-limited automation document fails on the first instance invocation" >}}
+
+We can see the failure, and that the automation did not invoke on more instances! We can drill down into the invocation to see why it failed.
+
+{{< figure src="failed-automation-2.png" link="failed-automation-2.png" class="center" alt="The execution detail page for PatchWithHealthcheck, the patch event succeeded but the healthcheck is marked as failed" >}}
+
+From this page you can then continue to drill down to the run command output to determine the cause of the failure.
 
 ## Automating automation awesomeness
 
