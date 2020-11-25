@@ -80,7 +80,7 @@ T+4: Abort invoking AWS-RunPatchBaseline on i-222
 T+5: Abort invoking PerformHealthcheckS3 on i-222
 ```
 
-Notice how the failed healthcheck on the first instance caused the rest of task invocations to abort? Here is the order of events for a hapyp path.
+Notice how the failed healthcheck on the first instance caused the rest of task invocations to abort? Here is the order of events for a happy path.
 
 ```
 Given we have 2 instances; i-111, i-222
@@ -237,13 +237,11 @@ From this page you can then continue to drill down to the run command output to 
 
 ## Automating automation awesomeness
 
-I apologise for the heading immediately...
-
 Now that we've tested the automation document and we're happy to have it automated, let's get this added to a maintenance window task. We can reuse the same maintenance window as we created last time, but with some differences.
 
 Since we are targeting an automation document, we need to specify the `task_type` as `AUTOMATION`, and we update the `task_arn` to our new document accordingly.
 
-As mentioned above (TODO link), we want to ensure our new combined document is only invoked on one instance at a time, so `max_concurrency` is set to `1`.
+We want to ensure our new combined document is only invoked on one instance at a time, so `max_concurrency` is set to `1`.
 
 Within `task_invocation_parameters` we use `automation_parameters` as opposed to `run_command_parameters`.
 
@@ -265,7 +263,7 @@ resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
   service_role_arn = aws_iam_role.patch_mw_role.arn
 
   max_concurrency = "1"
-  max_errors      = 0
+  max_errors      = "0"
 
   targets {
     key    = "WindowTargetIds"
