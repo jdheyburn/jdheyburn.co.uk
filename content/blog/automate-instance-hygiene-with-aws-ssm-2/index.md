@@ -1,7 +1,7 @@
 ---
-date: 2020-11-24
+date: 2020-02-03
 title: "Automate Instance Hygiene with AWS SSM: Automation Documents"
-description: TBC
+description: Introducing checks in our automation workflow to reduce the spread of broken patches to our estate
 type: posts
 series:
   - Automate Instance Hygiene with AWS SSM
@@ -17,6 +17,12 @@ draft: true
 In [part two](/blog/automate-instance-hygiene-with-aws-ssm-1/) of this [series](/series/automate-instance-hygiene-with-aws-ssm/) we look at how we can automate SSM command documents using SSM Maintenance Windows.
 
 This part will now explore another type of SSM Document; Automation.
+
+## tl;dr
+
+- Automation documents allow us to combine command documents together
+- With this, we can utilise maintenance window error thresholds to stop further invocations
+- Dynamic invocation of command documents can also be achieved with automation documents
 
 ## Prerequisites
 
@@ -349,22 +355,149 @@ Simply put, we're creating an new IAM policy with anything additional that the m
 
 Once you've got the config above applied you'll need to run a test. Just like [last time](/blog/automate-instance-hygiene-with-aws-ssm-1/#testing-the-barebones-maintenance-window), you can do this by changing the maintenance window execution time to something relatively close to your current time.
 
-TODO up to here
+Once the execution is complete (and hopefully it was successful, if not then check back at the configuration), you'll see that there will be 3 task invocations, one for each instance, and that none of them overlapped one another.
 
-Extend the doc to gracefully take the nodes out of rotation from the ALB
+{{< figure src="automation-maint-window-success.png" link="automation-maint-window-success.png" class="center" alt="Execution overview for the maintenance window invocation - we have 3 task invocations, one for each instance and all successful, for which only one was invoked at a time" caption="Notice how the start and end times don't overlap" >}}
 
-- the one that requires the target group arn being passed in
+Just like for command documents, you can view the detail for each invocation made on the instance. Here we can see the two steps that make up our newly created command document.
 
-Bonus:
+{{< figure src="automation-maint-window-success-detail.png" link="automation-maint-window-success-detail.png" class="center" alt="Task invocation detail view for one instance. There are two steps, one for invoking a patch event and another for performing a healthcheck - both are successful" >}}
 
-- Improve the automation doc so that you can pass in whatever document you like to invoke it (i.e. a maintenance command wrapper)
-- Improve the automation doc so that you do not have to specify the target groups for that instnace
-  - it should just dynamically look it up
+But the whole point of this exercise was to proactively handle errors right? So let's introduce some by doing what we've done [before](#failure-testing) and change the healthcheck script to fail. Once the new "broken" script is applied we can rerun another test of the maintenance window.
 
-## Proactively removing instances from circulation
+{{< figure src="automation-maint-window-failure.png" link="automation-maint-window-failure.png" class="center" alt="Execution overview for the maintenance window invocation - we have 3 task invocations, one for each instance, 1 failed which then aborted further task invocations on the remaining instances" >}}
 
-The previous examples have been pretty basic thus far - only calling run commands that we have written ourselves.
+This time round we can see that there was a failure in one task invocation, which then aborted further invocations on the remaining instances! Just as before, we can do a deep dive into the invocation to determine why it had failed.
 
-- Talk about how we are not proactively removing nodes from circulation
-- Could disrupt user experience
-- need to remove the instance from the target group first
+{{< figure src="automation-maint-window-failure-detail.png" link="automation-maint-window-failure-detail.png" class="center" alt="Task invocation detail view for one instance. There are two steps, one for invoking a patch event and another for performing a healthcheck - the patch was successful but the healthcheck failed" caption="From here you can follow the command invoked by the step to troubleshoot the failure" >}}
+
+## Bonus: Using automation to dynamically invoke command documents
+
+In this post we've looked at a common maintenance task in the form of an SSM command document called **AWS-RunPatchBaseline**, and created an automation document that will always invoke our healthcheck script after this invocation.
+
+You may have more command documents that perform some form of maintenance on instances, for which you would also want the healthcheck script to execute after as well.
+
+Instead of copying and pasting these automation documents, we can create just one automation document which takes in the command document ARN as a parameter, and dynamically invoke that, and have a hardcoded step afterward for executing a healthcheck!
+
+In it's raw YAML form, we would get a document that looks like this:
+
+```yaml
+---
+schemaVersion: "0.3"
+description: Executes a maintenance event on the instance followed by a healthcheck
+parameters:
+  InstanceIds:
+    type: StringList
+    description: The instance to target
+  DocumentArn:
+    type: String
+    description: The document arn to invoke
+  InputParameters:
+    type: StringMap
+    description: Parameters that should be passed to the document specified in DocumentArn
+    default: {}
+mainSteps:
+  - name: InvokeMaintenanceEvent
+    action: aws:runCommand
+    inputs:
+      DocumentName: "{{ DocumentArn }}"
+      InstanceIds: "{{ InstanceIds }}"
+      OutputS3BucketName: ${output_s3_bucket_name}
+      OutputS3KeyPrefix: ${output_s3_key_prefix}
+      Parameters: "{{ InputParameters }}"
+  - name: ExecuteHealthcheck
+    action: aws:runCommand
+    inputs:
+      DocumentName: ${healthcheck_document_arn}
+      InstanceIds: "{{ InstanceIds }}"
+      OutputS3BucketName: ${output_s3_bucket_name}
+      OutputS3KeyPrefix: ${output_s3_key_prefix}
+```
+
+Just like what we've done for `InstanceIds`, we're taking in the `DocumentArn` as a parameter and providing it as the input for the `aws:runCommand` step. Some documents will also take parameters, so we can allow the caller to specify them using `InputParameters`, which is defined as a `StringMap` type - allowing it to then be used in as parameters for the document we are invoking.
+
+When we create this document in the console and then execute it, we can then dynamically add in the document we want to invoke.
+
+{{< figure src="maintenance-wrapper-setup.png" link="maintenance-wrapper-setup.png" class="center" alt="The setup page for the maintenance wrapper document, we're specifying in the text field the command document to invoke, which is AWS-RunPatchBaseline. We've also added in the parameters for the document to run under InputParameters" >}}
+
+Then just like any other document we can invoke it.
+
+{{< figure src="maintenance-wrapper-success.png" link="maintenance-wrapper-success.png" class="center" alt="The automation execution overview page shows that two steps were invoked, InvokeMaintenanceEvent and ExecuteHealthcheck, both are successful. We can also see the input for InvokeMaintenanceEvent is specified as AWS-RunPatchBaseline, and the parameters we used previously." >}}
+
+We can see that the input from the previous screen was passed to the step. Let's keep going until we hit the command invocation.
+
+{{< figure src="maintenance-wrapper-command-detail.png" link="maintenance-wrapper-command-detail.png" class="center" alt="A screenshot of the command invocation page - it executed successfully and the document listed as being invoked was AWS-RunPatchBaseline" >}}
+
+### Terraforming dynamic command documents
+
+So now we've confirmed that documents can be dynamically invoked, let's get this Terraformed. You can view this in [GitHub](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/ssm_maintenance_document.tf).
+
+```hcl
+resource "aws_ssm_document" "maintenance_wrapper" {
+  name            = "MaintenanceWithHealthcheck"
+  document_type   = "Automation"
+  document_format = "YAML"
+
+  content = templatefile(
+    "documents/maintenance_wrapper_template.yml",
+    {
+      healthcheck_document_arn = aws_ssm_document.perform_healthcheck_s3.arn,
+      output_s3_bucket_name    = aws_s3_bucket.script_bucket.id,
+      output_s3_key_prefix     = "ssm_output/",
+    }
+  )
+}
+```
+
+Not a lot has really changed in this when we compare it to our previous document, but the difference is in the `parameters` field for the [document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/documents/maintenance_wrapper_template.yml).
+
+And then you can include it as a maintenance window task as below; I'm reusing the same maintenance window task as before.
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
+  window_id        = aws_ssm_maintenance_window.patch_with_healthcheck.id
+  task_type        = "AUTOMATION"
+  task_arn         = aws_ssm_document.maintenance_wrapper.arn
+  priority         = 10
+  service_role_arn = aws_iam_role.patch_mw_role.arn
+
+  max_concurrency = "1"
+  max_errors      = "0"
+
+  targets {
+    key    = "WindowTargetIds"
+    values = [aws_ssm_maintenance_window_target.patch_with_healthcheck_target.id]
+  }
+
+  task_invocation_parameters {
+    automation_parameters {
+      document_version = "$LATEST"
+
+      parameter {
+        name   = "InstanceIds"
+        values = ["{{ TARGET_ID }}"]
+      }
+
+      parameter {
+        name   = "DocumentArn"
+        values = ["AWS-RunPatchBaseline"]
+      }
+
+      parameter {
+        name   = "InputParameters"
+        values = [jsonencode({ Operation = "Scan" })]
+      }
+    }
+  }
+}
+```
+
+You can then copy and paste the same task resource, only changing the values for the `InputParameters` and `DocumentArn` parameters accordingly. If the document you are calling doesn't take any parameters, then you can just omit that block.
+
+> You'll have to ensure that the IAM role the maintenance window task is assuming has the correct IAM permissions as required by the document you're calling.
+
+## Conclusion
+
+What we've done in this post is taken our rudimentary command document, prone to introducing errors into our estate, and converted it to an automation document. With the right SSM maintenance window settings, you can ensure that any maintenance tasks you need to perform on your EC2 instances are done so in a manner that reduces the risk of errors in your environment.
+
+Next time, we'll be taking this a _step further_ to proactively remove EC2 instances from circulation when behind a load balancer.
