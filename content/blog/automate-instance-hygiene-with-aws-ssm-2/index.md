@@ -1,5 +1,5 @@
 ---
-date: 2020-02-03
+date: 2020-12-04
 title: "Automate Instance Hygiene with AWS SSM: Automation Documents"
 description: Introducing checks in our automation workflow to reduce the spread of broken patches to our estate
 type: posts
@@ -11,16 +11,15 @@ tags:
   - automation
   - terraform
   - patching
-draft: true
 ---
 
-In [part two](/blog/automate-instance-hygiene-with-aws-ssm-1/) of this [series](/series/automate-instance-hygiene-with-aws-ssm/) we look at how we can automate SSM command documents using SSM Maintenance Windows.
+In [part two](/blog/automate-instance-hygiene-with-aws-ssm-1/) of this [series](/series/automate-instance-hygiene-with-aws-ssm/) we looked at how we can automate SSM command documents using SSM Maintenance Windows.
 
 This part will now explore another type of SSM Document; Automation.
 
 ## tl;dr
 
-- Automation documents allow us to combine command documents together
+- Automation documents can allow us to combine command documents together
 - With this, we can utilise maintenance window error thresholds to stop further invocations
 - Dynamic invocation of command documents can also be achieved with automation documents
 
@@ -46,10 +45,11 @@ Essentially we can combine two command documents into one with an automation doc
 
 Well in the last post, we set up a maintenance window with two tasks; one for invoking **AWS-RunPatchBaseline** and another for **PerformHealthcheckS3** (our healthcheck SSM Document) - both of these are _command documents_. Say if we had a policy that wanted to ensure that after **AWS-RunPatchBaseline** was invoked, we would _always_ want the **PerformHealthcheckS3** invoked afterward... the Automation Document would help us get there.
 
-Not only that, the way that our maintenance window is currently structured is it will invoke **AWS-RunPatchBaseline** across all instances in scope at the same time. Once they are all done then it will invoke **PerformHealthcheckS3** across all instances at the same time. This looks like this:
+Not only that, the way that our maintenance window is [currently structured](/blog/automate-instance-hygiene-with-aws-ssm-1/#maintenance-window-tasks) is it will invoke **AWS-RunPatchBaseline** across all instances in scope at the same time. Once they are all done then it will invoke **PerformHealthcheckS3** across all instances at the same time. This looks like this:
 
 ```
 Given we have 2 instances; i-111, i-222
+
 T+0: Invoke AWS-RunPatchBaseline on i-111, i-222
 T+1: AWS-RunPatchBaseline finishes: i-111, i-222
 T+2: Invoke PerformHealthcheckS3 on i-111, i-222
@@ -64,6 +64,7 @@ This means that if a bad patch were to be installed in your estate, you could ha
 
 ```
 Given we have 2 instances; i-111, i-222
+
 T+0: Invoke AWS-RunPatchBaseline on i-111
 T+1: AWS-RunPatchBaseline finishes: i-111
 T+2: Invoke AWS-RunPatchBaseline on i-222
@@ -76,10 +77,13 @@ T+7: PerformHealthcheckS3 FAILS: i-222
 
 Now the healthcheck has failed for `i-222` as well because the bad patch landed on both instances, and production now has an outage.
 
+#### Solution
+
 Thankfully, Automation Documents help us avoid that - by combining the two command documents (AWS-RunPatchBaseline and PerformHealthcheckS3), we can mark this new automation document as a _solo maintenance window task_ and have it invoked one at a time on instances, and have it abort further invocations if any sub-documents failed within in:
 
 ```
 Given we have 2 instances; i-111, i-222
+
 T+0: Invoke AWS-RunPatchBaseline on i-111
 T+1: AWS-RunPatchBaseline finishes: i-111
 T+2: Invoke PerformHealthcheckS3 on i-111
@@ -92,6 +96,7 @@ Notice how the failed healthcheck on the first instance caused the rest of task 
 
 ```
 Given we have 2 instances; i-111, i-222
+
 T+0: Invoke AWS-RunPatchBaseline on i-111
 T+1: AWS-RunPatchBaseline finishes: i-111
 T+2: Invoke PerformHealthcheckS3 on i-111
@@ -101,8 +106,6 @@ T+5: AWS-RunPatchBaseline finishes: i-222
 T+6: Invoke PerformHealthcheckS3 on i-222
 T+7: PerformHealthcheckS3 succeeds: i-222
 ```
-
-### Additional automation actions
 
 So we know that automation documents allow us to combine command documents together - this is done using the `aws:runCommand` action, though there are [many more](https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-actions.html) actions available to you, some of which we'll explore later.
 
@@ -198,7 +201,7 @@ Because we want to test this document executing one at a time on an instance, we
 
 {{< figure src="execute-automation-1.png" link="execute-automation-1.png" class="center" alt="Execute automation document page for PatchHealthcheck, Rate Control is selected" >}}
 
-We'll need to select what instances are our targets. The instances in scope for this document are tagged with the key `App` with the value `HelloWorld`, so let's use that as our criteria. Note this is the most scalable solution for targeting instances. TODO link to github terraform for the tag being set?
+We'll need to select what instances are our targets. The instances in scope for this document are [tagged](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/ec2.tf#L23) with the key `App` with the value `HelloWorld`, so let's use that as our criteria. Note this is the most scalable solution for targeting instances.
 
 {{< figure src="execute-automation-2.png" link="execute-automation-2.png" class="center" alt="A screenshot of the execute automation page with tag key App and tag value HelloWorld specified" >}}
 
@@ -215,7 +218,7 @@ Once all done then click **Execute**.
 
 #### Results
 
-As the execution progresses you'll notice it invoke the document on one instance at a time. As it completes you'll have a screen that looks like the below as you click onto the execution detail page. Notice that the start and end times of each instance invocation do not overlap with one another.
+As the execution progresses you'll notice it invokes the document on one instance at a time. As it completes you'll have a screen that looks like the below as you click onto the execution detail page. Notice that the start and end times of each instance invocation do not overlap with one another.
 
 > Step name is the same as the instance ID in this case
 
@@ -249,14 +252,14 @@ Now that we've tested the automation document and we're happy to have it automat
 
 ### Maintenance window task
 
-Since we are targeting an automation document, we need to specify the `task_type` as `AUTOMATION`, and we update the `task_arn` to our new document accordingly.
+Since we are targeting an automation document, there are some differences we need to account for when compared to [command tasks](/blog/automate-instance-hygiene-with-aws-ssm-1/#maintenance-window-tasks). 
 
-We want to ensure our new combined document is only invoked on one instance at a time, so `max_concurrency` is set to `1`.
-
-Within `task_invocation_parameters` we use `automation_parameters` as opposed to `run_command_parameters`.
-
-- `document_version` allows us to target a specific document version
-- any parameters required by the document are defined within `parameter`
+1. Specify the `task_type` as `AUTOMATION`
+1. Update the `task_arn` to our new document accordingly
+1. Ensure our new combined document is only invoked on one instance at a time, so `max_concurrency` is set to `1`
+1. Within `task_invocation_parameters` we use `automation_parameters` as opposed to `run_command_parameters`.
+    - `document_version` allows us to target a specific document version
+    - any parameters required by the document are defined within `parameter`
 
 Remember that our document takes in `InstanceIds` as a parameter? Well you'll notice that the value is set to `"{{ TARGET_ID }}"`. This is known in AWS as a [pseudo parameter](https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-register-tasks-parameters.html), whereby the instance ID returned by `WindowTargetIds` will be passed into the automation document.
 
@@ -285,7 +288,7 @@ resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
       document_version = "$LATEST"
 
       parameter {
-        name = "InstanceIds"
+        name   = "InstanceIds"
         values = ["{{ TARGET_ID }}"]
       }
     }
@@ -349,7 +352,7 @@ resource "aws_iam_role_policy_attachment" "mw_role_add" {
 
 You can view the above resources in [GitHub](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/maintenance_window_iam.tf#L30).
 
-Simply put, we're creating an new IAM policy with anything additional that the maintenance window requires for it to operate. We'll use this policy to add any new actions in the future.
+Simply put, we're creating an new IAM policy with anything additional that the maintenance window requires for it to operate. We'll use this policy to add any new actions if we need to in the future.
 
 ### Testing automation documents in maintenance windows
 
@@ -363,7 +366,9 @@ Just like for command documents, you can view the detail for each invocation mad
 
 {{< figure src="automation-maint-window-success-detail.png" link="automation-maint-window-success-detail.png" class="center" alt="Task invocation detail view for one instance. There are two steps, one for invoking a patch event and another for performing a healthcheck - both are successful" >}}
 
-But the whole point of this exercise was to proactively handle errors right? So let's introduce some by doing what we've done [before](#failure-testing) and change the healthcheck script to fail. Once the new "broken" script is applied we can rerun another test of the maintenance window.
+But the whole point of this exercise was to proactively handle errors right? So let's introduce some by doing what we've done [before](#failure-testing) and change the healthcheck script to fail.
+
+Once the new "broken" script is applied we can rerun another test of the maintenance window.
 
 {{< figure src="automation-maint-window-failure.png" link="automation-maint-window-failure.png" class="center" alt="Execution overview for the maintenance window invocation - we have 3 task invocations, one for each instance, 1 failed which then aborted further task invocations on the remaining instances" >}}
 
@@ -377,7 +382,7 @@ In this post we've looked at a common maintenance task in the form of an SSM com
 
 You may have more command documents that perform some form of maintenance on instances, for which you would also want the healthcheck script to execute after as well.
 
-Instead of copying and pasting these automation documents, we can create just one automation document which takes in the command document ARN as a parameter, and dynamically invoke that, and have a hardcoded step afterward for executing a healthcheck!
+Instead of copying and pasting these automation documents, we can create just one automation document which takes in the command document ARN as a parameter, dynamically invoke it, and then have a hardcoded step afterward for executing a healthcheck!
 
 In it's raw YAML form, we would get a document that looks like this:
 
@@ -426,7 +431,7 @@ Then just like any other document we can invoke it.
 
 We can see that the input from the previous screen was passed to the step. Let's keep going until we hit the command invocation.
 
-{{< figure src="maintenance-wrapper-command-detail.png" link="maintenance-wrapper-command-detail.png" class="center" alt="A screenshot of the command invocation page - it executed successfully and the document listed as being invoked was AWS-RunPatchBaseline" >}}
+{{< figure src="maintenance-wrapper-command-detail.png" link="maintenance-wrapper-command-detail.png" class="center" alt="A screenshot of the command invocation page - it executed successfully and the document listed as being invoked was AWS-RunPatchBaseline" caption="The document name was dynamically passed to the command execution" >}}
 
 ### Terraforming dynamic command documents
 
@@ -449,7 +454,7 @@ resource "aws_ssm_document" "maintenance_wrapper" {
 }
 ```
 
-Not a lot has really changed in this when we compare it to our previous document, but the difference is in the `parameters` field for the [document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/documents/maintenance_wrapper_template.yml).
+Not a lot has really changed in this when we compare it to our [one from earlier](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/ssm_combined_command.tf), but the difference is in the `parameters` field for the [document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-2/documents/maintenance_wrapper_template.yml).
 
 And then you can include it as a maintenance window task as below; I'm reusing the same maintenance window task as before.
 
@@ -500,4 +505,4 @@ You can then copy and paste the same task resource, only changing the values for
 
 What we've done in this post is taken our rudimentary command document, prone to introducing errors into our estate, and converted it to an automation document. With the right SSM maintenance window settings, you can ensure that any maintenance tasks you need to perform on your EC2 instances are done so in a manner that reduces the risk of errors in your environment.
 
-Next time, we'll be taking this a _step further_ to proactively remove EC2 instances from circulation when behind a load balancer.
+Next time, we'll be taking this a _step further_ to proactively remove EC2 instances from circulation when behind a load balancer for maintenance activities.
