@@ -1,5 +1,5 @@
 ---
-date: 2020-12-12
+date: 2020-12-14
 title: "Who Goes Blogging 7: Hugo Minify RSS Code Indentation Fix"
 description: Hugo's minify function can cause code indentation in RSS feeds to break - I discuss the fix in this post
 type: posts
@@ -8,7 +8,6 @@ series:
 tags:
     - rss
     - hugo
-draft: true
 ---
 
 It's certainly been a while since the [previous post](/blog/who-goes-blogging-6-three-steps-to-improve-hugos-rss-feeds/) in this series, which has become the home of any updates I make to my [Hugo](https://gohugo.io/) website.
