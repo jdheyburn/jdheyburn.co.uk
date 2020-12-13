@@ -4,11 +4,11 @@ title: "Who Goes Blogging 6: Three Steps to Improve Hugo's RSS Feeds"
 description: Spending time to ensure that posts are rendered nicely for RSS feeds
 type: posts
 series:
-  - Who Goes Blogging
+    - Who Goes Blogging
 tags:
-  - rss
-  - cards
-lastmod: 2020-12-12
+    - rss
+    - cards
+lastmod: 2020-12-14
 ---
 
 I "fixed" the default RSS template used by Hugo to show the full article content, along with images, and also talk about how to have social media cards appear in the RSS items too.
@@ -21,19 +21,19 @@ I uploaded my completed RSS file to [GitHub Gist](https://gist.github.com/jdheyb
 
 {{< figure src="inoreader-complete.png" link="inoreader-complete.png" class="center" alt="inoreader as an RSS feed aggregator" caption="My RSS aggregator of choice currently is [inoreader](https://www.inoreader.com/) - I'll be using this in my examples" >}}
 
-Hugo [generates RSS XML](https://gohugo.io/templates/rss/) files from a template that will loop over your content and expose this at an endpoint for RSS aggregators to subscribe to and periodically check for updates against. Hugo generates a bunch of RSS XML files at different sections of the website, allowing consumers to subscribe to the section that interests them most - you can even subscribe to tags if that XML is being generated!
+Hugo [generates RSS XML](https://gohugo.io/templates/rss/) files from a template that will loop over your content and expose this at an endpoint for RSS aggregators to subscribe to and periodically check for updates against. Hugo generates a bunch of RSS XML files at different sections of the website, allowing consumers to subscribe to the section that interests them most - you can even subscribe to tags if that XML is being generated! 
 
 Usually there is site top-level available at `/index.xml` - in the case of my site that would be <https://jdheyburn.co.uk/index.xml>. The source code for the template file Hugo uses to generate this is embedded in Hugo at [this location](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/_default/rss.xml).
 
 ## The Problem
 
-Some (but not all) websites only include the first paragraph of their post in an RSS update (aka summary), along with a message after that paragraph requesting the reader to visit the site in a browser to view the rest of the content.
+Some (but not all) websites only include the first paragraph of their post in an RSS update (aka summary), along with a message after that paragraph requesting the reader to visit the site in a browser to view the rest of the content. 
 
 This is a common feature of WordPress blogs - and it is done to have you load the full website and along with it, all the code for providing the owner with user analytics, and advertising - if they have it. So really they're getting the benefit of being able to publish updates via a standardised approach (RSS), to then lure you onto the website.
 
 {{< figure src="rss-post-show-more-content.png" link="rss-post-show-more-content.png" class="center" alt="An RSS post loading incompletely" >}}
 
-Hugo _kind of_ does this through the highlighted line in the [templated RSS XML file](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/_default/rss.xml):
+Hugo *kind of* does this through the highlighted line in the [templated RSS XML file](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/_default/rss.xml):
 
 ```xml
 <description>{{ .Summary | html }}</description>
@@ -43,7 +43,7 @@ Hugo _kind of_ does this through the highlighted line in the [templated RSS XML 
 
 {{< figure src="hugo-incomplete-post.png" link="hugo-incomplete-post.png" class="center" alt="Hugo producing a summarised RSS post" >}}
 
-I'm not against the practice of previewing the post, if a blog provides revenue for the author(s) then you will need to force readers to view the full website for analytics and advertising (businesses gotta make money!).
+I'm not against the practice of previewing the post, if a blog provides revenue for the author(s) then you will need to force readers to view the full  website for analytics and advertising (businesses gotta make money!). 
 
 Although I'm sure the initial purpose of RSS was only meant to be used to provide subscribers a pure text version of your content. At the end of the day, I believe the author should give the reader choice on mediums of consumption - and they accept the limitations that come from RSS.
 
@@ -128,11 +128,11 @@ This produces the block:
 
 ```html
 <figure>
-  <img src="image-file-name.png" alt="Here is an image!" />
+    <img src="image-file-name.png" alt="Here is an image!">  
 </figure>
 ```
 
-Since this contains no preceding forward-slash `/` in `src`, this becomes a _relative path_. This means the webserver will look for the image at the path relative to the current page.
+Since this contains no preceding forward-slash `/` in `src`, this becomes a *relative path*. This means the webserver will look for the image at the path relative to the current page.
 
 So when we navigate to `blog/some-blog-post/` in our web browser (as dictated from the above tree structure), your browser will request the image at `blog/some-blog-post/image-file-name.png` for you.
 
@@ -153,11 +153,11 @@ We need to go back to the same line where we added `.Content` and change it to:
 This calls the Hugo function [replaceRE](https://gohugo.io/functions/replacere/) which enables us to perform a find-and-replace using [regular expressions (regex)](https://www.regular-expressions.info/tutorial.html), and it takes three inputs:
 
 - `PATTERN` is the regex pattern used to find the text we want to remove
-  - `"img src=\"(.*?)\""`
+    - `"img src=\"(.*?)\""`
 - `REPLACEMENT` is the text that we want to replace the `PATTERN` with
-  - `(printf "%s%s%s" "img src=\"" .Permalink "$1\"")`
+    - `(printf "%s%s%s" "img src=\"" .Permalink "$1\"")`
 - `INPUT` is the string we want to perform the find-and-replace on
-  - `.Content`
+    - `.Content`
 
 In the example above, we're placing a [capturing group](https://www.regular-expressions.info/brackets.html) in the `PATTERN` so that it will capture the contents inside `src` and save them so that we can refer to it in the `REPLACEMENT`, while removing `img src=""`.
 
@@ -180,7 +180,7 @@ Once we've made the change, images are now rendered properly!
 > Will render this in RSS:
 >
 > ```html
-> <a href="https://jdheyburn.co.uk/#rendering-images-in-rss-posts"></a>
+> <a href="https://jdheyburn.co.uk/#rendering-images-in-rss-posts">
 > ```
 >
 > Which does not take the reader to the right location at all. What we need to do is repeat the regex used above in `rss.xml` to catch these and replace them with the complete URL. See below for the snippet.
@@ -203,23 +203,27 @@ You can do these in RSS via the [enclosure](https://www.w3schools.com/xml/rss_ta
 <enclosure url="image-location.png" type="image/jpg"></enclosure>
 ```
 
-If you have a look at our `layouts/_default/rss.xml` file, we don't have this defined. We could go and add it in now, but I would like a unified social media image to be used across all platforms. This will enable me to focus my effort on generating a single social media card image that is shared across all methods of consumption.
+If you have a look at our `layouts/_default/rss.xml` file, we don't have this defined. We could go and add it in now, but I would like a unified social media image to be used across all platforms. This will enable me to focus my effort on generating a single social media card image that is shared across all methods of consumption. 
 
 Based on the above, my theme (hugo-coder), renders the tags required for social media cards through the [internal template](https://github.com/gohugoio/hugo/blob/master/tpl/tplimpl/embedded/templates/twitter_cards.html) for [twitter_cards](https://gohugo.io/templates/internal/#use-the-twitter-cards-template). A snippet of the logic that determines this:
 
 ```html {linenos=table}
 {{- with $.Params.images -}}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="{{ index . 0 | absURL }}" />
-{{ else -}} {{- $images := $.Resources.ByType "image" -}} {{- $featured :=
-$images.GetMatch "*feature*" -}} {{- if not $featured }}{{ $featured =
-$images.GetMatch "{*cover*,*thumbnail*}" }}{{ end -}} {{- with $featured -}}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="{{ $featured.Permalink }}" />
-{{- else -}} {{- with $.Site.Params.images -}}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="{{ index . 0 | absURL }}" />
-{{ else -}} ...
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ index . 0 | absURL }}"/>
+{{ else -}}
+{{- $images := $.Resources.ByType "image" -}}
+{{- $featured := $images.GetMatch "*feature*" -}}
+{{- if not $featured }}{{ $featured = $images.GetMatch "{*cover*,*thumbnail*}" }}{{ end -}}
+{{- with $featured -}}
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ $featured.Permalink }}"/>
+{{- else -}}
+{{- with $.Site.Params.images -}}
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="{{ index . 0 | absURL }}"/>
+{{ else -}}
+...
 ```
 
 The hierarchy of images used to render the social media card goes like this:
@@ -231,7 +235,7 @@ The hierarchy of images used to render the social media card goes like this:
 
 ### Adding enclosure tags
 
-We can effectively copy and paste the code being used for generating Twitter cards and modify it for enclosure tags. The snippet of code ultimately ends up looking like this :point_down:
+We can effectively copy and paste the code being used for generating Twitter cards and modify it for enclosure tags. The snippet of code ultimately ends up looking like this  :point_down:
 
 ```html {linenos=table}
 {{- $pagePermalink := .Permalink -}}
@@ -255,7 +259,7 @@ We can effectively copy and paste the code being used for generating Twitter car
 Walking through what this is doing:
 
 - Lines 1-4 will use the image defined in the `images` in the post front matter, if it exists
-  - I had to define `{{-/* $pagePermalink := .Permalink */-}}` on line 1 to make `.Permalink` available inside the `with` block at line 4
+    - I had to define `{{-/* $pagePermalink := .Permalink */-}}` on line 1 to make `.Permalink` available inside the `with` block at line 4
 - Line 7 will find an image containing `feature` in its name, at the post leaf bundle section, if an image is not found previously
 - Line 8 will revert to an image containing either `cover` or `thumbnail`, if an image is not found previously
 - Lines 12-13 will default to the image defined at the site level params
@@ -271,7 +275,7 @@ I'm going to follow lines 12-13 above and have a default card defined at the sit
 
 ...while also ensuring that I've placed the image under `static/images/jdheyburn_co_uk_card.png`.
 
-Once all that is done and deployed - we will have an RSS post card that looks like this :raised_hands:
+Once all that is done and deployed - we will have an RSS post card that looks like this  :raised_hands:
 
 {{< figure src="hugo-enclosure-card-view.png" link="hugo-enclosure-card-view.png" class="center" alt="inoreader displaying an image for a Hugo post" >}}
 
