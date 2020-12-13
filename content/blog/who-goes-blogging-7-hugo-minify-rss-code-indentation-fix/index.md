@@ -1,5 +1,5 @@
 ---
-date: 2020-12-14
+date: 2020-12-12
 title: "Who Goes Blogging 7: Hugo Minify RSS Code Indentation Fix"
 description: Hugo's minify function can cause code indentation in RSS feeds to break - I discuss the fix in this post
 type: posts
@@ -13,9 +13,9 @@ draft: true
 
 It's certainly been a while since the [previous post](/blog/who-goes-blogging-6-three-steps-to-improve-hugos-rss-feeds/) in this series, which has become the home of any updates I make to my [Hugo](https://gohugo.io/) website.
 
-This post is a quick one but it's something I've been meaning to fix for a while. The RSS feeds that are generated will also include code blocks as defined through code fences (``````) or through `{{</* highlight */>}}` shortcodes.
+This post is a quick one but it's something I've been meaning to fix for a while. The RSS feeds that are generated will also include code blocks as defined through code fences (```) or through `{{</* highlight */>}}` shortcodes in your post content.
 
-However for some reason the code blocks generated in my RSS feeds were losing their indentation. Take this code snippet example from my [latest post](/blog/automate-instance-hygiene-with-aws-ssm-2) appearing as below:
+However for some reason the code blocks generated in my RSS feeds were losing their indentation. Take this code snippet example from my [latest post](/blog/automate-instance-hygiene-with-aws-ssm-2).
 
 ```hcl
 resource "aws_ssm_document" "patch_with_healthcheck" {
@@ -33,7 +33,7 @@ output_s3_key_prefix = "ssm_output/",
 }
 ```
 
-Whereas it should be appearing as:
+Whereas it should be rendering as:
 
 ```hcl
 resource "aws_ssm_document" "patch_with_healthcheck" {
@@ -89,10 +89,10 @@ So what's happening is the RSS XML that Hugo generates for us is then being [min
 
 In order to fix this we just need to copy the default minify config as mentioned above and change the last line to `keepWhitespace = true`.
 
-The git commit where I made the fix is here: https://github.com/jdheyburn/jdheyburn.co.uk/commit/e56aaf581283eb7a7a4d97ca7a30553beda09271.
-
-I tried to experiment to see if the whole config was required or not, but it appears so - if you found a way to omit some lines then let me know.
+You can view my [git commit](https://github.com/jdheyburn/jdheyburn.co.uk/commit/e56aaf581283eb7a7a4d97ca7a30553beda09271) that fixes this - should you want to include the fix too.
 
 > I'm using `toml` for my config, so make sure you change it to what your config is defined in (`yaml` / `json`)
+
+I tried to experiment to see if the whole config was required or not, but it appears so - if you found a way to omit some lines then let me know.
 
 That's it - hope this help you with fixing your RSS feeds too!
