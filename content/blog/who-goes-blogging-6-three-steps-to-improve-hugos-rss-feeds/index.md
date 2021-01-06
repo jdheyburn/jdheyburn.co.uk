@@ -8,7 +8,7 @@ series:
 tags:
     - rss
     - cards
-lastmod: 2020-05-16
+lastmod: 2020-12-14
 ---
 
 I "fixed" the default RSS template used by Hugo to show the full article content, along with images, and also talk about how to have social media cards appear in the RSS items too.
@@ -88,6 +88,10 @@ Let's now view the changes in the RSS reader.
 
 {{< figure src="hugo-complete-post.png" link="hugo-complete-post.png" class="center" alt="Hugo RSS post displaying all content" caption="We can now see much more content is being produced - and with proper HTML this time!" >}}
 
+> **UPDATE 2020-12-14**
+>
+> I came across an issue whereby code indentation wasn't rendering properly in RSS feeds if you used the `--minify` parameter - [this post](/blog/who-goes-blogging-7-hugo-minify-rss-code-indentation-fix/) resolves it.
+
 ## Rendering images in RSS posts
 
 Depending on how you are retrieving images - you may find that they are not displaying, and that the image alterative (`alt`) text is being displayed instead.
@@ -99,7 +103,6 @@ Depending on how you are retrieving images - you may find that they are not disp
 > They help boost accessibility to your website should the user have a text-to-voice application reading your website.
 >
 > They also provide a helpful description to your image in case it cannot load - which happens more often than you think!
-
 
 ### Why it is breaking :triumph:
 
