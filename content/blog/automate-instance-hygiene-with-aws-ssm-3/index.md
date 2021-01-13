@@ -50,13 +50,13 @@ There are multiple benefits to having a load balancer sit in front of your servi
 
 While there are several different load balancers out there such as [nginx](https://www.nginx.com/) and [HAProxy](https://www.haproxy.org/), AWS has its own managed load balancer service known as [ELB](https://aws.amazon.com/elasticloadbalancing/).
 
-TODO add diagram of new architecture and explain
-
 ### Adding web services
 
 In our current architecture, we just have 3 EC2 instances with nothing running on them which has served us well until now. Let's simulate a real web service by running a simple Hello World application across each of the instances. We can utilise EC2s [user data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) to start a basic service up for us by giving it as script to run on boot.
 
 > While user data is for useful provisioning services, I don't advise storing the source code of your application in there like I've done - this is just a hacky way to get something up and running.
+
+{{< figure src="alb-arch.png" link="alb-arch.png" class="center" caption="This is the architecture we'll be building out in this section, with an Application Load Balancer (ALB) fronting our EC2 instances" alt="An architecture diagram showing a user with an arrow pointing to an application load balancer on port 80. The load balancer then points to 3 EC2 instances on port 8080." >}}
 
 Because Go is pretty awesome and simple, let's use that as our web service, returning a simple `Hello, World!` when it is hit. We'll also have it return the name of the instance that was hit - this will be used later.
 
@@ -107,9 +107,11 @@ module "hello_world_ec2" {
 }
 ```
 
-Terraform will recreate any EC2 nodes with a change in `user_data` contents, so when you invoke `terraform apply` all instances will be recreated.
+Terraform will recreate any EC2 nodes with a change in `user_data` contents, so when you invoke `terraform apply` all instances will be recreated. 
 
-After they have all successfully deployed, you should be able to `curl` the public IP address of each instance to verify your setup is correct. If you are getting timeouts then make sure your instances have a security group rule permitting traffic from your IP address through port 8080.
+> N.B. the AMI I picked up for my EC2 instances has an issue with SSM Agent. Ensure you execute the `AWS-UpdateSSMAgent` across your instances after they have provisioned, or you can use an SSM Association document to do that for you as shown here. TODO
+
+After they have all successfully deployed, you should be able to `curl` the public IP address of each instance from your machine to verify your setup is correct. If you are getting timeouts then make sure your instances have a security group rule permitting traffic from your IP address through port 8080.
 
 ```bash
 $ curl http://54.229.209.60:8080
@@ -128,7 +130,7 @@ Now that we have a web service hosted on our instances, let's now add a load bal
 
 > For this I am using a Terraform module for provisioning all the components in the load balancer, and expanding on them is beyond the scope of this post.
 >
-> You can navigate to the AWS ALB (TODO acronym?) [documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) to find out more.
+> You can navigate to the AWS ALB (Application Load Balancer) [documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) to find out more.
 
 #### Security groups
 
@@ -186,7 +188,7 @@ Our requirements dictate we need the following:
 - Forward traffic to backend targets on port 8080
 - Include health checks to ensure we do not forward requests to unhealthy instances
 
-Translate these into the context of the module and we have something like this:
+Translate these requirements into the context of the module and we have something like this:
 
 ```hcl
 module "hello_world_alb" {
@@ -228,18 +230,7 @@ module "hello_world_alb" {
 
 > In order to keep this post simple I am not fronting services over HTTPS (secure HTTP) - I would strongly advise against doing this for non-test scenarios.
 
-TODO keep?
-
-<!-- Here's a breakdown of each attribute:
-
-- `load_balancer_type` - application to provision an ALB
-- `vpc_id` - set to the VPC where the rest of our stack is running in
-- `subnets` - we're allowing the ALB to be provisioned in any subnet; for an ALB serving traffic from the web you would want to deploy it in a public subnet instead of a private one
-- `security_groups` - what SGs should be applied to this ALB - we're assigning the one from [earlier]()
-
-Now we define the target groups, which is a [key component](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html) of an ALB. -->
-
-Another piece we will need is to hook up our EC2 instances with the target group created.
+Another step we will need is to hook up our EC2 instances with the target group created.
 
 ```hcl
 resource "aws_lb_target_group_attachment" "hello_world_tg_att" {
@@ -289,7 +280,7 @@ Now that we have a load balancer fronting our services, let's review executing o
 
 If an instance were to be rebooted during the AWS-RunPatchBaseline stage of the automation document, then there is a chance that a request would have been forwarded to that instance before the health checks against it have failed.
 
-To simulate this, let's create a new automation document which simulates a reboot. We'll just take our existing patching document and replace the patch step with a reboot command, following the [guidelines](https://docs.amazonaws.cn/en_us/systems-manager/latest/userguide/send-commands-reboot.html) to do this. I've also modified the health check to check to see if the new service came up okay - this may differ for your environment.
+To simulate this, let's create a new automation document which simulates a reboot. We'll just take our existing [patching document](TODO link) and replace the patch step with a reboot command, following the [guidelines](https://docs.amazonaws.cn/en_us/systems-manager/latest/userguide/send-commands-reboot.html) to do this. I've also modified the health check to check to see if the new service came up okay - this may differ for your environment.
 
 ```yaml
 ---
@@ -351,7 +342,7 @@ resource "aws_ssm_document" "reboot_with_healthcheck" {
 }
 ```
 
-Now let's see what happens if we were to run this document (TODO link to previous article on how to do this) against an instance while having the command below running on your local machine in the background to simulate traffic hitting the load balancer.
+Now that we have resources provisioned let's get our test set up. In a terminal window from your machine have this script running in the background to simulate load.
 
 ```bash
 $ while true;
@@ -367,6 +358,8 @@ do
 done
 ```
 
+Then we need to [invoke](TODO link to previous article) the new reboot document against an instance.
+
 ```bash
 Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 Hello, World! From ip-172-31-14-19.eu-west-1.compute.internal
@@ -388,15 +381,15 @@ Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 ```
 
-These error messages are coming from the load balancer, [indicating](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html#http-502-issues) that the underlying backend wasn't able to complete the request. This is happening because the load balancer hasn't had enough time to determine whether the instance is unhealthy or not - as dictated from our health check policy (2 failed checks with 6 seconds between them).
+These error messages are coming from the load balancer, [indicating](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html#http-502-issues) that the underlying backend wasn't able to complete the request. This is happening because the load balancer hasn't had enough time to determine whether the instance is unhealthy or not - as dictated from our health check policy (2 failed checks with 6 seconds between them) - and so still forwards traffic to it.
 
-While we are the only users hitting this, had this been a production box hit by 100,000s of users, each one of them would experience an issue with your application.
+While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application.
 
 What we need is a means of removing the node from the load balancer rotation so that we can safely perform maintenance on it.
 
 ## Removing instances from load balancer rotation
 
-Load balancer target groups have an API endpoint that allow you to drain connections from backends - where the load balancer stops any _new_ requests being forwarded to that backend, and allows existing requests to complete. This API endpoint can be hit from Systems Manager Automation Documents to allow backends to be removed before a maintenance step, and added back in afterward.
+Load balancer target groups have an API endpoint that allow you to drain connections from backends - where the load balancer stops any _new_ requests being forwarded to that backend, and allows existing requests to complete. This can be done via - you guessed it - Automation Documents!
 
 ### Graceful load balancer document
 
@@ -418,7 +411,7 @@ You can see the document in its entirety [here](). The steps that it performs ar
 
 As this is an automation document, the `schemaVersion` should be `0.3`. We're using two parameters here to run the document:
 
-- `TargetGroupArn` - the ARN of the target group we are making modifications too`
+- `TargetGroupArn` - the ARN of the target group we are making modifications too
 - `InstanceId` - the instance that is undergoing maintenance
 
 ```yaml
@@ -530,7 +523,7 @@ Now our preconditions have been met we can remove the instance using the `aws:ex
         - Id: "{{ InstanceId }}"
 ```
 
-Once we've done that we need to verify the instance has definitely been removed. Remember that the target group allows for existing connections to complete their requests when it is draining, so deregistering the instance doesn't happen instantaenously - this is where the `aws:waitForAwsResourceProperty` helps us.
+Once we've done that we need to verify the instance has definitely been removed. Remember that the target group allows for existing connections to complete their requests when it is draining, so deregistering the instance doesn't happen instantaneously - this is where the `aws:waitForAwsResourceProperty` helps us.
 
 ```yaml
 - name: WaitForDeregisteredTarget
@@ -598,9 +591,7 @@ In a similar vein to `DeregisterTargets`, this [action](https://docs.aws.amazon.
       - Id: "{{ InstanceId }}"
 ```
 
-Registering the instance happens instantaneously, we will have to wait for the target group to perform initial health checks against the instance. Once we've asserted that it's healthy, then the document is complete!
-
-Remember that this document only handles one instance at a time, it will typically be up to the caller (maintenance window) to rate limit the execution of multiple instances one at a time.
+Registering the instance happens instantaneously, but we will have to wait for the target group to perform initial health checks against the instance. Once we've asserted that it's healthy, then the document is complete!
 
 ```yaml
 - name: WaitForHealthyTargetGroup
@@ -628,6 +619,10 @@ Remember that this document only handles one instance at a time, it will typical
   timeoutSeconds: 60
   isEnd: true
 ```
+
+Remember that this document only handles one instance at a time, it will typically be up to the caller (maintenance window) to rate limit the execution of multiple instances one at a time.
+
+TODO show testing for this and actually fixing the issue
 
 ### Terraform
 
@@ -726,7 +721,7 @@ data "aws_iam_policy_document" "mw_role_additional" {
 }
 ```
 
-### Testing 
+### Testing
 
 You can test the automation document by following the same process as before, else you can test the whole stack via changing the execution time of the maintenance window, as previously described. I'll be following along with the latter.
 
