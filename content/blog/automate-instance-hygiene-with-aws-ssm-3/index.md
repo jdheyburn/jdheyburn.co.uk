@@ -1,7 +1,7 @@
 ---
 date: 2021-01-10
-title: "Automate Instance Hygiene with AWS SSM: Proactive Instance Removal"
-description: TBC
+title: "Achieve Automated Zero Downtime Maintenance with Load Balancers"
+description: Load balancers can help us to ensure we proactively remove instances from rotation when we automate maintenance against their targets
 type: posts
 series:
   - Automate Instance Hygiene with AWS SSM
@@ -14,21 +14,28 @@ tags:
 draft: true
 ---
 
-Welcome to the last post in this [series]() where we've been exploring SSM Documents. So far in the series we've covered:
+Welcome to the last post in this [series](/series/automate-instance-hygiene-with-aws-ssm/) where we've been exploring SSM Documents. So far in the series we've covered:
 
 - How [Command Documents](/blog/automate-instance-hygiene-with-aws-ssm-0/) can help to execute commands on EC2 Instances
 - Automating these Command Documents through [Maintenance Windows](/blog/automate-instance-hygiene-with-aws-ssm-1/)
 - Safely chaining Command Documents through [Automation Documents](/blog/automate-instance-hygiene-with-aws-ssm-2/), and aborting for any failures
 
-This post will now look into how we can use Automation Documents to perform maintenance on EC2 instances without causing any degraded user experience.
+This post will now look into how we can use Automation Documents to perform maintenance on EC2 instances without impacting user experience.
+
+## tl;dr
+
+- With the introduction of load balancers to front your services, you can control which instances should be receiving traffic
+- This enables you to proactively remove instances from rotation so that you can perform maintenance on the backends
+- SSM automation documents can enable us to execute pre-maintenance steps such as removing an instance from a load balancer, as well as adding them back after
+  - See [here](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/graceful_patch_instance.yml) for an example document
 
 ## Prerequisites
 
-As always, the code for this post can be found on [GitHub]().
+If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here.
 
-ALB components - https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
+As always, the code for this post can be found on [GitHub](https://github.com/jdheyburn/terraform-examples/tree/main/aws-ssm-automation-3). If you've been following along in the series, the repository removes some resources which are no longer necessary - therefore your `terraform plan` may show removals.
 
-TODO complete
+A basic understanding and knowledge of [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB), and its components (e.g. [target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)) is required.
 
 ## Introducing load balancers
 
@@ -51,13 +58,15 @@ There are multiple benefits to having a load balancer sit in front of your servi
 - Perform healthchecks on backends and don't forward traffic to unhealthy nodes
 - Drain and remove backends to permit for rolling upgrades
 
-While there are several different load balancers out there such as [nginx](https://www.nginx.com/) and [HAProxy](https://www.haproxy.org/), AWS has its own managed load balancer service known as an [Elastic Load Balancer](https://aws.amazon.com/elasticloadbalancing/) (ELB).
+While there are several different software-based load balancers out there such as [nginx](https://www.nginx.com/) and [HAProxy](https://www.haproxy.org/), AWS has its own managed load balancer service known as an [Elastic Load Balancer](https://aws.amazon.com/elasticloadbalancing/) (ELB).
 
 ### Adding web services to our demo environment
 
-In the architecture we have been using for this series we have 3 EC2 instances with nothing running on them which has served us well until now. Let's simulate a real web service by running a simple Hello World application across each of the instances. We can utilise EC2s [user data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) to start a basic service up for us by giving it a script to run on instance provision.
+In order for us to get the benefit of load balancers to front the EC2 instances in the architecture this series left off from [last time](/blog/automate-instance-hygiene-with-aws-ssm-2/#prerequisites), we will need to have a service running on our instances.
 
-{{< figure src="alb-arch.png" link="alb-arch.png" class="center" caption="This is the architecture we'll be building out in this section, with an [Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB) fronting our EC2 instances" alt="An architecture diagram showing a user with an arrow pointing to an application load balancer on port 80. The load balancer then points to 3 EC2 instances on port 8080." >}}
+Let's simulate a real web service by running a simple Hello World application across each of the instances. We can utilise EC2s [user data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) to start a basic service up for us by giving it a script to run on instance provision.
+
+{{< figure src="alb-arch.png" link="alb-arch.png" class="center" caption="This is the architecture we'll be building out in this section, with an ALB fronting our EC2 instances" alt="An architecture diagram showing a user with an arrow pointing to an application load balancer on port 80. The load balancer then points to 3 EC2 instances on port 8080." >}}
 
 Let's use Go to create a web service for us since it is easy to get set up quickly - we'll have the server return a simple `Hello, World!` message when a request hits it. Let's also have it return the name of the instance that was hit - this will be used [later](#hitting-the-load-balancer).
 
@@ -88,7 +97,7 @@ export GOCACHE=/tmp/go-cache
 nohup go run /home/ec2-user/main.go
 ```
 
-So on instance boot this will:
+So on instance creation this will:
 
 1. Create a new file called `main.go` and populate it with the lines between the `EOF` delimiters
 1. Install Go
@@ -97,7 +106,7 @@ So on instance boot this will:
 
 > While user data is for useful provisioning services, I don't advise storing the source code of your application in there like I've done - this is just a hacky way to get something up and running.
 
-We've been using Terraform to provision our nodes. So we need to save this script in a file, `scripts/hello_world_user_data.sh`, and then pass it into the `user_data` attribute of our EC2 modules.
+We've been using Terraform to provision our nodes. So we need to save this script in a [file](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/scripts/hello_world_user_data.sh) (`scripts/hello_world_user_data.sh`), and then pass it into the `user_data` attribute of our [EC2 module](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/ec2.tf#L27).
 
 ```hcl
 module "hello_world_ec2" {
@@ -137,7 +146,7 @@ Now that we have a web service hosted on our instances, let's now add a load bal
 
 #### Security groups
 
-Before we can provision the load balancer, we need to specify the security group (SG) and the rules that should be applied to it. You can view this on [GitHub]().
+Before we can provision the load balancer, we need to specify the security group (SG) and the rules that should be applied to it. You can view this on [GitHub](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/alb.tf#L45).
 
 Since our application is written to serve request on port 8080, we need to permit both the new `aws_security_group.hello_world_alb` SG and the existing `aws_security_group.vm_base` SG to communicate between each other.
 
@@ -189,7 +198,7 @@ The [module documentation](https://registry.terraform.io/modules/terraform-aws-m
 - Forward traffic to backend targets on port 8080
 - Include health checks to ensure we do not forward requests to unhealthy instances
 
-Translate these requirements into the context of the module and we have something like this:
+Translate these requirements into the context of the module and we have [something like this](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/alb.tf#L1):
 
 ```hcl
 module "hello_world_alb" {
@@ -279,9 +288,11 @@ Hello, World! From ip-172-31-43-11.eu-west-1.compute.internal
 
 Now that we have a load balancer fronting our services, let's review executing our automation document from the [last post](/blog/automate-instance-hygiene-with-aws-ssm-2/#combining-command-docs-into-automation) and the problem it brings.
 
-If an instance were to be rebooted during the AWS-RunPatchBaseline stage of the automation document, then there is a chance that a request would have been forwarded to that instance before the health checks against it have failed.
+If an instance were to be rebooted during the **AWS-RunPatchBaseline** stage of the automation document, then there is a chance that a request would have been forwarded to that instance before the health checks against it have failed.
 
 To simulate this, let's create a new automation document which simulates a reboot. We'll just take our existing [patching document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/patch_with_healthcheck_template.yml) and replace the patch step with a reboot command, following the [AWS guidelines](https://docs.amazonaws.cn/en_us/systems-manager/latest/userguide/send-commands-reboot.html) to do this. I've also modified the health check to check to see if the new service came up okay - this may differ for your environment.
+
+You can view the document on [GitHub](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/reboot_with_healthcheck_template.yml).
 
 ```yaml
 ---
@@ -325,7 +336,7 @@ mainSteps:
           fi
 ```
 
-Then the Terraform code to create this document will look like this:
+Then the [Terraform code](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/ssm_reboot_with_healthcheck.tf) to create this document will look like this:
 
 ```hcl
 resource "aws_ssm_document" "reboot_with_healthcheck" {
@@ -394,7 +405,7 @@ Load balancer target groups have an API endpoint that allow you to drain connect
 
 ### Graceful load balancer document
 
-You can see the document in its entirety [here](). The steps that it performs are:
+You can see the document in its entirety [here](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/graceful_patch_instance.yml). The steps that it performs are:
 
 1. Check that the target group is healthy
    - We want to ensure we're not fuelling a dumpster fire
@@ -574,7 +585,7 @@ We're specifying an `onFailure` too, this tells the document should the step fai
 
 #### Add instance back to target group
 
-In a similar vein to `DeregisterTargets`, this [action](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RegisterTargets.html) will register the instance back to the target group.
+In a similar vein to DeregisterTargets, this [action](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_RegisterTargets.html) will register the instance back to the target group.
 
 ```yaml
 - name: RegisterTarget
@@ -617,11 +628,11 @@ Registering the instance happens instantaneously, but we will have to wait for t
   isEnd: true
 ```
 
-Remember that this document only handles one instance at a time, it will typically be up to the caller (maintenance window) to rate limit the execution of multiple instances one at a time.
+Remember that this document only handles one instance at a time, it will typically be up to the caller (i.e. a maintenance window) to rate limit the execution of multiple instances one at a time. We explored this in the [previous post](/blog/automate-instance-hygiene-with-aws-ssm-2/).
 
 ### Terraform additions and updates
 
-The above document can be represented in Terraform to provision.
+The above document can be represented in [Terraform](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/ssm_document_graceful_reboot.tf) to provision it.
 
 ```hcl
 resource "aws_ssm_document" "graceful_reboot_instance" {
@@ -638,7 +649,7 @@ resource "aws_ssm_document" "graceful_reboot_instance" {
 }
 ```
 
-We'll also need to update our maintenance window task to correctly reflect this new document, along with the new parameters it takes.
+We'll also need to update our [maintenance window task](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/maintenance_window.tf#L22) to correctly reflect this new document, along with the new parameters it takes.
 
 ```hcl
 resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
@@ -674,7 +685,7 @@ resource "aws_ssm_maintenance_window_task" "patch_with_healthcheck" {
 }
 ```
 
-And lastly, we'll need to update the IAM role permissions for `aws_iam_role.patch_mw_role.arn` as it will be invoking more actions.
+And lastly, we'll need to update the [IAM role permissions](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/maintenance_window_iam.tf#L30) for `aws_iam_role.patch_mw_role.arn` as it will be invoking more actions.
 
 ```hcl
 data "aws_iam_policy_document" "mw_role_additional" {
@@ -718,10 +729,27 @@ data "aws_iam_policy_document" "mw_role_additional" {
 
 ### Testing the new document
 
-You can test the automation document by following the same process as before, else you can test the whole stack via changing the execution time of the maintenance window, as [previously described](/blog/automate-instance-hygiene-with-aws-ssm-2/#testing-automation-documents-in-maintenance-windows). I'll be following along with the latter.
+You can test the automation document by following the [same process as before](/blog/automate-instance-hygiene-with-aws-ssm-2/#testing-automation-documents), else you can test the whole stack via changing the [execution time of the maintenance window](/blog/automate-instance-hygiene-with-aws-ssm-2/#testing-automation-documents-in-maintenance-windows). I'll be following along with the latter.
 
 While the document is running you can re-use the same command to hit the ALB endpoint [from earlier](#so-what-does-all-this-have-to-do-with-our-maintenance-document) to see how traffic is distributed amongst the instances. I won't display the output here since it'll be pretty uninteresting and display no errors... which is exactly what we want!
 
-Improvement to be made? can the load balancer ARN be dynamic?
+When the document invokes, you'll first see that it will only execute on one instance at a time, which was the enhancement we introduced in the [last post](/blog/automate-instance-hygiene-with-aws-ssm-2/). The execution time of the document on each invocation is slightly long at ~12 minutes - but we would rather it take the time to ensure that all requests to instances have been drained.
 
-LAstly write tldr
+{{< figure src="graceful-document-in-progress.png" link="graceful-document-in-progress.png" class="center" caption="Note that the current invocation in progress starts immediately after the bottom invocation has completed" alt="AWS console showing the automation document execution view. There are 3 task invocations, one for each instance in scope. One has completed successfully, another is in progress, and another is pending invocation." >}}
+
+If we were to drill down into the in progress invocation, you can see all the steps from the document.
+
+{{< figure src="graceful-document-instance-detail.png" link="graceful-document-instance-detail" class="center" caption=" It takes just over 6 minutes to remove the instance from rotation - but at that point we can then start the maintenance document on the instance with full confidence it won't impact any user experience" alt="AWS console showing the individual steps of the automation document removing the targeted instance from rotation before executing the maintenance automation document" >}}
+
+## Bonus: Dynamic target group removal
+
+The example document in the previous section requires you to know the target group ARN in advance of execution the document - we actually specify the target group in scope in the [maintenance window task](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/maintenance_window.tf#L48). But what if you didn't know the target group, or you wanted a more dynamic set up... so that you don't have to specify the target group. You could simply say "for this given instance, remove it from any target groups that are pointing to it and execute maintenance"... that would be awesome right?
+
+TODO add it in here.
+
+## Conclusion
+
+TODO conclusion
+
+
+TODO remove files from automation 3 that are not used
