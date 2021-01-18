@@ -1,6 +1,6 @@
 ---
 date: 2021-01-10
-title: "How to automate AWS zero downtime maintenance with SSM and load balancers"
+title: "How to automate zero downtime maintenance with AWS SSM & ALBs"
 description: Load balancers can help us to ensure we proactively remove instances from rotation when we automate maintenance against their targets
 type: posts
 series:
@@ -25,15 +25,15 @@ This post will now look into how we can use Automation Documents to perform main
 ## tl;dr
 
 - With the introduction of load balancers to front your services, you can control which instances should be receiving traffic
-- This enables you to proactively remove instances from rotation so that you can perform maintenance on the backends
+- This enables you to proactively remove instances from rotation so that you can perform maintenance on the backends to minimalise user disruption
 - SSM automation documents can enable us to execute pre-maintenance steps such as removing an instance from a load balancer, as well as adding them back after
-  - See [here](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/graceful_patch_instance.yml) for an example document
+  - See the [document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/graceful_patch_instance.yml) produced in this post highlighting this, and where I [explain](#graceful-load-balancer-document) how it works, and [how to deploy](#terraform-additions-and-updates) it using Terraform
 
 ## Prerequisites
 
-If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here.
+If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here; or if you know what you're looking for the tl;dr provides a good summary.
 
-As always, the code for this post can be found on [GitHub](https://github.com/jdheyburn/terraform-examples/tree/main/aws-ssm-automation-3). If you've been following along in the series, the repository removes some resources which are no longer necessary - therefore your `terraform plan` may show removals.
+As always, the code for this post can be found on [GitHub](https://github.com/jdheyburn/terraform-examples/tree/main/aws-ssm-automation-3).
 
 A basic understanding and knowledge of [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) (ALB), and its components (e.g. [target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)) is required.
 
@@ -395,6 +395,8 @@ Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 ```
 
+Not good! :anguished:
+
 These error messages are coming from the load balancer, [indicating](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html#http-502-issues) that the underlying backend wasn't able to complete the request. This is happening when the instance gets rebooted as specified in our document.
 
 The load balancer hasn't had enough time to determine whether the instance is unhealthy or not - as dictated from our [health check policy](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/alb.tf#L19) (2 failed checks with 6 seconds between them) - and so still forwards traffic to it even though it cannot respond.
@@ -410,7 +412,7 @@ We can chart them together for visualisation.
 
 {{< figure src="non-graceful-results.png" link="non-graceful-results.png" class="center" caption="HTTPCode_ELB_5XX_Count only reports on failures - if the metric is missing data points then no errors occurred at that time" alt="A graph in CloudWatch showing the number of requests being served by the ALB, along with occasional HTTP 5XX counts - corresponding at the same time the instances were being rebooted" >}}
 
-While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application.
+While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application, and equal lost customers! :rage:
 
 What we need is a means of removing the node from the load balancer rotation so that we can safely perform maintenance on it.
 
@@ -758,18 +760,10 @@ We can have a look back at the ALB metrics again to see if we received any error
 
 {{< figure src="graceful-results.png" link="graceful-results.png" class="center" caption="No error - no problem!" alt="CloudWatch metrics view for the ALB RequestCount and HTTP_ELB_5XX_Count. The former hovers at approximately 100 requests per minute, whereas there are no error counts being reported." >}}
 
-## Bonus: Dynamic target group removal
-
-The example document in the previous section requires you to know the target group ARN in advance of execution the document - we actually specify the target group in scope in the [maintenance window task](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/maintenance_window.tf#L48). But what if you didn't know the target group, or you wanted a more dynamic set up... so that you don't have to specify the target group. You could simply say "for this given instance, remove it from any target groups that are pointing to it and execute maintenance"... that would be awesome right?
-
-TODO add it in here.
-
 ## Conclusion
 
-TODO conclusion
+Each post prior to this one in the series has been leading up to where we are now - a means of achieving automated zero downtime maintenance for anything that sits behind an AWS ALB.
 
-TODO remove files from automation 3 that are not used
+SSM is very much a bit of a beast and I hope that this series has helped clear the fog and given yourselves an idea of what you can do with SSM to automate a variety of tasks in your AWS estate.
 
-TODO uncheck unused images
-
-TODO cloudwatch metric for cover
+Happy automating! :muscle: :raised_hands:
