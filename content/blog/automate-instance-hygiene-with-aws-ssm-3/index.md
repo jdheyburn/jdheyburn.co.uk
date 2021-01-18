@@ -1,6 +1,6 @@
 ---
 date: 2021-01-10
-title: "Achieve Automated Zero Downtime Maintenance with Load Balancers"
+title: "How to automate AWS zero downtime maintenance with SSM and load balancers"
 description: Load balancers can help us to ensure we proactively remove instances from rotation when we automate maintenance against their targets
 type: posts
 series:
@@ -354,6 +354,8 @@ resource "aws_ssm_document" "reboot_with_healthcheck" {
 }
 ```
 
+### Testing for failure
+
 After this has been applied in our environment let's get our test set up. In a terminal window from your machine have this script running in the background to simulate load.
 
 ```bash
@@ -393,7 +395,20 @@ Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 Hello, World! From ip-172-31-18-158.eu-west-1.compute.internal
 ```
 
-These error messages are coming from the load balancer, [indicating](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html#http-502-issues) that the underlying backend wasn't able to complete the request. This is happening because the load balancer hasn't had enough time to determine whether the instance is unhealthy or not - as dictated from our [health check policy](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/alb.tf#L19) (2 failed checks with 6 seconds between them) - and so still forwards traffic to it even though it cannot respond.
+These error messages are coming from the load balancer, [indicating](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html#http-502-issues) that the underlying backend wasn't able to complete the request. This is happening when the instance gets rebooted as specified in our document.
+
+The load balancer hasn't had enough time to determine whether the instance is unhealthy or not - as dictated from our [health check policy](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/alb.tf#L19) (2 failed checks with 6 seconds between them) - and so still forwards traffic to it even though it cannot respond.
+
+We can actually view this disruption in [CloudWatch Metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/working_with_metrics.html) too. ALBs expose [metrics](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html#load-balancer-metrics-alb) for us which we can monitor against, including:
+
+- RequestCount
+  - Informs us how many incoming requests the ALB is receiving
+- HTTPCode_ELB_5XX_Count
+  - How many HTTP 5XX error codes are being returned by the ALB
+
+We can chart them together for visualisation.
+
+{{< figure src="non-graceful-results.png" link="non-graceful-results.png" class="center" caption="HTTPCode_ELB_5XX_Count only reports on failures - if the metric is missing data points then no errors occurred at that time" alt="A graph in CloudWatch showing the number of requests being served by the ALB, along with occasional HTTP 5XX counts - corresponding at the same time the instances were being rebooted" >}}
 
 While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application.
 
@@ -731,15 +746,17 @@ data "aws_iam_policy_document" "mw_role_additional" {
 
 You can test the automation document by following the [same process as before](/blog/automate-instance-hygiene-with-aws-ssm-2/#testing-automation-documents), else you can test the whole stack via changing the [execution time of the maintenance window](/blog/automate-instance-hygiene-with-aws-ssm-2/#testing-automation-documents-in-maintenance-windows). I'll be following along with the latter.
 
-While the document is running you can re-use the same command to hit the ALB endpoint [from earlier](#so-what-does-all-this-have-to-do-with-our-maintenance-document) to see how traffic is distributed amongst the instances. I won't display the output here since it'll be pretty uninteresting and display no errors... which is exactly what we want!
+While the document is running you can re-use the same command to hit the ALB endpoint [from earlier](#testing-for-failure) to see how traffic is distributed amongst the instances. You'll first see that it will only execute on one instance at a time, which was the enhancement we introduced in the [last post](/blog/automate-instance-hygiene-with-aws-ssm-2/).
 
-When the document invokes, you'll first see that it will only execute on one instance at a time, which was the enhancement we introduced in the [last post](/blog/automate-instance-hygiene-with-aws-ssm-2/). The execution time of the document on each invocation is slightly long at ~12 minutes - but we would rather it take the time to ensure that all requests to instances have been drained.
+{{< figure src="graceful-document-overview.png" link="graceful-document-overview.png" class="center" caption="" alt="AWS console showing the automation document execution view. There are 3 task invocations, one for each instance in scope - they have all executed successfully and only one invocation was executed at a time." >}}
 
-{{< figure src="graceful-document-in-progress.png" link="graceful-document-in-progress.png" class="center" caption="Note that the current invocation in progress starts immediately after the bottom invocation has completed" alt="AWS console showing the automation document execution view. There are 3 task invocations, one for each instance in scope. One has completed successfully, another is in progress, and another is pending invocation." >}}
+When we drill down into each invocation we can see the automation steps doing their magic.
 
-If we were to drill down into the in progress invocation, you can see all the steps from the document.
+{{< figure src="graceful-document-invocation-detail.png" link="graceful-document-invocation-detail.png" class="center" caption="" alt="AWS console showing the individual steps of the automation document removing the targeted instance from rotation before executing the maintenance automation document" >}}
 
-{{< figure src="graceful-document-instance-detail.png" link="graceful-document-instance-detail" class="center" caption=" It takes just over 6 minutes to remove the instance from rotation - but at that point we can then start the maintenance document on the instance with full confidence it won't impact any user experience" alt="AWS console showing the individual steps of the automation document removing the targeted instance from rotation before executing the maintenance automation document" >}}
+We can have a look back at the ALB metrics again to see if we received any errors.
+
+{{< figure src="graceful-results.png" link="graceful-results.png" class="center" caption="No error - no problem!" alt="CloudWatch metrics view for the ALB RequestCount and HTTP_ELB_5XX_Count. The former hovers at approximately 100 requests per minute, whereas there are no error counts being reported." >}}
 
 ## Bonus: Dynamic target group removal
 
@@ -751,5 +768,8 @@ TODO add it in here.
 
 TODO conclusion
 
-
 TODO remove files from automation 3 that are not used
+
+TODO uncheck unused images
+
+TODO cloudwatch metric for cover
