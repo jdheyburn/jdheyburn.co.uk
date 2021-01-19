@@ -1,5 +1,5 @@
 ---
-date: 2021-01-10
+date: 2021-01-19
 title: "How to automate zero downtime maintenance with AWS SSM & ALBs"
 description: Load balancers can help us to ensure we proactively remove instances from rotation when we automate maintenance against their targets
 type: posts
@@ -11,10 +11,9 @@ tags:
   - automation
   - terraform
   - patching
-draft: true
 ---
 
-Welcome to the last post in this [series](/series/automate-instance-hygiene-with-aws-ssm/) where we've been exploring SSM Documents. So far in the series we've covered:
+Welcome to the last post in this [series](/series/automate-instance-hygiene-with-aws-ssm/) where we've been exploring SSM Documents, so far we've covered:
 
 - How [Command Documents](/blog/automate-instance-hygiene-with-aws-ssm-0/) can help to execute commands on EC2 Instances
 - Automating these Command Documents through [Maintenance Windows](/blog/automate-instance-hygiene-with-aws-ssm-1/)
@@ -31,7 +30,7 @@ This post will now look into how we can use Automation Documents to perform main
 
 ## Prerequisites
 
-If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here; or if you know what you're looking for the tl;dr provides a good summary.
+If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here; or if you know what you're looking for the tl;dr provides a summary.
 
 As always, the code for this post can be found on [GitHub](https://github.com/jdheyburn/terraform-examples/tree/main/aws-ssm-automation-3).
 
@@ -142,7 +141,7 @@ Now that we have a web service hosted on our instances, let's now add a load bal
 
 > For this I am using a Terraform [ALB module](https://registry.terraform.io/modules/terraform-aws-modules/alb/aws/latest) for provisioning all the components in the load balancer, and expanding on them is beyond the scope of this post.
 >
-> You can navigate to the AWS ALB [documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) to find out more.
+> You can navigate to the AWS ALB [documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) to find out about the underlying components the module creates for us.
 
 #### Security groups
 
@@ -412,11 +411,11 @@ We can chart them together for visualisation.
 
 {{< figure src="non-graceful-results.png" link="non-graceful-results.png" class="center" caption="HTTPCode_ELB_5XX_Count only reports on failures - if the metric is missing data points then no errors occurred at that time" alt="A graph in CloudWatch showing the number of requests being served by the ALB, along with occasional HTTP 5XX counts - corresponding at the same time the instances were being rebooted" >}}
 
-While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application, and equal lost customers! :rage:
+While we are the only users hitting this, had this been a production box hit by 1,000s of users, each one of them would experience an issue with your application, and equals lost customers! :rage:
 
 What we need is a means of removing the node from the load balancer rotation so that we can safely perform maintenance on it.
 
-## Removing instances from load balancer rotation with automation documents
+## Removing instances from load balancer rotation
 
 Load balancer target groups have an API endpoint that allow you to drain connections from backends - where the load balancer stops any _new_ requests being forwarded to that backend, and allows existing requests to complete. This can be done via - you guessed it - Automation Documents!
 
