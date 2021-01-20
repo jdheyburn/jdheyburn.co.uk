@@ -289,7 +289,7 @@ Now that we have a load balancer fronting our services, let's review executing o
 
 If an instance were to be rebooted during the **AWS-RunPatchBaseline** stage of the automation document, then there is a chance that a request would have been forwarded to that instance before the health checks against it have failed.
 
-To simulate this, let's create a new automation document which simulates a reboot. We'll just take our existing [patching document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/patch_with_healthcheck_template.yml) and replace the patch step with a reboot command, following the [AWS guidelines](https://docs.amazonaws.cn/en_us/systems-manager/latest/userguide/send-commands-reboot.html) to do this. I've also modified the health check to check to see if the new service came up okay - this may differ for your environment.
+To simulate this, let's create a new automation document which simulates a reboot. We'll just take our existing [patching document](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/patch_with_healthcheck_template.yml) and replace the patch step with a reboot command, following the [AWS guidelines](https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-reboot.html) to do this. I've also modified the health check to check to see if the new service came up okay - this may differ for your environment.
 
 You can view the document on [GitHub](https://github.com/jdheyburn/terraform-examples/blob/main/aws-ssm-automation-3/documents/reboot_with_healthcheck_template.yml).
 
