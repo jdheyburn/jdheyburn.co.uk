@@ -447,7 +447,7 @@ parameters:
     description: The instance to target
   TargetGroupArn:
     type: String
-    description: The target group ARN for Appian
+    description: The target group ARN for the instance
 ```
 
 #### Sanity checks
