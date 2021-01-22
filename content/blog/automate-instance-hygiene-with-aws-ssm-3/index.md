@@ -30,7 +30,7 @@ This post will now look into how we can use Automation Documents to perform main
 
 ## Prerequisites
 
-If you're just joining in from this post then I recommend reading through the previous posts to gain of understanding of how we got here; or if you know what you're looking for the tl;dr provides a summary.
+If you're just joining in from this post then I recommend reading through the previous posts to gain an understanding of how we got here; or if you know what you're looking for the tl;dr provides a summary.
 
 As always, the code for this post can be found on [GitHub](https://github.com/jdheyburn/terraform-examples/tree/main/aws-ssm-automation-3).
 
