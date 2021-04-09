@@ -1,7 +1,7 @@
 ---
 title: ":file_folder: Projects"
 images:
-    - images/jdheyburn_co_uk_card.png
+  - images/jdheyburn_co_uk_card.png
 ---
 
 ## Portfolio Website
@@ -26,6 +26,7 @@ images:
 **Status**: Merged :white_check_mark:
 
 [**Add patch_source block to resource_aws_ssm_patch_baseline**](https://github.com/terraform-providers/terraform-provider-aws/pull/11879)
-- The [patch source](https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-how-it-works-alt-source-repository.html) API enables AWS SSM Patch Baselines to specify alternate patch repositories at runtime of the SSM Document AWS-RunPatchBaseline. 
 
-**Status**: Awaiting Review :hourglass_flowing_sand:
+- The [patch source](https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-how-it-works-alt-source-repository.html) API enables AWS SSM Patch Baselines to specify alternate patch repositories at runtime of the SSM Document AWS-RunPatchBaseline.
+
+**Status**: Merged :white_check_mark:
