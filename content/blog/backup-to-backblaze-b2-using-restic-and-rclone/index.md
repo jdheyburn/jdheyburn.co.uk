@@ -1,18 +1,16 @@
 ---
 date: 2021-04-28
 title: "Backup to Backblaze B2 using restic and rclone"
-description: 
+description: I use the "holy trinity" of restic, rclone, and B2, together with systemd to automate backups at home
 type: posts
 series: []
 tags:
   - backup
-  - restic
   - rclone
+  - restic
 ---
 
-
-
-Over the last lockdown I spent some time making sure backups for my music files were all 
+Over the last UK lockdown I spent some time making sure I had backups of my music collection after another project had me organising them using beets. I used this as a good opportunity to ensure I had other backups in place for some other critical files at home too.
 
 ## Backup tools
 
@@ -178,9 +176,9 @@ function main() {
 main $@
 ```
 
-This script is a bit messy, but it gets the job done. It supports a parameter which can be either `backup` or `prune`, depending on what job needs to be ran.
+This script is a bit messy, but it gets the job done. It supports a parameter which can be either `backup` or `prune`, depending on what job needs to be ran. If the mode is `backup` then it will invoke the `pull-backups.sh` script so that restic has the latest files to backup.
 
-If the mode is `backup` then it will invoke the `pull-backups.sh` script so that restic has the latest files to backup.
+Both restic repositories will be kept under `/mnt/usb/Backup/restic`.
 
 Once the script is defined we can have systemd invoke it.
 
@@ -259,16 +257,137 @@ function main() {
 main $@
 ```
 
+In addition to the restic respostory directory, I'm also backing up the beets databases and music files. These are going to my Google Drive storage in case I want to hook it up to some other apps that can pull files from Google Drive. Remember that B2 charges for downloads and so I'm using it as a disaster recovery store. (TODO did I mention it already?)
 
+Like `restic-all.sh` above, this script is also invoked by systemd.
+
+```systemd
+# /etc/systemd/system/rclone-all.service
+
+# This should be invoked after restic has done doing the daily backup
+
+[Unit]
+Description=Rclone backup everything service
+After=restic-all.service
+OnFailure=unit-status-mail@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/jdheyburn/dotfiles/restic/rclone-all.sh
+
+[Install]
+WantedBy=restic-all.service
+```
+
+Since we want to have rclone invoked after restic has done its thing, we need to specify `After=restic-all.service` and `WantedBy=restic-all.service`. Note that this'll run even if `restic-all.service` failed - but that's not really an issue for me since rclone is uploading more than just restic respositories.
+
+We don't need to specify a systemd `.timer` file for this unit file since we're using the completion of `restic-all.service` as our invocation point.
+
+## Handling failures
+
+> N.B. big thanks to [Laeffe](https://northernlightlabs.se/) for their [excellent guide](https://northernlightlabs.se/2014-07-05/systemd-status-mail-on-unit-failure.html) on this.
+
+Automated backups are very useful for setting and forgetting, but when something goes wrong and backups haven't occurred, we need to be made aware of it.
+
+We can configure each of the systemd files to invoke a script on failure which can then send us an email when this happens.
+
+You'll notice that each of the systemd unit files have `OnFailure=unit-status-mail@%n.service` defined in them. This is an additional unit file where if there were to be a failure in any of the scripts, a service named this will be invoked.
+
+```systemd
+# /etc/systemd/system/unit-status-mail@.service
+
+[Unit]
+Description=Unit Status Mailer Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/jdheyburn/dotfiles/restic/systemd/unit-status-mail.sh %I "Hostname: %H" "Machine ID: %m" "Boot ID: %b"
+```
+
+The `@` symbol is a special case within systemd that [enables special functionality](https://superuser.com/a/393429). In our case when we invoked it at `OnFailure=unit-status-mail@%n.service` the calling unit file will pass its name via `%n` to allow the receiving unit file to access it at `%I`.
+
+This `%I` variable is then being passed as an argument to the script `unit-status-mail.sh`. The contents of the script are below:
+
+```bash
+# unit-status-mail.sh
+
+#!/bin/bash
+
+# From https://northernlightlabs.se/2014-07-05/systemd-status-mail-on-unit-failure.html
+
+MAILTO="ADD_EMAIL_HERE"
+MAILFROM="unit-status-mailer"
+UNIT=$1
+
+EXTRA=""
+for e in "${@:2}"; do
+  EXTRA+="$e"$'\n'
+done
+
+UNITSTATUS=$(systemctl status $UNIT)
+
+sendmail $MAILTO <<EOF
+From:$MAILFROM
+To:$MAILTO
+Subject:Status mail for unit: $UNIT
+
+Status report for unit: $UNIT
+$EXTRA
+
+$UNITSTATUS
+EOF
+
+echo -e "Status mail sent to: $MAILTO for unit: $UNIT"
+```
+
+The name of the calling unit file is passed to `UNIT` where the status of it is received, and the output is sent in an email to `MAILTO`.
+
+You'll need to make sure you have `sendmail` installed on the machine to do this.
+
+For me, the emails landed in the spam folder - but once you configure a rule on your email client to always forward them to your inbox, you'll always be notified if there's an error.
+
+{{< figure src="status-email.png" link="status-email.png" class="center" caption="The resulting email" alt="A screenshot showing an example email highlighting there has been a failure in the restic-all service." >}}
 
 ## restic prune
 
+One last area to look at with restic is [pruning](https://restic.readthedocs.io/en/latest/060_forget.html). This is where restic will remove old data that has been "forgotten"
 
+You'll notice in `restic-all.sh` that we are calling `restic forget` after each backup - this tells restic that the old snapshot is no longer required. The script has been written to accommodate for both `backup` and `prune` functionality, so in order to execute that portion of the script we need to set up another systemd unit file to invoke it.
 
+```systemd
+# /etc/systemd/system/restic-prune.service
+
+[Unit]
+Description=Restic backup service (data pruning)
+OnFailure=unit-status-mail@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/jdheyburn/dotfiles/restic/restic-all.sh prune
+```
+
+Since it is resource intensive to perform `prune` against your repository, its best to run this at a different interval to your backups. From the below unit file `OnCalendar=*-*-1 10:00:00` corresponds to the first day of the month at 10am.
+
+```systemd
+[Unit]
+Description=Prune data from the restic repository monthly
+
+[Timer]
+OnCalendar=*-*-1 10:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+## Area of improvement
+
+While at least everything is being backed up, I'm not sure if this is the best approach for restic. If I wanted to restore a backup in restic, I would have to copy down the entire restic repository and then pull out the snapshot from there. Whereas restic has B2 integration built into it, which I believe restic can hit directly to pull down only the snapshot that we want to restore from. Since B2 charges for downloads, minimising the amount of data we transfer out will save costs.
+
+I'll do some investigating and keep you updated!
 
 ## TODO
 
 - why b2? how can people get set up on it?
-- handle failures
-  - https://northernlightlabs.se/2014-07-05/systemd-status-mail-on-unit-failure.html
-- better backup method?
+- test restore?
