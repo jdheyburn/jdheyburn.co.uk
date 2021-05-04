@@ -1,41 +1,48 @@
 ---
-date: 2021-04-28
+date: 2021-05-04
 title: "Backup to Backblaze B2 using restic and rclone"
-description: I use the holy trinity of restic, rclone, and B2, together with systemd to automate backups at home
+description: I use the holy trinity of restic, rclone, and B2 together with systemd to automate backups at home
 type: posts
 series: []
 tags:
   - backup
+  - backblaze
+  - beets
+  - lms
   - rclone
   - restic
-draft: true
+  - systemd
 ---
 
 Over the last UK lockdown I spent some time making sure I had backups of my music collection after I had organised them using [beets](https://beets.readthedocs.io/en/stable/). I used this as a good opportunity to ensure I had other backups in place for some other critical files at home too.
 
 ## Backup tools
 
-[Restic](https://restic.net/) is a backup snapshot tool that given a set of directories, it will split the data into chunks and de-duplicate these chunks to a specified backup repostory. You can specify your backup policy to a repository, where it will manage what daily, weekly, or monthly snapshots to keep.
+[Restic](https://restic.net/) is a backup snapshot tool that given a set of directories, it will split the data into chunks and de-duplicate these chunks to a specified backup repository. You can specify your backup policy to a repository, where it will manage what daily, weekly, or monthly snapshots to keep.
 
 [Rclone](https://rclone.org/) is a cloud file transfer tool that allows you to synchronise, copy, etc., any data across a huge library of cloud backends.
 
-Both of these are open source tools that are free to use. Getting set up on them is beyond the scope of this post, as I want to write more about the automation and orchestration of these tools.
+Both of these are open source tools that are free to use. Getting set up on them is beyond the scope of this post.
 
 Backups should be automated without us having to think of them (at least until you need to restore!), so for this I'll be using systemd unit services with timers.
 
-I'm then using [Backblaze B2](https://www.backblaze.com/b2/cloud-storage.html) to store the restic repositories in the cloud. At the time of writing they charge $0.005 GB/month for storage, and $0.01 per GB downloaded. Since this is a disaster recovery backup, I don't anticipate downloading all that much.
+Restic is storing the snapshots in repositories on my local NFS server. I'm then using [Backblaze B2](https://www.backblaze.com/b2/cloud-storage.html) to store these in the cloud. At the time of writing they charge $0.005 GB/month for storage, and $0.01 per GB downloaded. So it costs more to download from B2, but since this is a disaster recovery backup I don't anticipate downloading all that much. Being able to store it cheap over a long term is most important.
+
+There are a load of other storage services too; here's a list below taken from [Backblaze's website](https://www.backblaze.com/b2/cloud-storage.html). The other one I was contending with was [Wasabi](https://wasabi.com/cloud-storage-pricing/#three-info); they're only marginally more expensive than B2 for storage ($0.0059 GB/month), but they don't charge for downloads.
+
+{{< figure src="cloud-storage-price-comparison.png" link="cloud-storage-price-comparison.png" class="center" caption="Cloud storage cost comparisons" alt="A table showing the cost comparison of B2 versus S3, Azure, and Google Cloud Platform - B2 is the cheapest." >}}
 
 ## Backup contents and policy
 
 I have restic set up to backup to two respositories:
 
 1. small-files
-    - PiHole configuration
-    - UniFi backups
-    - Logitech Media Server (LMS) backups
+   - PiHole configuration
+   - UniFi backups
+   - Logitech Media Server (LMS) backups
 1. media
-    - all music files
-    - beets databases
+   - all music files
+   - beets databases
 
 Reason being why these are split into two repositories is so that I can define a separate backup policy for each of them.
 
@@ -54,6 +61,8 @@ LMS sits on a different machine to dee so we'll need to retrieve the files first
 Once restic has taken snapshots and stored them on the USB drive, we'll need to upload the backups to B2 with rclone.
 
 > N.B. the configuration to automate restic with systemd was largely inspired from a post on [Fedora Magazine](https://fedoramagazine.org/automate-backups-with-restic-and-systemd/).
+
+You can view the code for all these scripts and systemd unit files at my [GitHub repository](https://github.com/jdheyburn/dotfiles/tree/master/restic).
 
 ### Retrieving backups from remote servers
 
@@ -213,7 +222,37 @@ WantedBy=timers.target
 
 This will invoke the service at 2am every day once we enable it with `systemctl enable restic-all.timer`.
 
-## Rclone
+We can have a look at the resulting snapshots with the below command.
+
+```bash
+$ restic -r /mnt/usb/Backup/restic/small-files/ snapshots
+repository 79dbc9b6 opened successfully, password is correct
+found 1 old cache directories in /root/.cache/restic, run `restic cache --cleanup` to remove them
+ID        Time                 Host        Tags           Paths
+------------------------------------------------------------------------------------------
+d93573f4  2020-06-30 02:00:01  dee         systemd.timer  /etc/pihole
+                                                          /var/lib/unifi/backup/autobackup
+
+96ecf97e  2020-07-31 02:00:35  dee         systemd.timer  /etc/pihole
+                                                          /var/lib/unifi/backup/autobackup
+
+d2b0a78e  2020-08-31 02:00:21  dee         systemd.timer  /etc/pihole
+                                                          /var/lib/unifi/backup/autobackup
+
+... # removed for brevity
+
+ec6fd77e  2021-05-03 02:00:34  dee         systemd.timer  /etc/pihole
+                                                          /mnt/usb/Backup/lms
+                                                          /var/lib/unifi/backup/autobackup
+
+722fcbbf  2021-05-04 02:00:34  dee         systemd.timer  /etc/pihole
+                                                          /mnt/usb/Backup/lms
+                                                          /var/lib/unifi/backup/autobackup
+------------------------------------------------------------------------------------------
+39 snapshots
+```
+
+## Syncing to B2 with rclone
 
 Restic has now created snapshots and stored them in their respective repositories on the USB drive - but this isn't really a safe place to keep backups since the USB drive could crap out at any moment. We can use rclone to offload the repositories to B2.
 
@@ -353,7 +392,7 @@ For me, the emails landed in the spam folder - but once you configure a rule on 
 
 {{< figure src="status-email.png" link="status-email.png" class="center" caption="The resulting email" alt="A screenshot showing an example email highlighting there has been a failure in the restic-all service." >}}
 
-## Restic prune
+## Removing aged restic snapshots
 
 One last area to look at with restic is [pruning](https://restic.readthedocs.io/en/latest/060_forget.html), this is where restic will remove old data that has been "forgotten".
 
@@ -385,8 +424,80 @@ Persistent=true
 WantedBy=timers.target
 ```
 
-## Area of improvement?
+## Restoring a backup
 
-While at least everything is being backed up, I'm not sure if this is the best approach for restic. If I wanted to restore a backup in restic, I would have to copy down the entire restic repository and then pull out the snapshot from there.
+Now the most important part - how to restore a restic snapshot. Let's start with how to restore from a local repository.
 
-Whereas restic has B2 integration built into it, which I believe restic can hit directly to pull down only the snapshot that we want to restore from. Since B2 charges for downloads, minimising the amount of data we transfer out will save costs.
+### Restore from local restic repository
+
+Firstly we need to find the snapshot ID that we want to restore to - in this example I want the latest snapshot.
+
+```bash
+$ restic -r /mnt/usb/Backup/restic/small-files/ snapshots --last
+repository 79dbc9b6 opened successfully, password is correct
+found 1 old cache directories in /root/.cache/restic, run `restic cache --cleanup` to remove them
+ID        Time                 Host        Tags           Paths
+------------------------------------------------------------------------------------------
+f7ef9c33  2021-04-17 02:00:51  dee         systemd.timer  /etc/pihole
+                                                          /mnt/usb/Backup/media/beets-db
+                                                          /var/lib/unifi/backup/autobackup
+
+e2a73c00  2021-04-21 02:00:21  dee         systemd.timer  /etc/pihole
+                                                          /var/lib/unifi/backup/autobackup
+
+722fcbbf  2021-05-04 02:00:34  dee         systemd.timer  /etc/pihole
+                                                          /mnt/usb/Backup/lms
+                                                          /var/lib/unifi/backup/autobackup
+------------------------------------------------------------------------------------------
+3 snapshots
+```
+
+So the ID is `722fcbbf`, let's browse the contents to see if the file we want is in there.
+
+```bash
+$ restic -r /mnt/usb/Backup/restic/small-files/ ls 722fcbbf
+repository 79dbc9b6 opened successfully, password is correct
+found 1 old cache directories in /root/.cache/restic, run `restic cache --cleanup` to remove them
+snapshot 722fcbbf of [/var/lib/unifi/backup/autobackup /etc/pihole /mnt/usb/Backup/lms] filtered by [] at 2021-05-04 02:00:34.383403601 +0100 BST):
+/etc
+/etc/pihole
+/etc/pihole/GitHubVersions
+/etc/pihole/adlists.list
+# ... removed for brevity
+```
+
+Let's say we want to restore `/etc/pihole/adlists.list`, we can use the `--include` argument to specify just that. If we didn't use a filter argument then restic would default to restoring the entire contents of the snapshot.
+
+```bash
+$ restic -r /mnt/usb/Backup/restic/small-files/ restore 722fcbbf --target /tmp/restic-restore --include /etc/pihole/adlists.list
+repository 79dbc9b6 opened successfully, password is correct
+found 1 old cache directories in /root/.cache/restic, run `restic cache --cleanup` to remove them
+restoring <Snapshot 722fcbbf of [/var/lib/unifi/backup/autobackup /etc/pihole /mnt/usb/Backup/lms] at 2021-05-04 02:00:34.383403601 +0100 BST by root@dee> to /tmp/restic-restore
+
+$ tree /tmp/restic-restore/
+/tmp/restic-restore/
+└── etc
+    └── pihole
+        └── adlists.list
+```
+
+### Restore from B2 restic repository
+
+We're storing the repositories on B2 too, and restic has B2 integration built into it. So in the scenario where the NFS server had died and we needed to restore a snapshot stored on B2, we can hit it directly without having to use rclone to pull down the entire repository for us to restore from. This'll be a cheaper approach as restic is only pulling down the files it needs to restore from, lowering B2 download costs.
+
+We just need to configure some variables to permit restic to hit B2. If you're using rclone you can use the same ID and key here.
+
+```bash
+export B2_ACCOUNT_ID="ACCCOUNT_ID"
+export B2_ACCOUNT_KEY="ACCCOUNT_KEY"
+export RESTIC_PASSWORD_FILE="/path/to/passwordfile
+restic -r b2:BUCKET_NAME:restic/small-files snapshots --last
+```
+
+From here you can then use the same commands as in the local repository to traverse the snapshots and restore.
+
+## Conclusion
+
+The process above is probably more complex than what it needs to be; having a separate process for backing up and restoring. Since I want to back up to the NFS locally first followed by B2, this approach made the most sense since I don't want to incur download costs from B2 if I can avoid it by using the local restic repository first.
+
+What's most important is that backups are being made, and that I _can_ restore from them.
