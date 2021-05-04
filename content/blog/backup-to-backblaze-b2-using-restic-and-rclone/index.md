@@ -498,6 +498,6 @@ From here you can then use the same commands as in the local repository to trave
 
 ## Conclusion
 
-The process above is probably more complex than what it needs to be; having a separate process for backing up and restoring. Since I want to back up to the NFS locally first followed by B2, this approach made the most sense since I don't want to incur download costs from B2 if I can avoid it by using the local restic repository first.
+The process above is probably more complex than what it needs to be; having a separate process for backing up and restoring. Since I want to back up to the NFS locally first followed by B2, this approach made the most sense as it allows me to minimise download costs from B2 through targeting the local repository first.
 
 What's most important is that backups are being made, and that I _can_ restore from them.
