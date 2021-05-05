@@ -179,7 +179,7 @@ function main() {
 main $@
 ```
 
-This script is a bit messy, but it gets the job done. It takes in an argument which can be either `backup` or `prune`, depending on what task needs to run. If the mode is `backup` then it will invoke the `pull-backups.sh` prior to snapshotting so that it has the latest files to backup. I cover the `prune` function [later](#restic-prune).
+This script is a bit messy, but it gets the job done. It takes in an argument which can be either `backup` or `prune`, depending on what task needs to run. If the mode is `backup` then it will invoke the `pull-backups.sh` prior to snapshotting so that it has the latest files to backup. I cover the `prune` function [later](#removing-aged-restic-snapshots).
 
 Both restic repositories will be kept under `/mnt/usb/Backup/restic`.
 
