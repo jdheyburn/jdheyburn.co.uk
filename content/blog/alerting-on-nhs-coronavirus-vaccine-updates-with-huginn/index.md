@@ -17,7 +17,7 @@ The UK's coronavirus vaccine strategy has been to target those most vulnerable f
 
 My local GP would send out an SMS text message informing me when I'm eligible, however I've heard that this text can come days after you're eligible. Knowing that the latest guidance is maintained on the [NHS Coronavirus Vaccine site](https://www.nhs.uk/conditions/coronavirus-covid-19/coronavirus-vaccination/coronavirus-vaccine/), I can use [Huginn](https://github.com/huginn/huginn#what-is-huginn) to alert me when the page updates with the latest eligibility.
 
-{{< figure src="vaccine-eligibility.png" link="vaccine-eligibility.png" class="center" caption="" alt="A list of bullet points of who is eligible to receive the vaccine, includes people aged 32 years and older, vulnerable people, etc" >}}
+{{< figure src="vaccine-eligibility.png" link="vaccine-eligibility.png" class="center" caption="" alt="A list of bullet points of who is eligible to receive the vaccine, includes people aged 30 years and older, vulnerable people, etc" >}}
 
 ## tl;dr
 
@@ -32,7 +32,7 @@ My local GP would send out an SMS text message informing me when I'm eligible, h
 
 Being self-hosted it can be deployed out in a number of ways. I already have [Portainer](https://www.portainer.io/) (a GUI for [Docker](https://www.docker.com/)) running in a virtual machine - so to deploy it out I can follow the instructions for [Docker container deployment](https://github.com/huginn/huginn/blob/master/doc/docker/install.md). I created a [docker-compose](https://docs.docker.com/compose/) file so that it can be easily replicated for yourselves in Docker, or even as a [Portainer Stack](https://documentation.portainer.io/v2.0/stacks/create/).
 
-You'll notice there are some environment variables for SMTP here; the values for these will differ for your SMTP setup. I talk more about how I set this up with my Gmail account later in the post.
+You'll notice there are some environment variables for SMTP here; the values for these will differ for your SMTP setup. I talk more about how I set this up with my Gmail account [later in the post](#configure-huginn-for-sending-email-over-gmail-smtp).
 
 ```yaml
 version: "3"
@@ -66,7 +66,7 @@ volumes:
 
 This'll expose Huginn on the Docker host at port 3000. I like to give my services a nice domain name to access them at using Caddy, which I've [written about before](/blog/reverse-proxy-multiple-domains-using-caddy-2/). Here's a condensed version of what my Caddy config file looks like for Huginn.
 
-```jsonc
+```json
 {
   "apps": {
     "http": {
@@ -105,14 +105,14 @@ This'll expose Huginn on the Docker host at port 3000. I like to give my service
               ],
               "terminal": true
             },
-            # ... others removed for brevity
+            // ... others removed for brevity
           ],
           "tls_connection_policies": [
             {
               "match": {
                 "sni": [
                   "huginn.joannet.casa",
-                  # ... others removed for brevity
+                  // ... others removed for brevity
                 ]
               }
             },
@@ -138,7 +138,7 @@ This'll expose Huginn on the Docker host at port 3000. I like to give my service
             },
             "subjects": [
               "huginn.joannet.casa",
-              # ... others removed for brevity
+              // ... others removed for brevity
             ]
           }
         ]
@@ -150,6 +150,8 @@ This'll expose Huginn on the Docker host at port 3000. I like to give my service
 
 I'll need to also add in a DNS entry in PiHole to route HTTP calls on my network for `https://huginn.joannet.casa` to the IP address of my Caddy server.
 
+{{< figure src="huginn-deployed.png" link="huginn-deployed.png" class="center" caption="Deployed and ready for set up!" alt="Huginn login page at the domain name for it specified earlier" >}}
+
 ## Setting up agents
 
 The workflow we need to set up here is pretty simple whereby we only need two agents; a Website Agent and an Email Agent. The website agent will perform the scraping of the NHS website on a regular basis, and if the component on the web page has changed, then it will invoke it's downstream notifier - the Email Agent.
@@ -157,6 +159,10 @@ The workflow we need to set up here is pretty simple whereby we only need two ag
 ```text
 Website Agent    ------ invokes ------>    Email Agent
 ```
+
+Before we do that we'll need to create an account for it - this is all local to your deployment and is not external. The invitation code you'll need to enter is `try-huginn`.
+
+{{< figure src="huginn-account-setup.png" link="huginn-account-setup.png" class="center" caption="" alt="Huginn account setup page with the form filled in with email address and password. The invitation code is populated with try-huginn" >}}
 
 ### Website agent
 
@@ -174,7 +180,9 @@ The other fields serve a purpose that's beyond the scope of this post.
 
 Within Options comes the configuration used to define the website agent. The documentation for the agent config appears on the right hand side, so you can read through that for reference.
 
-In order for us to determine how to configure this we first need to decide what part of the web page we want to be alerted on in event of a update. Refer to the screenshot above and you'll see a number of bullet points listed out of the vaccine criteria. The text we want to be alerted on is "people aged 32 and over".
+In order for us to determine how to configure this we first need to decide what part of the web page we want to be alerted on in event of a update. Refer to the screenshot below of the [NHS Coronavirus Vaccine page](https://www.nhs.uk/conditions/coronavirus-covid-19/coronavirus-vaccination/coronavirus-vaccine/) and you'll see a number of bullet points listed out of the vaccine criteria. The text we want to be alerted on is "people aged 30 and over".
+
+{{< figure src="vaccine-eligibility.png" link="vaccine-eligibility.png" class="center" caption="" alt="A list of bullet points of who is eligible to receive the vaccine, includes people aged 30 years and older, vulnerable people, etc" >}}
 
 The website agent supports an [xpath syntax](https://www.w3schools.com/xml/xpath_syntax.asp) as a config option, which is an expression syntax used to retrieve objects from XML documents - including HTML. But how do we find out what the xpath for this text field is?
 
@@ -233,7 +241,11 @@ Going back to the agent config, this xpath syntax then goes into the xpath key.
 }
 ```
 
+{{< figure src="website-agent-form-populated.png" link="website-agent-form-populated.png" class="center" caption="The rest of the create a new agent form looks like this" alt="The completed form to create a new website agent will the fields populated as specified previously" >}}
+
 Once it's configured then you can click on **Dry Run** at the bottom to see the text it extracts.
+
+{{< figure src="website-agent-dry-run.png" link="website-agent-dry-run.png" class="center" caption="" alt="Huginn correctly extracts the text for 'people aged 30 and over' from the NHS website" >}}
 
 ### Email agent
 
@@ -257,11 +269,13 @@ The options field is not as complex as the website agent - mine is configured wi
 }
 ```
 
+{{< figure src="email-agent-form-populated.png" link="email-agent-form-populated.png" class="center" caption="" alt="The completed form to create a new email agent will the fields populated as specified previously" >}}
+
 The real complexity lies in configuring Huginn to send email...
 
-## Configure Gmail for sending email
+## Configure Huginn for sending email over Gmail SMTP
 
-I have a Gmail account which opens up SMTP access to allows applications to send email programatically, where Huginn has support for this. You'll notice back in setting up Huginn (TODO link) that I had a number of environment variables configured for SMTP. It took a bit of trial-and-error and searching through GitHub issues to get it right, but that config works for me.
+I have a Gmail account which opens up SMTP access to allows applications to send email programatically, where Huginn has support for this. You'll notice earlier when we [deployed Huginn](#deploying-huggin) that I had a number of environment variables configured for SMTP. It took a bit of trial-and-error and searching through GitHub issues to get it right, but that config works for me.
 
 Since my Gmail account is set up with 2FA, I cannot use my actual Gmail password in the SMTP_PASSWORD field. Instead what I have to do is set up an application-specific password that only Huginn is configured for. This restriction known in Google as [less secure app access](https://support.google.com/accounts/answer/6010255).
 
@@ -293,8 +307,8 @@ We can test the whole flow by making a modification to the website agent we crea
 
 Couple this with setting a frequent schedule (i.e. every 5m) then we should be receiving an email with the current value every 5 minutes.
 
-{{< figure src="example-email.png" link="example-email.png" class="center" caption="" alt="" >}}
+{{< figure src="example-email.png" link="example-email.png" class="center" caption="Once the flow is tested, we can set the mode on the website agent back to `on_change`" alt="" >}}
 
-Once the flow is tested, we can set the mode on the website agent back to `on_change`. Then it's just the waiting game until getting vaxx'ed up :syringe:
+Now we just play the waiting time until getting vaxx'ed up as Marc Rebillet says... :syringe:
 
 {{< youtube qeCwwYjf8gw >}}
