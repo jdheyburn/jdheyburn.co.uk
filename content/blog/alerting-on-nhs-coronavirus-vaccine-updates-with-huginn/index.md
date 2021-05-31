@@ -15,11 +15,9 @@ draft: true
 
 The UK's coronavirus vaccine strategy has been to target those most vulnerable first, and then trickle down towards the healthier population. Since that age is creeping down toward my age group, I wanted to see if I could alert myself when I would be eligible for the vax.
 
-Usually the GP sends out the text message informing you that you're eligible. The NHS maintains a [web page](https://www.nhs.uk/conditions/coronavirus-covid-19/coronavirus-vaccination/coronavirus-vaccine/) that has the latest guidance on there.
+My local GP would send out an SMS text message informing me when I'm eligible, however I've heard that this text can come days after you're eligible. Knowing that the latest guidance is maintained on the [NHS Coronavirus Vaccine site](https://www.nhs.uk/conditions/coronavirus-covid-19/coronavirus-vaccination/coronavirus-vaccine/), I can use [Huginn](https://github.com/huginn/huginn#what-is-huginn) to alert me when the page updates with the latest eligibility.
 
 {{< figure src="vaccine-eligibility.png" link="vaccine-eligibility.png" class="center" caption="" alt="A list of bullet points of who is eligible to receive the vaccine, includes people aged 32 years and older, vulnerable people, etc" >}}
-
-Having always wanted to play around with Huginn, I decided to set up a web scraping alert when this updates.
 
 ## tl;dr
 
@@ -28,15 +26,13 @@ Having always wanted to play around with Huginn, I decided to set up a web scrap
 - That action can take the form of an email alert
 - This can be used to monitor the latest age group eligible for a vaccine
 
-## Huggin?
+## Deploying Huggin
 
-[Huginn](https://github.com/huginn/huginn) is a self-hosted automation kit that allows you to create agents and workflows in response to events, sort of like your own [IFTTT](https://ifttt.com/) (If This Then That).
+[Huginn](https://github.com/huginn/huginn) is a self-hosted automation kit that allows you to create agents and workflows in response to events, sort of like your own [IFTTT](https://ifttt.com/) (If This Then That). 
 
-TODO expand
+Being self-hosted it can be deployed out in a number of ways. I already have [Portainer](https://www.portainer.io/) (a GUI for [Docker](https://www.docker.com/)) running in a virtual machine - so to deploy it out I can follow the instructions for [Docker container deployment](https://github.com/huginn/huginn/blob/master/doc/docker/install.md) 
 
-## Deploying Huginn
 
-I have [Portainer](https://www.portainer.io/) running in a VM at home, so I am using the following to have it deployed.
 
 I use Caddy to give internal services at home a nice domain to remember. I added a configuration for Caddy to be Huginn-aware.
 
