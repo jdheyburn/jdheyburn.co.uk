@@ -30,17 +30,125 @@ My local GP would send out an SMS text message informing me when I'm eligible, h
 
 [Huginn](https://github.com/huginn/huginn) is a self-hosted automation kit that allows you to create agents and workflows in response to events, sort of like your own [IFTTT](https://ifttt.com/) (If This Then That). 
 
-Being self-hosted it can be deployed out in a number of ways. I already have [Portainer](https://www.portainer.io/) (a GUI for [Docker](https://www.docker.com/)) running in a virtual machine - so to deploy it out I can follow the instructions for [Docker container deployment](https://github.com/huginn/huginn/blob/master/doc/docker/install.md) 
+Being self-hosted it can be deployed out in a number of ways. I already have [Portainer](https://www.portainer.io/) (a GUI for [Docker](https://www.docker.com/)) running in a virtual machine - so to deploy it out I can follow the instructions for [Docker container deployment](https://github.com/huginn/huginn/blob/master/doc/docker/install.md). I created a [docker-compose](https://docs.docker.com/compose/) file so that it can be easily replicated for yourselves in Docker, or even as a [Portainer Stack](https://documentation.portainer.io/v2.0/stacks/create/).
 
+You'll notice there are some environment variables for SMTP here; the values for these will differ for your SMTP setup. I talk more about how I set this up with my Gmail account later in the post.
 
+```yaml
+version: "3"
+services:
+  huginn:
+    command:
+      - /scripts/init
+    container_name: huginn
+    environment:
+      - SMTP_PORT=587
+      - SMTP_SERVER=<SMTP_SERVER>
+      - SMTP_PASSWORD=<SMTP_PASSWORD>
+      - SMTP_USER_NAME=<SMTP_USER_NAME>
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_DOMAIN=<SMTP_DOMAIN>
+      - DATABASE_POOL=10
+    image: huginn/huginn:latest
+    ports:
+      - 3000:3000/tcp
+    restart: unless-stopped
+    user: "1001"
+    volumes:
+      - mysql:/var/lib/mysql
+    working_dir: /app
 
-I use Caddy to give internal services at home a nice domain to remember. I added a configuration for Caddy to be Huginn-aware.
-
-```json
-TODO add config
+volumes:
+  mysql:
+    driver: local
 ```
 
-Then I can access it from my browser.
+This'll expose Huginn on the Docker host at port 3000. I like to give my services a nice domain name to access them at using Caddy, which I've [written about before](/blog/reverse-proxy-multiple-domains-using-caddy-2/). Here's a condensed version of what my Caddy config file looks like for Huginn.
+
+```jsonc
+{
+  "apps": {
+    "http": {
+      "servers": {
+        "srv0": {
+          "listen": [
+            ":443"
+          ],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "handler": "subroute",
+                  "routes": [
+                    {
+                      "handle": [
+                        {
+                          "handler": "reverse_proxy",
+                          "upstreams": [
+                            {
+                              "dial": "192.168.2.15:3000"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "match": [
+                {
+                  "host": [
+                    "huginn.joannet.casa"
+                  ]
+                }
+              ],
+              "terminal": true
+            },
+            # ... others removed for brevity
+          ],
+          "tls_connection_policies": [
+            {
+              "match": {
+                "sni": [
+                  "huginn.joannet.casa",
+                  # ... others removed for brevity
+                ]
+              }
+            },
+            {}
+          ]
+        }
+      }
+    },
+    "tls": {
+      "automation": {
+        "policies": [
+          {
+            "issuer": {
+              "challenges": {
+                "dns": {
+                  "provider": {
+                    "api_token": "CLOUDFLARE_API_TOKEN",
+                    "name": "cloudflare"
+                  }
+                }
+              },
+              "module": "acme"
+            },
+            "subjects": [
+              "huginn.joannet.casa",
+              # ... others removed for brevity
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+I'll need to also add in a DNS entry in PiHole to route HTTP calls on my network for `https://huginn.joannet.casa` to the IP address of my Caddy server.
 
 ## Setting up agents
 
