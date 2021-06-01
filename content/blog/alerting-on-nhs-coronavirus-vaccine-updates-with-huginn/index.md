@@ -164,6 +164,8 @@ Before we do that we'll need to create an account for it - this is all local to 
 
 {{< figure src="huginn-account-setup.png" link="huginn-account-setup.png" class="center" caption="" alt="Huginn account setup page with the form filled in with email address and password. The invitation code is populated with try-huginn" >}}
 
+When you get through to the main page, I suggest disabling the agents that are there already to prevent some problems later on.
+
 ### Website agent
 
 From the Huginn home page, create a new agent, where the type will be Website Agent.
@@ -179,6 +181,8 @@ There will be a bunch of fields that appear, the only ones you need to fill in a
 The other fields serve a purpose that's beyond the scope of this post.
 
 Within Options comes the configuration used to define the website agent. The documentation for the agent config appears on the right hand side, so you can read through that for reference.
+
+{{< figure src="website-agent-form-populated.png" link="website-agent-form-populated.png" class="center" caption="" alt="The completed form to create a new website agent will the fields populated as specified previously" >}}
 
 In order for us to determine how to configure this we first need to decide what part of the web page we want to be alerted on in event of a update. Refer to the screenshot below of the [NHS Coronavirus Vaccine page](https://www.nhs.uk/conditions/coronavirus-covid-19/coronavirus-vaccination/coronavirus-vaccine/) and you'll see a number of bullet points listed out of the vaccine criteria. The text we want to be alerted on is "people aged 30 and over".
 
@@ -240,8 +244,6 @@ Going back to the agent config, this xpath syntax then goes into the xpath key.
   }
 }
 ```
-
-{{< figure src="website-agent-form-populated.png" link="website-agent-form-populated.png" class="center" caption="The rest of the create a new agent form looks like this" alt="The completed form to create a new website agent will the fields populated as specified previously" >}}
 
 Once it's configured then you can click on **Dry Run** at the bottom to see the text it extracts.
 
