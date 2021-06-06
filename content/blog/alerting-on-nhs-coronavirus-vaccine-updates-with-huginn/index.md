@@ -11,7 +11,12 @@ tags:
   - marcrebillet
   - portainer
   - smtp
+lastmod: 2021-06-06
 ---
+
+> **UPDATE 2021-06-06**
+>
+> A few days after publishing this I came across a bug where agent jobs would be stuck in pending state. I've since fixed this and documented some additional changes I've made at the [end of the post](#fixing-agent-jobs-stuck-in-pending-state).
 
 The UK's coronavirus vaccine strategy has been to target those most vulnerable first, and then trickle down towards the healthier population. Since that age is creeping down toward my age group, I wanted to see if I could alert myself when I would be eligible for the vax.
 
@@ -32,7 +37,7 @@ My local GP would send out an SMS text message informing me when I'm eligible, h
 
 Being self-hosted it can be deployed out in a number of ways. I already have [Portainer](https://www.portainer.io/) (a GUI for [Docker](https://www.docker.com/)) running in a virtual machine - so to deploy it out I can follow the instructions for [Docker container deployment](https://github.com/huginn/huginn/blob/master/doc/docker/install.md). I created a [docker-compose](https://docs.docker.com/compose/) file so that it can be easily replicated for yourselves in Docker, or even as a [Portainer Stack](https://documentation.portainer.io/v2.0/stacks/create/).
 
-You'll notice there are some environment variables for SMTP here; the values for these will differ for your SMTP setup. I talk more about how I set this up with my Gmail account [later in the post](#configure-huginn-for-sending-email-over-gmail-smtp). 
+You'll notice there are some environment variables for SMTP here; the values for these will differ for your SMTP setup. I talk more about how I set this up with my Gmail account [later in the post](#configure-huginn-for-sending-email-over-gmail-smtp).
 
 > Also big thanks to zblesk for their [blog post on Huginn](https://zblesk.net/blog/running-huginn-with-docker/) which helped me iron out some of the environment variables!
 
@@ -78,9 +83,7 @@ The config above will expose Huginn on the Docker host at port 3000. I like to g
     "http": {
       "servers": {
         "srv0": {
-          "listen": [
-            ":443"
-          ],
+          "listen": [":443"],
           "routes": [
             {
               "handle": [
@@ -104,20 +107,18 @@ The config above will expose Huginn on the Docker host at port 3000. I like to g
               ],
               "match": [
                 {
-                  "host": [
-                    "huginn.joannet.casa"
-                  ]
+                  "host": ["huginn.joannet.casa"]
                 }
               ],
               "terminal": true
-            },
+            }
             // ... others removed for brevity
           ],
           "tls_connection_policies": [
             {
               "match": {
                 "sni": [
-                  "huginn.joannet.casa",
+                  "huginn.joannet.casa"
                   // ... others removed for brevity
                 ]
               }
@@ -143,7 +144,7 @@ The config above will expose Huginn on the Docker host at port 3000. I like to g
               "module": "acme"
             },
             "subjects": [
-              "huginn.joannet.casa",
+              "huginn.joannet.casa"
               // ... others removed for brevity
             ]
           }
@@ -324,3 +325,82 @@ Couple this with setting a frequent schedule (i.e. every 5m) then we should be r
 Now we just play the waiting time until getting vaxx'ed up as Marc Rebillet says... :syringe:
 
 {{< youtube qeCwwYjf8gw >}}
+
+## Fixing agent jobs stuck in pending state
+
+Using the docker compose file above caused an issue for me where Huginn would get jobs stuck in a pending state - where rebooting the container was the only way to unblock them... no good for an alerting app!
+
+Huginn by default includes a mysql daemon as the datastore if none is provided in the environment variables. I decided to have mysql running in a separate container to see if that fixed it... and it did!
+
+My new docker compose file looks like this:
+
+```yaml
+services:
+  huginn:
+    command:
+      - /scripts/init
+    container_name: huginn_huginn
+    environment:
+      - SMTP_PORT=587
+      - SMTP_SERVER=<SMTP_SERVER>
+      - SMTP_PASSWORD=<SMTP_PASSWORD>
+      - SMTP_USER_NAME=<SMTP_USER_NAME>
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_DOMAIN=<SMTP_DOMAIN>
+      - TIMEZONE=London
+      - DATABASE_POOL=30
+      - DATABASE_NAME=huginn
+      - DATABASE_USERNAME=huginn
+      - DATABASE_PASSWORD=<MYSQL_PASSWORD>
+      - DATABASE_HOST=huginn_mysql
+      - DATABASE_PORT=3306
+      - START_MYSQL=false
+      - DATABASE_ENCODING=utf8mb4
+      - IMPORT_DEFAULT_SCENARIO_FOR_ALL_USERS=false
+      - DOMAIN=huginn.joannet.casa
+      - INVITATION_CODE=<INVITATION_CODE>
+    image: huginn/huginn:latest
+    ports:
+      - 3000:3000/tcp
+    restart: unless-stopped
+    user: "1000"
+    working_dir: /app
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql
+    container_name: huginn_mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=<MYSQL_ROOT_PASSWORD>
+      - MYSQL_DATABASE=huginn
+      - MYSQL_USER=huginn
+      - MYSQL_PASSWORD=<MYSQL_PASSWORD>
+    volumes:
+      - mysql:/var/lib/mysql
+
+volumes:
+  mysql:
+    driver: local
+```
+
+The `mysql` container is pretty standard so I won't cover that here. There are some env vars I had to add to the `huginn` container:
+
+- `DATABASE_HOST` - the database hostname to connect to, we can use the container name here
+- `DATABASE_PORT` - the port to which to connect to the database
+- `DATABASE_NAME` - the name of the database to use
+- `DATABASE_USERNAME` - who we should connect to the database as
+- `DATABASE_PASSWORD` - authentication for the user
+- `DATABASE_ENCODING` - a requirement when using a newer version of MySQL as defined in the [documentation](https://github.com/huginn/huginn/blob/master/.env.example#L33)
+- `START_MYSQL` - whether to use a local mysql daemon or not
+
+Some additional env vars I added unrelated to the new database:
+
+- `IMPORT_DEFAULT_SCENARIO_FOR_ALL_USERS` - I don't care able the agents that are added by default
+- `INVITATION_CODE` - Lock down Huginn by requiring this code for new user sign ups
+- `DOMAIN` - the endpoint that Huginn is available at
+
+I've also added in a `depends_on` on the database container to assist with orchestration. On first boot however it takes some time for mysql to initialise the database, so Huginn may fail as the database is not yet ready to be connected to. Once the initialisation is done then reboot the Huginn container and it should be able to bootstrap the database fine.
