@@ -243,7 +243,7 @@ type: posts
 
 Changing the section the article is in affects the URL too; meaning articles will appear at `https://jdheyburn.co.uk/blog/blog-bootstrap/` instead of `https://jdheyburn.co.uk/posts/blog-bootstrap/`. Therefore existing hyperlinks pointing to these articles will break. 
 
-Tnere is another quick fix available for us through the front matter setting `aliases`.
+There is another quick fix available for us through the front matter setting `aliases`.
 
 {{<highlight yml "hl_lines=6-7" >}}
 ---
