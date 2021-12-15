@@ -1,5 +1,6 @@
 ---
 date: 2020-12-14
+lastmod: 2021-12-15
 title: "Who Goes Blogging 7: Hugo Minify RSS Code Indentation Fix"
 description: Hugo's minify function can cause code indentation in RSS feeds to break - I discuss the fix in this post
 type: posts
@@ -9,6 +10,12 @@ tags:
     - rss
     - hugo
 ---
+
+> **UPDATE 2021-12-15**
+>
+> The minify config was incorrect at time of publication, and so it's been corrected so that minification *does* happen while not impacting XML files.
+>
+> Thanks to [Andrea](https://aradaelli.com/) for pointing this out to me!
 
 It's certainly been a while since the [previous post](/blog/who-goes-blogging-6-three-steps-to-improve-hugos-rss-feeds/) in this series, which has become the home of any updates I make to my [Hugo](https://gohugo.io/) website.
 
@@ -51,47 +58,22 @@ resource "aws_ssm_document" "patch_with_healthcheck" {
 }
 ```
 
-This is happening during the [GitHub Action](https://github.com/jdheyburn/jdheyburn.co.uk/blob/master/.github/workflows/deploy.yml#L31) that builds the website - I am using the `--minify` parameter which follows [this configuration](https://gohugo.io/getting-started/configuration/#configure-minify) by default, and the highlighted line.
+This is happening during the [GitHub Action](https://github.com/jdheyburn/jdheyburn.co.uk/blob/master/.github/workflows/deploy.yml#L31) that builds the website - I had previously been using the `--minify` flag which follows [this configuration](https://gohugo.io/getting-started/configuration/#configure-minify) by default.
 
-```toml {hl_lines="24"}
-[minify]
-  disableCSS = false
-  disableHTML = false
-  disableJS = false
-  disableJSON = false
-  disableSVG = false
-  disableXML = false
-  minifyOutput = false
-  [minify.tdewolff]
-    [minify.tdewolff.css]
-      decimals = -1
-      keepCSS2 = true
-    [minify.tdewolff.html]
-      keepConditionalComments = true
-      keepDefaultAttrVals = true
-      keepDocumentTags = true
-      keepEndTags = true
-      keepQuotes = false
-      keepWhitespace = false
-    [minify.tdewolff.js]
-    [minify.tdewolff.json]
-    [minify.tdewolff.svg]
-      decimals = -1
-    [minify.tdewolff.xml]
-      keepWhitespace = false
-```
+What's happening is the RSS XML that Hugo generates for us is then being [minified](https://en.wikipedia.org/wiki/Minification_(programming)) to remove the whitespace generated in that file. This includes the whitespace that's used to indent the code in the RSS feeds. Not. Good.
 
-
-So what's happening is the RSS XML that Hugo generates for us is then being [minified](https://en.wikipedia.org/wiki/Minification_(programming)) to remove the whitespace generated in that file. This includes the whitespace that's used to indent the code in the RSS feeds. Not. Good.
+On original publication I thought setting `minify.tdewolff.xml.keepWhitespace = true` would be enough. On [closer reading](https://github.com/tdewolff/minify#xml), it does not have the desired effect.
 
 ## The Fix
 
-In order to fix this we just need to copy the default minify config as mentioned above and change the last line to `keepWhitespace = true`.
+In order to fix this we need to add in the below to the site's config. Then we can remove the `--minify` flag from our build script, since minification is enabled via our config now.
 
-You can view my [git commit](https://github.com/jdheyburn/jdheyburn.co.uk/commit/e56aaf581283eb7a7a4d97ca7a30553beda09271) that fixes this - should you want to include the fix too.
+```toml
+[minify]
+  disableXML = true
+  minifyOutput = true
+```
 
 > I'm using `toml` for my config, so make sure you change it to what your config is defined in (`yaml` / `json`)
 
-I tried to experiment to see if the whole config was required or not, but it appears so - if you found a way to omit some lines then let me know.
-
-That's it - hope this help you with fixing your RSS feeds too!
+Hope this help you with fixing your RSS feeds too!
