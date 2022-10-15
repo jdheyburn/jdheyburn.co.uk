@@ -3,7 +3,7 @@ title: Converting to the Church of Nix
 description: Enter description
 type: posts
 images:
-    - images/jdheyburn_co_uk_card.png
+  - images/jdheyburn_co_uk_card.png
 draft: true
 date: 2022-10-02
 ---
@@ -30,27 +30,22 @@ Prior to starting this, I had this setup across my network:
 
 My starting point for playing with self-hosting, it was a Raspberry Pi 3.
 
-
-- Pihole
-    - For adblocking and local DNS resolution
-- UniFi Controller
-    - Control plane for my UniFi devices at home
-- Caddy
-    - Reverse proxy for all services in the network
-- NFS server
-    - Network wide storage
-    - Includes backups to cloud storage
+| Service                           | Purpose                                          |
+| --------------------------------- | ------------------------------------------------ |
+| [Caddy](https://caddyserver.com/) | Reverse proxy for all services in the network    |
+| NFS server                        | Network wide storage, backed up to cloud storage |
+| [PiHole](https://pi-hole.net/)    | For adblocking and local DNS resolution          |
+| UniFi Controller                  | Control plane for my UniFi devices at home       |
 
 #### frank
 
 A Ubuntu VM on a Proxmox hypervisor, built so that I could play with Proxmox and docker containers.
 
-- Portainer
-    - UI for docker containers
-- Huginn
-    - Experiment with automation (such as NHS vaccine alerts)
-- Heimdall
-    - Dashboard for services
+| Service                                    | Purpose                                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| [Heimdall](https://heimdall.site/)         | Dashboard for services                                                                                                    |
+| [Huginn](https://github.com/huginn/huginn) | Experiment with automation (such as [NHS vaccine alerts](/blog/alerting-on-nhs-coronavirus-vaccine-updates-with-huginn/)) |
+| [Portainer](https://www.portainer.io/)     | UI for docker containers                                                                                                  |
 
 ### Today
 
@@ -60,40 +55,28 @@ Host frank is unchanged from above today, while here's what I have running elsew
 
 Upgraded to a Raspberry Pi 4 (NixOS is RAM hungry!) in an Argon One case.
 
-- Adguardhome
-    - Replaces Pihole
-    - For adblocking and local DNS resolution
-- UniFi Controller
-    - Control plane for my UniFi devices at home
-- Caddy
-    - Reverse proxy for services _local to the host_
-- NFS server
-    - Network wide storage
-    - Includes backups to cloud storage
-- Healthchecks
-    - Monitor cron jobs (primarily the backup jobs for now)
-- Plex
-    - Music and video player
-- Minio
-    - S3 compatible storage
+| Service                                                   | Purpose                                                   |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| [AdGuardHome](https://github.com/AdguardTeam/AdGuardHome) | For adblocking and local DNS resolution (replaces PiHole) |
+| [Caddy](https://caddyserver.com/)                         | Reverse proxy for services _local to the host_            |
+| [Healthchecks](https://healthchecks.io/)                  | Monitor cron jobs (primarily the backup jobs for now)     |
+| [Minio](https://min.io/)                                  | S3 compatible storage                                     |
+| NFS server                                                | Network wide storage, backed up to cloud storage          |
+| [Plex](https://www.plex.tv/)                              | Music and video player                                    |
+| UniFi Controller                                          | Control plane for UniFi devices                           |
 
 #### dennis
 
 New VM running NixOS on the Proxmox HV. I built this as I had some RAM issues on dee, which I subsequently fixed but ended up putting more services on there to experiment with multiple hosts.
 
-- Caddy
-    - Reverse proxy for services _local to the host_
-- Prometheus with Thanos
-    - Metric scraping and long term storage
-- Loki
-    - Log collection
-- Grafana
-    - Metric and logs visualisation
-- Victoria Metrics
-  - Metric scraping
-  - Just testing this for now as a potential Prometheus replacement
-- Dashy
-    - Replaces heimdall 
+| Service                                                                | Purpose                                                              |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [Caddy](https://caddyserver.com/)                                      | Reverse proxy for services _local to the host_                       |
+| [Dashy](https://dashy.to/)                                             | Replaces Heimdall as a dashboard for services                        |
+| [Grafana](https://grafana.com/)                                        | Metric and log visualisation                                         |
+| [Loki](https://grafana.com/oss/loki/)                                  | Log collections                                                      |
+| [Prometheus](https://prometheus.io/) with [Thanos](https://thanos.io/) | Metric scraping and long term storage                                |
+| [Victoria Metrics](https://victoriametrics.com/)                       | Metric scraping (just testing as a potential Prometheus replacement) |
 
 ## Configurations
 
@@ -105,6 +88,6 @@ Since NixOS can be used to build packages and services, it can also be used to b
 - Prometheus monitoring service endpoints
 - TODO find more?
 
-Each of these I'l write about in more detail in future posts - which I'll link back here once they're done.
+Each of these I'll write about in more detail in future posts - which I'll link back here once they're done.
 
 You can explore the repo yourself in the meantime.
