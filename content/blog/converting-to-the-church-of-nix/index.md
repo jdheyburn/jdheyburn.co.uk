@@ -1,6 +1,6 @@
 ---
 title: Converting to the Church of Nix
-description: Migrating self-hosted services to NixOS
+description: Migrating self-hosted services to NixOS, in this quick introductory post
 type: posts
 date: 2022-10-17
 ---
