@@ -77,10 +77,11 @@ enableEmoji = true
     weight = 3
     url = "https://twitter.com/jdheyburn/"
 [[params.social]]
-    name = "DEV.to"
-    icon = "fab fa-dev"
+    name = "Mastodon"
+    icon = "fab fa-mastodon"
     weight = 4
-    url = "https://dev.to/jdheyburn"
+    rel = "me"
+    url = "https://hachyderm.io/@jdheyburn"
 [[params.social]]
     name = "LinkedIn"
     icon = "fab fa-linkedin"
