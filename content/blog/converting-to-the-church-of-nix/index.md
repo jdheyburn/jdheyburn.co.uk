@@ -3,9 +3,11 @@ title: Converting to the Church of Nix
 description: Migrating self-hosted services to NixOS, in this quick introductory post
 type: posts
 date: 2022-10-17
+tags:
+- homelab
+- nix
 ---
   
-
 I've [written in the past](/blog/reverse-proxy-multiple-domains-using-caddy-2/) about some services I host at home which were running on a Raspberry Pi 3 with Raspbian. Making changes to the host was done ad-hoc with no configuration management tool like Ansible, so should anything happen to the host and it dies, I won't have a way to reproduce what I had working before.
 
 Naturally last December, the Pi SD card got corrupted and lost everything that was on there.
