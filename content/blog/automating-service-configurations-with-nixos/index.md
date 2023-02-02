@@ -2,7 +2,7 @@
 title: Automating service configurations with NixOS
 description: Using Nix to bootstrap and deploy services and their connectivity.
 type: posts
-date: 2023-01-16
+date: 2023-02-02
 tags:
 - automation
 - homelab
