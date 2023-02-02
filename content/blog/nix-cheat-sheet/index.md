@@ -3,12 +3,23 @@ title: Nix Cheat Sheet
 description: One stop shop with some low-level snippets related to Nix.
 type: posts
 date: 2023-01-13
+lastmod: 2023-01-26
 tags:
 - code snippets
 - nix
 ---
 
 The world of Nix has a bit of a steep learning curve. As I write blog posts on the subject, I'll refer to some of the tips and tricks from the cheat sheet here.
+
+## Documentation
+
+A list of Nix documentation I refer to, along with some getting started pages:
+
+- [Nixpkgs manual](https://nixos.org/manual/nixpkgs/stable/)
+- [NixOS manual](https://nixos.org/manual/nixos/stable/)
+- [nix.dev](https://nix.dev/)
+- [Nix Pills](https://nixos.org/guides/nix-pills/)
+- [Zero to Nix](https://zero-to-nix.com/)
 
 ## Resources
 
