@@ -4,7 +4,7 @@ title: ":wave: Hey Joe!"
 
 Hi there! :wave:
 
-I'm a technology enthusiast based in London, UK :guardsman: :uk: with experience across software development, DevOps, and Cloud Engineering. 
+I'm a technology enthusiast based in London, UK :guardsman: :uk: with experience across software development, DevOps, and Cloud Engineering.
 
 I mainly [blog about](/blog/) stuff I've been working on - documenting my methodology throughout the way, along with writing up about any cool stuff [I've built or contributed to](/projects/).
 
@@ -31,10 +31,10 @@ If you're interested in contacting me then please feel free to [reach out](/cont
 
 ## :trophy: :scroll: Certificates
 
-- AWS Solutions Architect Associate 
-    - 2019 - Present
+- AWS Solutions Architect Associate
+  - 2019 - 2022
 - Cisco Certified Network Associate (CCNA)
-    - 2013 - 2019
+  - 2013 - 2019
 
 ## :speaking_head: :globe_with_meridians: Languages
 
