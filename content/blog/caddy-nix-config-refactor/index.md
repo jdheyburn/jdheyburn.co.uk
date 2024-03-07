@@ -1,6 +1,6 @@
 ---
 date: 2024-03-07
-title: Simplifying Caddy Nix Config
+title: Simplifying Caddy configs in NixOS
 description: I refactor my Caddy configs from the unnecessarily complex method to something a whole lot more simpler
 type: posts
 tags:
