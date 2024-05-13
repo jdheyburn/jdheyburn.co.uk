@@ -5,6 +5,7 @@ type: posts
 date: 2023-02-02
 tags:
 - automation
+- caddy
 - homelab
 - nix
 ---
