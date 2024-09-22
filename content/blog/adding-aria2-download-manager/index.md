@@ -1,5 +1,5 @@
 ---
-date: 2024-05-13
+date: 2024-09-22
 title: Adding aria2 download manager to my NixOS homelab
 description: I add aria2 as a download manager to a NixOS server to help bundle my Bandcamp downloads together
 type: posts
