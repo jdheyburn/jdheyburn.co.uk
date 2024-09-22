@@ -5,7 +5,7 @@ description: I refactor my Caddy configs from the unnecessarily complex method t
 type: posts
 tags:
   - caddy
-  - nixos
+  - nix
 ---
 
 ## tl;dr

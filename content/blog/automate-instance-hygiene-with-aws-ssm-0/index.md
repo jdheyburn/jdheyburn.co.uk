@@ -568,7 +568,7 @@ Now, let's give this command a spin in the console. We're going to execute it th
 
 If you got any failures, make sure to dive into the failed invocation and see why it failed. Did it fail because of your healthcheck command? Then it is working as intended! Although if it failed on `aws:downloadContent`, check to make sure your instances are running the latest version of SSM agent. You can do this with the `AWS-UpdateSSMAgent` SSM document. Don't be like me and spend hours troubleshooting against an out-of-date SSM agent! :joy:
 
-{{< tweet 1320011701480284162 >}}
+{{< tweet user="jdheyburn" id="1320011701480284162" >}}
 
 Let's now dive into the output of the Linux instance.
 
