@@ -7,7 +7,14 @@ tags:
   - journalling
   - obsidian
   - pkm
+lastmod: 2025-01-26
 ---
+
+## Edits
+
+- 2025-01-26
+  - Updated moment locale from `gb` to `en-gb`
+  - Sundays were incorrectly being templated as the first day of the week, instead of last
 
 ## tl;dr
 
@@ -174,7 +181,7 @@ Templater is used to populate the property values in the front matter, so let's 
 
 ```javascript
 <%*
-moment.locale("gb")
+moment.locale("en-gb")
 const thisDay = window.moment(new Date(tp.file.title));
 const previousDay = thisDay.clone().subtract(1, 'days');
 const previousDayFmt = previousDay.format("YYYY-MM-DD")
@@ -341,7 +348,7 @@ These local variables are define in the template:
 
 ```javascript
 <%*
-moment.locale("gb")
+moment.locale("en-gb")
 const thisWeek = window.moment(tp.file.title, "YYYY-&W WW");
 const previousWeek = thisWeek.clone().subtract(1, 'weeks')
 const nextWeek = thisWeek.clone().add(1, 'weeks')
@@ -483,7 +490,7 @@ The monthly note consolidates all the weekly notes into here so that I can write
 
 ```javascript
 <%*  
-moment.locale("gb")  
+moment.locale("en-gb")  
 const thisMonth = window.moment(tp.file.title, "YYYY-MM-&M ");
 const thisQuarter = thisMonth.format("YYYY-[Q]Q")
 const previousMonth = thisMonth.clone().subtract(1, 'months')  
@@ -576,7 +583,7 @@ I've not really built up a habit of writing a summary for quarterly notes, but I
 
 ```js
 <%*
-moment.locale("gb")
+moment.locale("en-gb")
 const thisQuarter = window.moment(tp.file.title, "YYYY-&Q Q");
 const theseMonths = [...new Set([0,1,2].map(m=>thisQuarter.startOf("quarter").clone().add(m, "months")))]
 const thisYear = thisQuarter.format("YYYY-[Y]")
