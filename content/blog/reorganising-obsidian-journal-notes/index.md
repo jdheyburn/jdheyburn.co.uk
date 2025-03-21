@@ -18,7 +18,13 @@ I finished off my [previous post on journalling](/blog/how-i-use-obsidian-to-jou
 
 I've been playing around with AI code generation, specifically the Claude 3.7 Sonnet model, and I wanted to see if it could produce scripts to help with this.
 
-With a few prompts, it returned with something I was able to use to move everything over. Initially it generated seperate scripts for each journal note type (daily, weekly, monthly, quarterly), but I asked it to condense them down into a single script for simplicity. I also asked for user confirmation prior to moving files as a means of validating what it's doing.
+Unfortunately I didn't capture the exact prompts I used, but it was something along these lines:
+
+> There are markdown files in the date format `YYYY-MM-DD.md` found in `planner/daily`. Create a Python script that will group them in directories by their respective year and month. The Python script should include user confirmation before moving the files.
+
+I repeated this for each note type, and finished with asking it to consolidate all the scripts into one for simplicity.
+
+> Consolidate all the scripts you've created into one.
 
 You can find all the scripts on the Github gist link below.
 
@@ -65,7 +71,11 @@ From my [previous post](/blog/how-i-use-obsidian-to-journal/#daily) you would ha
 
 These links broke after the restructure because the notes are no longer directly underneath `planner/daily`. I can't remember the reason why I set it up this way; it might've been because I expected more daily notes in various locations. In either case I don't have a need for it, so we can change these to implicit links. There are also implicit links to weekly and monthly notes, but these links will work fine as the files are still in the vault, Obsidian will be able to find them.
 
-I also asked Claude to write me a bash one-liner to rename these:
+I also asked Claude to write me a bash one-liner to rename these.
+
+> There are markdown files under `planner/daily` that have text in the format `[[planner/daily/2023-11-19|2023-11-19]] || [[planner/daily/2023-11-21|2023-11-21]]`. Write a bash command that converts them to `[[2023-11-19]] || [[2023-11-21]]`.
+
+I thought I'd have to be explicit with the date format, but it seemed to understand the context enough to imply it:
 
 ```bash
 find planner/daily -name "*.md" -type f -exec sed -i '' -E 's/\[\[planner\/daily\/([0-9]{4}-[0-9]{2}-[0-9]{2})\|([0-9]{4}-[0-9]{2}-[0-9]{2})\]\]/[[\1]]/g' {} \;
