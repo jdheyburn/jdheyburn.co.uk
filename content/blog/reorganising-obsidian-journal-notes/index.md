@@ -1,5 +1,5 @@
 ---
-date: 2025-03-21
+date: 2025-03-26
 title: Reorganising Obsidian Journal Notes
 description: Using AI to help restructure my journal notes in an Obsidian vault
 type: posts
