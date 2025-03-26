@@ -7,12 +7,12 @@ tags:
   - journalling
   - obsidian
   - pkm
-lastmod: 2025-03-21
+lastmod: 2025-03-26
 ---
 
 ## Edits
 
-- 2025-03-21
+- 2025-03-26
   - Periodic Notes are now grouped in directories by their year (and if applicable, month)
   - See blog post: [Reorganising Obsidian Journal Notes](/blog/reorganising-obsidian-journal-notes)
 - 2025-01-26
@@ -675,7 +675,7 @@ However the main purpose of this post is to share my flow for journalling, and w
 - Weekly notes move from `planner/weekly` to `planner/weekly/YYYY`
 - Monthly notes move from `planner/monthly` to `planner/monthly/YYYY`
 
-> **UPDATE 2025-03-21**
+> **UPDATE 2025-03-26**
 >
 > I wrote a follow-up blog post to group periodic notes into their respective year:
 > [Reorganising Obsidian Journal Notes](/blog/reorganising-obsidian-journal-notes)
